@@ -31,6 +31,11 @@ Everything in Quick, plus:
 - Import/export chain: referenced files exist and cross-references resolve
 - Frontmatter cross-consistency: field values align across related artifacts
 - Line count thresholds: files meet minimum size expectations for their type
+- Convention compliance: If .planning/codebase/CONVENTIONS.md exists, check that new/modified files follow established conventions:
+  - Naming patterns match (file names, function names, variable names follow detected patterns)
+  - File placement matches directory conventions (tests in test directories, components in component directories)
+  - Import ordering follows project conventions (if documented)
+  - Export patterns match (default vs named, barrel files)
 
 ### Deep Tier (30+ checks)
 Everything in Standard, plus:
@@ -38,6 +43,11 @@ Everything in Standard, plus:
 - Requirement-to-artifact mapping: each requirement ID traces to at least one artifact
 - Cross-file consistency: shared constants, enums, or type definitions match everywhere used
 - Convention compliance: naming patterns, directory structure, file organization follow project norms
+- Convention verification (detailed): If .planning/codebase/CONVENTIONS.md exists, perform systematic comparison:
+  - For each new file created: verify naming matches the convention pattern for its file type
+  - For each modified file: verify changes don't introduce convention violations
+  - For code patterns: verify idioms match documented conventions (e.g., error handling style, async patterns)
+  - Report convention violations as FAIL with the specific convention and the violating code
 - Completeness audit: no partial implementations, no TODO/FIXME without tracking
 
 ## Goal-Backward Methodology
@@ -45,6 +55,7 @@ Everything in Standard, plus:
 The verification sequence:
 
 1. **Read the plan** -- extract objective, must_haves (truths, artifacts, key_links), and success_criteria
+1b. If .planning/codebase/ exists, read CONVENTIONS.md for convention baseline. Convention checks supplement (do not replace) must_haves verification.
 2. **Derive check list** -- for each truth, determine what observable condition proves it; for each artifact, determine existence and content checks; for each key_link, determine the grep pattern that confirms the connection
 3. **Execute checks** -- run each check, collecting evidence (file paths, line numbers, grep output)
 4. **Classify results:**
