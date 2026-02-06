@@ -32,7 +32,7 @@ If the command is not yet implemented, show its planned phase and description.
 | Status | Command       | Description                                             |
 |--------|---------------|---------------------------------------------------------|
 | ✓      | /vbw:init     | Initialize a new VBW project with .planning directory   |
-| ○      | /vbw:plan     | Plan a phase: research, decompose, self-review [Phase 2]|
+| ✓      | /vbw:plan     | Plan a phase: research, decompose, self-review          |
 | ○      | /vbw:build    | Execute a planned phase through Dev agents [Phase 3]    |
 | ○      | /vbw:ship     | Complete and archive a milestone [Phase 6]              |
 
@@ -60,9 +60,9 @@ If the command is not yet implemented, show its planned phase and description.
 | Status | Command          | Description                                          |
 |--------|------------------|------------------------------------------------------|
 | ○      | /vbw:map         | Analyze existing codebase structure [Phase 3]        |
-| ○      | /vbw:discuss     | Gather context before planning [Phase 2]             |
-| ○      | /vbw:assumptions | Surface Claude's assumptions [Phase 2]               |
-| ○      | /vbw:research    | Standalone research task [Phase 2]                   |
+| ✓      | /vbw:discuss     | Gather context before planning                       |
+| ✓      | /vbw:assumptions | Surface Claude's assumptions                         |
+| ✓      | /vbw:research    | Standalone research task                             |
 | ○      | /vbw:milestone   | Start new milestone [Phase 6]                        |
 | ○      | /vbw:switch      | Switch active milestone [Phase 6]                    |
 | ○      | /vbw:audit       | Audit milestone before shipping [Phase 6]            |
@@ -79,10 +79,11 @@ If the command is not yet implemented, show its planned phase and description.
 New to VBW? Follow these steps:
 
 1. `/vbw:init "My project description"` -- Set up your project
-2. `/vbw:plan 1` -- Plan your first phase
-3. `/vbw:build 1` -- Execute the plan
-4. `/vbw:qa 1` -- Verify the work
-5. `/vbw:ship` -- Ship the milestone
+2. `/vbw:discuss 1` -- Clarify your vision for Phase 1 (optional)
+3. `/vbw:plan 1` -- Plan your first phase
+4. `/vbw:build 1` -- Execute the plan [Phase 3]
+5. `/vbw:qa 1` -- Verify the work [Phase 8]
+6. `/vbw:ship` -- Ship the milestone [Phase 6]
 
 Run `/vbw:help <command>` for detailed help on any command.
 
