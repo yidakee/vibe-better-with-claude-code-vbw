@@ -1,7 +1,5 @@
 ---
-name: config
 description: View and modify VBW configuration including effort profile, verification tier, and skill preferences.
-disable-model-invocation: true
 argument-hint: [setting value]
 allowed-tools: Read, Write, Edit, Bash, Glob
 ---
@@ -64,7 +62,7 @@ If value is invalid, show allowed values for that setting.
 
 ## Output Format
 
-Follow @references/vbw-brand.md for visual formatting:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for visual formatting:
 - Single-line box for config display table
 - ✓ for successful setting changes
 - ⚠ for invalid setting name or value

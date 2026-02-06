@@ -1,7 +1,5 @@
 ---
-name: init
 description: Initialize a new VBW project with .planning directory, artifact templates, and project definition.
-disable-model-invocation: true
 argument-hint: [project-description]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
@@ -38,21 +36,19 @@ Detected project files:
 
 ### Step 1: Scaffold .planning/ directory
 
-Locate the VBW plugin root by using Glob to find `.claude-plugin/plugin.json` and determining the parent directory. Then use the Read tool to read each template file from the plugin's `templates/` directory and the Write tool to create the corresponding file in the user's `.planning/` directory.
+Use the Read tool to read each template file from the VBW plugin directory at `${CLAUDE_PLUGIN_ROOT}/templates/` and the Write tool to create the corresponding file in the user's `.planning/` directory.
 
 Files to create:
 
-| Target                    | Source (Read from plugin)        |
-|---------------------------|----------------------------------|
-| .planning/PROJECT.md      | templates/PROJECT.md             |
-| .planning/REQUIREMENTS.md | templates/REQUIREMENTS.md        |
-| .planning/ROADMAP.md      | templates/ROADMAP.md             |
-| .planning/STATE.md        | templates/STATE.md               |
-| .planning/config.json     | config/defaults.json             |
+| Target                    | Source (Read from plugin)                        |
+|---------------------------|--------------------------------------------------|
+| .planning/PROJECT.md      | ${CLAUDE_PLUGIN_ROOT}/templates/PROJECT.md       |
+| .planning/REQUIREMENTS.md | ${CLAUDE_PLUGIN_ROOT}/templates/REQUIREMENTS.md  |
+| .planning/ROADMAP.md      | ${CLAUDE_PLUGIN_ROOT}/templates/ROADMAP.md       |
+| .planning/STATE.md        | ${CLAUDE_PLUGIN_ROOT}/templates/STATE.md         |
+| .planning/config.json     | ${CLAUDE_PLUGIN_ROOT}/config/defaults.json       |
 
 Also create the directory: `.planning/phases/` (use `mkdir -p .planning/phases`).
-
-Read each template via the Read tool. Do NOT use @-reference syntax for template reads -- these are runtime file operations, not context includes.
 
 ### Step 2: Fill PROJECT.md with user input
 
@@ -99,7 +95,7 @@ Update STATE.md with:
 
 ### Step 6: Present summary
 
-Display the initialization summary using brand formatting from @references/vbw-brand.md.
+Display the initialization summary using brand formatting from @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md.
 
 Use a double-line box for the completion banner:
 ```
@@ -127,7 +123,7 @@ End with a "Next Up" block:
 
 ## Output Format
 
-Follow @references/vbw-brand.md for all visual formatting:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
 - Double-line box (Unicode) for the init completion banner
 - ✓ for created files and completed steps
 - ○ for pending/future items

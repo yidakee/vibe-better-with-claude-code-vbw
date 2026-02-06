@@ -1,7 +1,5 @@
 ---
-name: help
 description: Display all available VBW commands with descriptions and usage examples.
-disable-model-invocation: true
 argument-hint: [command-name]
 allowed-tools: Read, Glob
 ---
@@ -10,7 +8,7 @@ allowed-tools: Read, Glob
 
 ## Context
 
-Available skills: `!`ls skills/vbw-*/SKILL.md 2>/dev/null | wc -l`` installed
+Available commands: `!`ls ${CLAUDE_PLUGIN_ROOT}/commands/*.md 2>/dev/null | wc -l`` installed
 
 ## Behavior
 
@@ -18,12 +16,12 @@ Available skills: `!`ls skills/vbw-*/SKILL.md 2>/dev/null | wc -l`` installed
 
 Show all VBW commands grouped by lifecycle stage. Use a double-line box for the header.
 
-Mark available commands (skills that exist in skills/ directory) with ✓.
+Mark available commands (those with .md files in commands/ directory) with ✓.
 Mark planned commands with ○ and their target phase.
 
 ### With argument: Display detailed command help
 
-If `$ARGUMENTS` matches a command name (e.g., `init`, `config`), read that skill's SKILL.md using the Read tool via `skills/vbw-{name}/SKILL.md` and display:
+If `$ARGUMENTS` matches a command name (e.g., `init`, `config`), read that command file using the Read tool via `${CLAUDE_PLUGIN_ROOT}/commands/{name}.md` and display:
 - Command name and description
 - Usage examples
 - Available arguments
@@ -94,7 +92,7 @@ Run `/vbw:help <command>` for detailed help on any command.
 
 ## Output Format
 
-Follow @references/vbw-brand.md for visual formatting:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for visual formatting:
 - Double-line box for the help header banner
 - ✓ for available commands, ○ for planned commands
 - ➜ for navigation prompts in Getting Started
