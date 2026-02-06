@@ -22,7 +22,7 @@ Current STATE.md:
 
 Detected project files:
 ```
-!`ls package.json pyproject.toml Cargo.toml go.mod *.sln 2>/dev/null || echo "No detected project files"`
+!`ls package.json pyproject.toml Cargo.toml go.mod *.sln Gemfile build.gradle pom.xml 2>/dev/null || echo "No detected project files"`
 ```
 
 ## Guard
@@ -30,7 +30,7 @@ Detected project files:
 1. **Already initialized:** If `.planning/` exists and contains a `PROJECT.md`, STOP and inform the user:
    "VBW is already initialized in this directory. Use /vbw:config to modify settings or delete .planning/ to re-initialize."
 
-2. **Brownfield project:** If project files are detected (package.json, pyproject.toml, Cargo.toml, go.mod, *.sln), note this is an existing project. After initialization completes, suggest running `/vbw:map` (available in Phase 3) to analyze the existing codebase.
+2. **Brownfield project:** If project files are detected (package.json, pyproject.toml, Cargo.toml, go.mod, *.sln, Gemfile, build.gradle, pom.xml), AND source code files exist (use Glob to check for *.ts, *.js, *.py, *.go, *.rs, *.java, *.rb, *.php in the working directory), this is an existing codebase. Set BROWNFIELD=true for use in Step 6.
 
 ## Steps
 
@@ -93,6 +93,36 @@ Update STATE.md with:
 - Empty decisions table
 - Progress bar at 0%
 
+### Step 5.5: Brownfield codebase summary (if BROWNFIELD=true)
+
+If an existing codebase was detected:
+
+1. Count source files by extension using Glob:
+   - TypeScript/JavaScript: *.ts, *.tsx, *.js, *.jsx
+   - Python: *.py
+   - Go: *.go
+   - Rust: *.rs
+   - Java: *.java
+   - Ruby: *.rb
+   - Other detected extensions
+
+2. Check for test files (files matching *test*, *spec*, __tests__/)
+
+3. Check for common patterns:
+   - CI/CD configs (.github/workflows/, .gitlab-ci.yml, Jenkinsfile)
+   - Docker (Dockerfile, docker-compose.yml)
+   - Monorepo indicators (lerna.json, pnpm-workspace.yaml, packages/, apps/)
+
+4. Store a brief summary in STATE.md under a "Codebase Profile" section:
+   ```
+   ### Codebase Profile
+   - Type: Brownfield (existing codebase detected)
+   - Languages: {detected languages with file counts}
+   - Tests: {yes/no with framework if detected}
+   - CI/CD: {yes/no with platform}
+   - Monorepo: {yes/no}
+   ```
+
 ### Step 6: Present summary
 
 Display the initialization summary using brand formatting from @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md.
@@ -115,10 +145,24 @@ Show created files with checkmarks:
 
 Show project core value and phase overview.
 
-End with a "Next Up" block:
+If BROWNFIELD=true, add after the created files list:
+
 ```
- Next Up
- Run /vbw:plan 1 to plan your first phase.
+⚠ Existing codebase detected ({total-source-files} source files)
+
+Run /vbw:map to analyze your codebase before planning.
+This produces architecture docs, conventions, and concern analysis
+that improve planning quality for existing projects.
+
+➜ Next Up
+  /vbw:map -- Analyze your codebase (recommended)
+  /vbw:plan 1 -- Skip mapping and plan directly
+```
+
+If BROWNFIELD=false, end with:
+```
+➜ Next Up
+  /vbw:plan 1 to plan your first phase.
 ```
 
 ## Output Format
