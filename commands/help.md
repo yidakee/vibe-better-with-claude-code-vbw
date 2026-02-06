@@ -40,7 +40,7 @@ If the command is not yet implemented, show its planned phase and description.
 
 | Status | Command       | Description                                             |
 |--------|---------------|---------------------------------------------------------|
-| ○      | /vbw:status   | View progress dashboard with metrics [Phase 4]          |
+| ✓      | /vbw:status   | View progress dashboard with metrics                    |
 | ○      | /vbw:qa       | Run verification on completed work [Phase 8]            |
 
 ### Supporting
