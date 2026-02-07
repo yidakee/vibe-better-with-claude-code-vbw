@@ -15,6 +15,14 @@ D='\033[2m' B='\033[1m' X='\033[0m'
 # --- Cached platform info ---
 _UID=$(id -u)
 _OS=$(uname)
+_VER=$(cat "$(dirname "$0")/../VERSION" 2>/dev/null | tr -d '[:space:]')
+_CACHE="/tmp/vbw-${_VER:-0}-${_UID}"
+
+# Clean stale caches from previous versions on first run
+if ! [ -f "${_CACHE}-ok" ]; then
+  rm -f /tmp/vbw-*-"${_UID}"-* /tmp/vbw-sl-cache-"${_UID}" /tmp/vbw-usage-cache-"${_UID}" /tmp/vbw-gh-cache-"${_UID}" /tmp/vbw-team-cache-"${_UID}" 2>/dev/null
+  touch "${_CACHE}-ok"
+fi
 
 # --- Helpers ---
 
@@ -100,7 +108,7 @@ NOW=$(date +%s)
 
 # --- VBW state (cached 5s) ---
 
-VBW_CF="/tmp/vbw-sl-cache-${_UID}"
+VBW_CF="${_CACHE}-sl"
 
 if ! cache_fresh "$VBW_CF" 5; then
   PH=""; TT=""; ST=""; EF="balanced"; BR=""
@@ -137,7 +145,7 @@ IFS='|' read -r PH TT ST EF BR PD PT PPD QA < "$VBW_CF"
 # Response: five_hour, seven_day, seven_day_opus (utilization 0-100, resets_at ISO),
 #           extra_usage (utilization, monthly_limit, used_credits)
 
-USAGE_CF="/tmp/vbw-usage-cache-${_UID}"
+USAGE_CF="${_CACHE}-usage"
 USAGE_LINE=""
 
 if ! cache_fresh "$USAGE_CF" 60; then
@@ -239,7 +247,7 @@ fi
 
 # --- GitHub link (cached 30s) ---
 
-GH_CF="/tmp/vbw-gh-cache-${_UID}"
+GH_CF="${_CACHE}-gh"
 GH_LINK=""
 
 if ! cache_fresh "$GH_CF" 30; then
@@ -259,7 +267,7 @@ fi
 
 # --- Team status (cached 3s) ---
 
-TEAM_CF="/tmp/vbw-team-cache-${_UID}"
+TEAM_CF="${_CACHE}-team"
 TEAM_LINE=""
 
 if ! cache_fresh "$TEAM_CF" 3; then
