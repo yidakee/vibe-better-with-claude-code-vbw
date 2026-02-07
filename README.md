@@ -133,7 +133,7 @@ For the "I'll just prompt carefully" crowd.
 
 <img src="assets/statusline.png" width="100%" />
 
-Five lines of cold, hard accountability rendered after every single response. Phase progress so you can see how little you've accomplished. Context window burn rate so you can watch your session die in real time. Usage limits with countdown timers -- because nothing says "I'm a productive developer" like a progress bar showing how fast you're hitting your API ceiling. Cost tracking down to the cent, updating live, so you can calculate exactly how much you're paying per line of code you didn't write. And a clickable GitHub link, in case you want to visit the repo and pretend you understand what's in it.
+Five lines of cold, hard accountability rendered after every single response. Phase progress so you can see how little you've accomplished. Context window burn rate so you can watch your session die in real time. Usage limits with countdown timers, because nothing says "I'm a productive developer" like a progress bar showing how fast you're hitting your API ceiling. Cost tracking down to the cent, updating live, so you can calculate exactly how much you're paying per line of code you didn't write. And a clickable GitHub link, in case you want to visit the repo and pretend you understand what's in it.
 
 Most developers use `htop` to monitor their systems. You use a statusline to monitor how much of your Anthropic subscription an AI burned while you watched.
 
