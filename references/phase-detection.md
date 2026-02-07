@@ -1,6 +1,6 @@
 # VBW Phase Auto-Detection Protocol
 
-Single source of truth for detecting the target phase when the user omits the phase number from a command. Referenced by `${CLAUDE_PLUGIN_ROOT}/skills/plan/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/build/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/qa/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/discuss/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/assumptions/SKILL.md`.
+Single source of truth for detecting the target phase when the user omits the phase number from a command. Referenced by `${CLAUDE_PLUGIN_ROOT}/skills/plan/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/execute/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/qa/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/discuss/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/assumptions/SKILL.md`.
 
 ## Overview
 
@@ -29,7 +29,7 @@ All directory scanning below uses the resolved phases directory.
 4. If found: use that phase
 5. If all phases have plans: report "All phases are planned. Specify a phase to re-plan: `/vbw:plan N`" and STOP
 
-### Build Command (`/vbw:build`)
+### Build Command (`/vbw:execute`)
 
 **Goal:** Find the next phase that is planned but not yet built.
 
@@ -38,7 +38,7 @@ All directory scanning below uses the resolved phases directory.
 2. For each directory, check for `*-PLAN.md` and `*-SUMMARY.md` files
 3. The first phase where `*-PLAN.md` files exist but at least one plan lacks a corresponding `*-SUMMARY.md` is the target
 4. If found: use that phase
-5. If all planned phases are fully built: report "All planned phases are built. Specify a phase to rebuild: `/vbw:build N`" and STOP
+5. If all planned phases are fully built: report "All planned phases are built. Specify a phase to rebuild: `/vbw:execute N`" and STOP
 
 **Matching logic:** Plan file `NN-PLAN.md` corresponds to summary file `NN-SUMMARY.md` (same numeric prefix).
 

@@ -98,7 +98,7 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
   Effort: {profile}
 
 ➜ Next Up
-  /vbw:build {N} -- Execute this phase
+  /vbw:execute {N} -- Execute this phase
 ```
 
 ## Output Format

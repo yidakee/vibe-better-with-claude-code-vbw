@@ -9,11 +9,6 @@ if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
-# Allow skill directories (skills/build/ etc. must be readable)
-if echo "$FILE_PATH" | grep -qE '/skills/[^/]+/'; then
-  exit 0
-fi
-
 # Sensitive file patterns
 BLOCKED_PATTERNS=(
   '\.env$'

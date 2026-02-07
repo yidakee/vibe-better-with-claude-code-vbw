@@ -1,8 +1,8 @@
 #!/bin/bash
 # VBW Status Line for Claude Code — 4/5-Line Dashboard
 # Line 1: [VBW] Phase N/M │ Plans: done/total (N this phase) │ Effort: X │ QA: pass │ Branch: main
-# Line 2: ▓▓▓▓▓▓▓▓░░░░░░░░░░░░ 42% │ Tokens: 15.2K in  1.2K out │ Cache: 5.0K write  2.0K read
-# Line 3: 5h: ██░░░░░░░░  6% ~2h13m │ 7d: ███░░░░░░░ 35% │ Opus: ░░░░░░░░░░  0% │ Extra: 96% $578/$600
+# Line 2: Context: ▓▓▓▓▓▓▓▓░░░░░░░░░░░░ 42% 84.0K/200K │ Tokens: 15.2K in  1.2K out │ Cache: 5.0K write  2.0K read
+# Line 3: Session: ██░░░░░░░░  6% ~2h13m │ Weekly: ███░░░░░░░ 35% ~2d 23h │ Extra: 96% $578/$600
 # Line 4: Model: Opus │ Cost: $1.42 │ Time: 12m 34s (API: 23s) │ Diff: +156 -23 │ GitHub │ CC 1.0.11
 # Line 5: Team: build-team │ researcher ◆ │ tester ○ │ dev-1 ✓ │ Tasks: 3/5  (conditional)
 
@@ -166,15 +166,16 @@ if ! cache_fresh "$USAGE_CF" 60; then
         "FIVE_EPOCH=" + ((.five_hour.resets_at // "") | if . == "" or . == null then "0" else epoch | tostring end),
         "WEEK_PCT=" + ((.seven_day.utilization // 0) | pct | tostring),
         "WEEK_EPOCH=" + ((.seven_day.resets_at // "") | if . == "" or . == null then "0" else epoch | tostring end),
-        "OPUS_PCT=" + ((.seven_day_opus.utilization // 0) | pct | tostring),
+        "SONNET_PCT=" + ((.seven_day_sonnet.utilization // -1) | pct | tostring),
+        "EXTRA_ENABLED=" + (if .extra_usage.is_enabled == true then "1" else "0" end),
         "EXTRA_PCT=" + ((.extra_usage.utilization // -1) | pct | tostring),
-        "EXTRA_USED=" + ((.extra_usage.used_credits // 0) | tostring),
-        "EXTRA_LIMIT=" + ((.extra_usage.monthly_limit // 0) | tostring)
+        "EXTRA_USED_C=" + ((.extra_usage.used_credits // 0) | floor | tostring),
+        "EXTRA_LIMIT_C=" + ((.extra_usage.monthly_limit // 0) | floor | tostring)
       ' 2>/dev/null)"
 
-      printf '%s\n' "${FIVE_PCT:-0}|${FIVE_EPOCH:-0}|${WEEK_PCT:-0}|${WEEK_EPOCH:-0}|${OPUS_PCT:-0}|${EXTRA_PCT:--1}|${EXTRA_USED:-0}|${EXTRA_LIMIT:-0}|ok" > "$USAGE_CF"
+      printf '%s\n' "${FIVE_PCT:-0}|${FIVE_EPOCH:-0}|${WEEK_PCT:-0}|${WEEK_EPOCH:-0}|${SONNET_PCT:--1}|${EXTRA_ENABLED:-0}|${EXTRA_PCT:--1}|${EXTRA_USED_C:-0}|${EXTRA_LIMIT_C:-0}|ok" > "$USAGE_CF"
     else
-      printf '%s\n' "0|0|0|0|0|-1|0|0|fail" > "$USAGE_CF"
+      printf '%s\n' "0|0|0|0|-1|0|-1|0|0|fail" > "$USAGE_CF"
     fi
   else
     printf '%s\n' "noauth" > "$USAGE_CF"
@@ -184,7 +185,7 @@ fi
 USAGE_DATA=$(cat "$USAGE_CF" 2>/dev/null)
 
 if [ "$USAGE_DATA" != "noauth" ]; then
-  IFS='|' read -r FIVE_PCT FIVE_EPOCH WEEK_PCT WEEK_EPOCH OPUS_PCT EXTRA_PCT EXTRA_USED EXTRA_LIMIT FETCH_OK <<< "$USAGE_DATA"
+  IFS='|' read -r FIVE_PCT FIVE_EPOCH WEEK_PCT WEEK_EPOCH SONNET_PCT EXTRA_ENABLED EXTRA_PCT EXTRA_USED_C EXTRA_LIMIT_C FETCH_OK <<< "$USAGE_DATA"
 
   if [ "$FETCH_OK" = "ok" ]; then
     # Countdown helper: epoch -> "~2h13m" / "~3d 2h" / "now"
@@ -209,22 +210,24 @@ if [ "$USAGE_DATA" != "noauth" ]; then
     FIVE_REM=$(countdown "$FIVE_EPOCH")
     WEEK_REM=$(countdown "$WEEK_EPOCH")
 
-    # 5-hour session
-    USAGE_LINE="5h: $(progress_bar "${FIVE_PCT:-0}" 10) ${FIVE_PCT:-0}%"
+    # Session (5-hour rolling window)
+    USAGE_LINE="Session: $(progress_bar "${FIVE_PCT:-0}" 10) ${FIVE_PCT:-0}%"
     [ -n "$FIVE_REM" ] && USAGE_LINE="$USAGE_LINE $FIVE_REM"
 
-    # 7-day all-models
-    USAGE_LINE="$USAGE_LINE ${D}│${X} 7d: $(progress_bar "${WEEK_PCT:-0}" 10) ${WEEK_PCT:-0}%"
+    # Weekly (7-day rolling window, all models)
+    USAGE_LINE="$USAGE_LINE ${D}│${X} Weekly: $(progress_bar "${WEEK_PCT:-0}" 10) ${WEEK_PCT:-0}%"
     [ -n "$WEEK_REM" ] && USAGE_LINE="$USAGE_LINE $WEEK_REM"
 
-    # 7-day Opus-specific
-    USAGE_LINE="$USAGE_LINE ${D}│${X} Opus: $(progress_bar "${OPUS_PCT:-0}" 10) ${OPUS_PCT:-0}%"
+    # Sonnet (7-day Sonnet-specific) — only show if present
+    if [ "${SONNET_PCT:--1}" -ge 0 ] 2>/dev/null; then
+      USAGE_LINE="$USAGE_LINE ${D}│${X} Sonnet: $(progress_bar "${SONNET_PCT}" 10) ${SONNET_PCT}%"
+    fi
 
-    # Extra usage (monthly spend) — only show if present (not -1)
-    if [ "${EXTRA_PCT:--1}" -ge 0 ] 2>/dev/null; then
-      # Format used/limit as dollars (credits are in cents)
-      EXTRA_USED_D=$((EXTRA_USED / 100))
-      EXTRA_LIMIT_D=$((EXTRA_LIMIT / 100))
+    # Extra usage (monthly spend) — only show if enabled
+    if [ "${EXTRA_ENABLED:-0}" = "1" ] && [ "${EXTRA_PCT:--1}" -ge 0 ] 2>/dev/null; then
+      # Credits are in cents — divide by 100 for dollars
+      EXTRA_USED_D=$(awk "BEGIN { printf \"%.2f\", ${EXTRA_USED_C:-0} / 100 }")
+      EXTRA_LIMIT_D=$(awk "BEGIN { printf \"%.2f\", ${EXTRA_LIMIT_C:-0} / 100 }")
       USAGE_LINE="$USAGE_LINE ${D}│${X} Extra: $(progress_bar "${EXTRA_PCT}" 5) ${EXTRA_PCT}% \$${EXTRA_USED_D}/\$${EXTRA_LIMIT_D}"
     fi
   else
@@ -312,8 +315,10 @@ TEAM_LINE=$(cat "$TEAM_CF" 2>/dev/null)
 
 [ "$PCT" -ge 90 ] && BC="$R" || { [ "$PCT" -ge 70 ] && BC="$Y" || BC="$G"; }
 FL=$((PCT * 20 / 100)); EM=$((20 - FL))
-BAR=""; [ "$FL" -gt 0 ] && BAR=$(printf "%${FL}s" | tr ' ' '▓')
-[ "$EM" -gt 0 ] && BAR="${BAR}$(printf "%${EM}s" | tr ' ' '░')"
+CTX_BAR=""; [ "$FL" -gt 0 ] && CTX_BAR=$(printf "%${FL}s" | tr ' ' '▓')
+[ "$EM" -gt 0 ] && CTX_BAR="${CTX_BAR}$(printf "%${EM}s" | tr ' ' '░')"
+# Used tokens = input + cache_write + cache_read (per official docs)
+CTX_USED=$((IN_TOK + CACHE_W + CACHE_R))
 
 # --- Line 1: VBW project state ---
 
@@ -332,9 +337,9 @@ else
 fi
 [ -n "$BR" ] && L1="$L1 ${D}│${X} Branch: $BR"
 
-# --- Line 2: context window deep metrics ---
+# --- Line 2: context window ---
 
-L2="${BC}${BAR}${X} ${PCT}%"
+L2="Context: ${BC}${CTX_BAR}${X} ${BC}${PCT}%${X} $(fmt tok "$CTX_USED")/$(fmt tok "$CTX_SIZE")"
 L2="$L2 ${D}│${X} Tokens: $(fmt tok "$IN_TOK") in  $(fmt tok "$OUT_TOK") out"
 L2="$L2 ${D}│${X} Cache: $(fmt tok "$CACHE_W") write  $(fmt tok "$CACHE_R") read"
 

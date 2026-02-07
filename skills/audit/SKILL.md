@@ -46,9 +46,9 @@ Otherwise: .vbw-planning/ root paths. MILESTONE_NAME = slug or "default".
 
 If `--fix` present and issues found, suggest commands:
 - Missing verifications: `/vbw:qa {N}`
-- Incomplete plans: `/vbw:build {N}`
+- Incomplete plans: `/vbw:execute {N}`
 - Placeholder goals: edit roadmap manually
-- Failed executions: re-run `/vbw:build {N}`
+- Failed executions: re-run `/vbw:execute {N}`
 
 ### Step 5: Present report
 
@@ -72,7 +72,7 @@ If `--fix` present and issues found, suggest commands:
 
   {If FAIL:}
   ✗ Milestone not ready to ship
-    /vbw:build {N} -- Complete Phase {N}
+    /vbw:execute {N} -- Complete Phase {N}
 ```
 
 ## Output Format

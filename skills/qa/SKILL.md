@@ -36,7 +36,7 @@ Phase directories:
    4. If found: announce "Auto-detected Phase {N} ({slug}) -- built, not yet verified" and proceed with that phase number
    5. If all built phases are verified: STOP and tell user "All phases verified. Specify a phase to re-verify: `/vbw:qa N`"
 
-3. **Phase not built:** If no SUMMARY.md files in phase directory, STOP: "Phase {N} has no completed plans. Run /vbw:build {N} first."
+3. **Phase not built:** If no SUMMARY.md files in phase directory, STOP: "Phase {N} has no completed plans. Run /vbw:execute {N} first."
 
 Note: Continuous verification is handled by hooks (PostToolUse, TaskCompleted, TeammateIdle). This command is for deep, on-demand verification only.
 
@@ -116,7 +116,7 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
   Report:   {path to VERIFICATION.md}
 
 ➜ Next Up
-  /vbw:build {N+1} -- Build next phase (if PASS)
+  /vbw:execute {N+1} -- Build next phase (if PASS)
   /vbw:fix "{issue}" -- Fix a failing check (if FAIL/PARTIAL)
 ```
 

@@ -74,7 +74,7 @@ The `effort` field in `config/defaults.json` sets the global default. Per-invoca
 Users can override the global effort setting per command invocation:
 
 ```
-/vbw:build --effort=thorough
+/vbw:execute --effort=thorough
 ```
 
 The `--effort` flag takes precedence over the `config/defaults.json` default for that invocation only. It does not modify the stored default.

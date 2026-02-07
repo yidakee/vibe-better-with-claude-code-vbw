@@ -61,7 +61,7 @@ Run /vbw:help for all commands.
 |---------|---------|
 | /vbw:init | Creates CLAUDE.md for the first time |
 | /vbw:plan | Updates after planning completes (new phase context) |
-| /vbw:build | Updates after phase build completes (new decisions, patterns) |
+| /vbw:execute | Updates after phase build completes (new decisions, patterns) |
 | /vbw:ship | Regenerates to reflect shipped state (milestone archived) |
 
 ## 2. Pattern Learning (MEMO-02, MEMO-03)
@@ -99,7 +99,7 @@ Each phase produces one entry appended to PATTERNS.md:
 
 ### Pattern Capture
 
-Pattern capture is triggered by `/vbw:build` after all plans in a phase complete. The build command:
+Pattern capture is triggered by `/vbw:execute` after all plans in a phase complete. The build command:
 
 1. Reads all SUMMARY.md files from the completed phase
 2. Extracts timing data (duration per plan, total phase time)

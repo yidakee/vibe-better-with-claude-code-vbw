@@ -77,7 +77,7 @@ If --verbose: also prepare per-phase breakdown with per-plan durations.
 ### Step 6: Determine next action
 
 1. Find first incomplete phase
-2. If has plans but not all summaries: `/vbw:build {N}`
+2. If has plans but not all summaries: `/vbw:execute {N}`
 3. If complete and next has no plans: `/vbw:plan {N+1}`
 4. If all complete: `/vbw:ship`
 5. If no plans anywhere: `/vbw:plan`

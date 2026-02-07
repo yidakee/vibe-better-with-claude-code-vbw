@@ -59,7 +59,7 @@ Think of it as project management for the post-dignity era of software developme
 
 Most Claude Code plugins were built for the subagent era, one main session spawning helper agents that report back and die. Much like the codebases they produce. VBW is designed from the ground up for the three features that changed the game:
 
-- **Agent Teams for real parallelism.** `/vbw:build` creates a team of Dev teammates that execute tasks concurrently, each in their own context window. `/vbw:map` runs 4 Scout teammates in parallel to analyze your codebase. This isn't "spawn a subagent and wait" -- it's coordinated teamwork with a shared task list and direct inter-agent communication.
+- **Agent Teams for real parallelism.** `/vbw:execute` creates a team of Dev teammates that execute tasks concurrently, each in their own context window. `/vbw:map` runs 4 Scout teammates in parallel to analyze your codebase. This isn't "spawn a subagent and wait" -- it's coordinated teamwork with a shared task list and direct inter-agent communication.
 
 - **Native hooks for continuous verification.** 8 hook events run automatically during builds -- validating writes, checking commits, gating quality, blocking access to sensitive files. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
 
@@ -206,7 +206,7 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                                    │
                                    ▼
                     ┌──────────────────────────────┐
-                    │  /vbw:build [phase]          │
+                    │  /vbw:execute [phase]          │
                     │  Agent Team: Dev teammates   │
                     │  Atomic commits per task     │
                     │  Hooks verify continuously   │
@@ -263,7 +263,7 @@ VBW scaffolds a `.vbw-planning/` directory with your project definition, require
 VBW auto-detects the next phase that needs planning. The Lead agent researches your phase, breaks it into tasks grouped by execution wave, and self-reviews the plan. You get a `PLAN.md` with YAML frontmatter, task breakdown, and dependency mapping. It's like having a tech lead who doesn't sigh audibly when you ask questions.
 
 ```
-/vbw:build
+/vbw:execute
 ```
 
 Again, VBW knows which phase to build next. An Agent Team of Dev teammates executes each task in parallel, making atomic commits. Hooks run continuous verification automatically. You get a `SUMMARY.md` with what was done, what deviated, and how many tokens were burned.
@@ -274,7 +274,7 @@ Again, VBW knows which phase to build next. An Agent Team of Dev teammates execu
 
 At any point, check where you stand. Shows phase progress, completion bars, velocity metrics, and suggests what to do next. Add `--metrics` for a token consumption breakdown per agent. Think of it as the project dashboard you never bothered to set up manually.
 
-Repeat `/vbw:plan` and `/vbw:build` for each phase until your roadmap is complete.
+Repeat `/vbw:plan` and `/vbw:execute` for each phase until your roadmap is complete.
 
 ```
 /vbw:ship
@@ -282,7 +282,7 @@ Repeat `/vbw:plan` and `/vbw:build` for each phase until your roadmap is complet
 
 Archives the milestone, tags the release, updates project docs. You shipped. With actual verification. Your future self won't want to set the codebase on fire. Probably.
 
-> You can always be explicit with `/vbw:plan 3`, `/vbw:build 2`, etc. Useful for re-running a phase, skipping ahead, or when working across multiple terminals.
+> You can always be explicit with `/vbw:plan 3`, `/vbw:execute 2`, etc. Useful for re-running a phase, skipping ahead, or when working across multiple terminals.
 
 <br>
 
@@ -295,7 +295,7 @@ Archives the milestone, tags the release, updates project docs. You shipped. Wit
 
 `/vbw:map` creates an Agent Team with 4 Scout teammates that analyze your codebase across tech stack, architecture, code quality, and concerns. They produce synthesis documents (`INDEX.md`, `PATTERNS.md`) that feed into every subsequent planning session. Think of it as a full-body scan. Results may be upsetting.
 
-Then proceed with `/vbw:plan`, `/vbw:build`, `/vbw:qa`, `/vbw:ship` as above.
+Then proceed with `/vbw:plan`, `/vbw:execute`, `/vbw:qa`, `/vbw:ship` as above.
 
 <br>
 
@@ -313,7 +313,7 @@ These are the commands you'll use every day. This is the job now.
 | :--- | :--- |
 | `/vbw:init` | Initialize a project. Scaffolds `.vbw-planning/` with PROJECT.md, REQUIREMENTS.md, ROADMAP.md, and STATE.md. Detects your tech stack and suggests Claude Code skills. Works for both new and existing codebases. |
 | `/vbw:plan [phase]` | Plan a phase. The Lead agent researches context, decomposes work into tasks grouped by wave, and self-reviews the plan. Produces PLAN.md files with YAML frontmatter. Accepts `--effort` flag (thorough/balanced/fast/turbo). Phase is auto-detected when omitted. |
-| `/vbw:build [phase]` | Execute a planned phase. Creates an Agent Team with Dev teammates for parallel execution. Atomic commits per task. Continuous QA via hooks. Produces SUMMARY.md. Resumes from last checkpoint if interrupted. Phase is auto-detected when omitted. |
+| `/vbw:execute [phase]` | Execute a planned phase. Creates an Agent Team with Dev teammates for parallel execution. Atomic commits per task. Continuous QA via hooks. Produces SUMMARY.md. Resumes from last checkpoint if interrupted. Phase is auto-detected when omitted. |
 | `/vbw:ship` | Complete a milestone. Runs audit, archives state to `.vbw-planning/milestones/`, tags the git release, merges milestone branch (if any), and updates project docs. The one command that means you actually finished something. |
 
 Phase numbers are optional -- when omitted, VBW auto-detects the next phase based on artifact state.
@@ -384,7 +384,7 @@ VBW uses 6 specialized agents, each with native tool permissions enforced via YA
 Here's when each one shows up to work:
 
 ```
-  /vbw:map                        /vbw:plan                       /vbw:build
+  /vbw:map                        /vbw:plan                       /vbw:execute
   ┌─────────┐                     ┌─────────┐                     ┌─────────┐
   │         │                     │         │                     │         │
   │  SCOUT  │ ──reads codebase──▶ │  LEAD   │ ──produces plan──▶  │   DEV   │
@@ -493,7 +493,7 @@ Your AI-managed project now has more structure than most startups that raised a 
 
 VBW leverages three Opus 4.6 features that make the whole thing work:
 
-**Agent Teams** -- `/vbw:build` and `/vbw:map` create teams of parallel agents. Dev teammates execute tasks concurrently, each with their own context window. The session acts as team lead. This replaces the old sequential wave system.
+**Agent Teams** -- `/vbw:execute` and `/vbw:map` create teams of parallel agents. Dev teammates execute tasks concurrently, each with their own context window. The session acts as team lead. This replaces the old sequential wave system.
 
 **Native Hooks** -- 8 hook events provide continuous verification without agent overhead. PostToolUse validates writes and commits. TeammateIdle gates quality. TaskCompleted verifies atomic commits exist. PreToolUse blocks access to sensitive files. No more spawning QA agents after every wave.
 

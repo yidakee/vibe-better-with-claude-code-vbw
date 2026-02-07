@@ -101,7 +101,7 @@ Single-line box for wave groupings during build execution.
 └──────────────────────────────────────────┘
 ```
 
-**Usage:** Displayed before executing each wave in /vbw:build.
+**Usage:** Displayed before executing each wave in /vbw:execute.
 Plan titles are comma-separated; wrap to a second line if
 needed to stay under 80 characters inside the box.
 
@@ -122,7 +122,7 @@ Symbol key:
 - ✗ failed (execution stopped or errored)
 - ○ skipped (already complete or dependency unmet)
 
-**Usage:** Listed under each Wave Banner during /vbw:build.
+**Usage:** Listed under each Wave Banner during /vbw:execute.
 Indented 2 spaces from the left margin.
 
 ### 4. Status Dashboard (VIZL-06)
@@ -146,7 +146,7 @@ Multi-section display for /vbw:status output.
     Average duration: {time}
     Total time:       {time}
 
-  ➜ Next: /vbw:build {N} to continue.
+  ➜ Next: /vbw:execute {N} to continue.
 ```
 
 **Usage:** Standalone status overview invoked by /vbw:status.
@@ -171,7 +171,7 @@ Summary block for QA agent results.
   ✗ {check-name-4}: {failure reason}
 ```
 
-**Usage:** Displayed after QA agent completes in /vbw:build.
+**Usage:** Displayed after QA agent completes in /vbw:execute.
 Double-line box for the header; individual checks listed below
 with ✓ for passed and ✗ for failed (with reason).
 
@@ -210,7 +210,7 @@ each on its own line with a brief description after `--`.
 
 Suggest 1-3 commands based on context:
 - After init: `/vbw:map` or `/vbw:plan`
-- After plan: `/vbw:build {N}`
+- After plan: `/vbw:execute {N}`
 - After build: `/vbw:plan {N+1}` or `/vbw:ship`
 - After map: `/vbw:plan {N}`
 
@@ -306,7 +306,7 @@ fails or output is viewed in limited environments.
     Average duration: 3 min
     Total time:       32 min
 
-  Next: /vbw:build 4 to continue.
+  Next: /vbw:execute 4 to continue.
 ```
 
 **Execution Progress -- fallback:**

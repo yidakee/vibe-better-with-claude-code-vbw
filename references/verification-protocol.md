@@ -1,12 +1,12 @@
 # VBW Verification Protocol
 
-Single source of truth for VBW's verification pipeline. Referenced by `${CLAUDE_PLUGIN_ROOT}/agents/vbw-qa.md` and skills (`${CLAUDE_PLUGIN_ROOT}/skills/qa/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/build/SKILL.md`).
+Single source of truth for VBW's verification pipeline. Referenced by `${CLAUDE_PLUGIN_ROOT}/agents/vbw-qa.md` and skills (`${CLAUDE_PLUGIN_ROOT}/skills/qa/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/execute/SKILL.md`).
 
 ## 1. Overview
 
 The verification protocol defines how VBW validates completed work. Verification runs in two contexts:
 
-- **Post-build:** Automatically after `/vbw:build` completes a phase (unless `--skip-qa` or turbo mode)
+- **Post-build:** Automatically after `/vbw:execute` completes a phase (unless `--skip-qa` or turbo mode)
 - **Standalone:** Via `/vbw:qa <phase>` for independent verification of any completed phase
 
 The QA agent (`${CLAUDE_PLUGIN_ROOT}/agents/vbw-qa.md`) executes verification. It is strictly read-only -- it returns structured findings as text output. The parent command persists results to `VERIFICATION.md`.
@@ -208,7 +208,7 @@ These are protocol instructions embedded in agent definitions -- NOT JavaScript 
 
 ### OnStop / Summary Validation (VRFY-05)
 
-**Where:** Protocol instruction in `${CLAUDE_PLUGIN_ROOT}/skills/build/SKILL.md`
+**Where:** Protocol instruction in `${CLAUDE_PLUGIN_ROOT}/skills/execute/SKILL.md`
 
 **Trigger:** When build completes a plan
 

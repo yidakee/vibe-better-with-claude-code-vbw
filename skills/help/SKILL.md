@@ -24,7 +24,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/{name}/SKILL.md` and display: name, descripti
 |--------|----------------|------------------------------------------------------|
 | ✓      | /vbw:init      | Initialize project with .vbw-planning directory      |
 | ✓      | /vbw:plan [phase]  | Plan a phase via Lead agent (auto-detects phase) |
-| ✓      | /vbw:build [phase] | Execute phase via Agent Teams (auto-detects phase)|
+| ✓      | /vbw:execute [phase] | Execute phase via Agent Teams (auto-detects phase)|
 | ✓      | /vbw:ship      | Archive milestone, tag repo, merge branch            |
 
 ### Monitoring
@@ -81,7 +81,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/{name}/SKILL.md` and display: name, descripti
 
 ## Architecture Notes
 
-**Agent Teams:** /vbw:build creates a team with Dev teammates for parallel plan execution. /vbw:map creates a team with Scout teammates for parallel codebase analysis. The session IS the team lead.
+**Agent Teams:** /vbw:execute creates a team with Dev teammates for parallel plan execution. /vbw:map creates a team with Scout teammates for parallel codebase analysis. The session IS the team lead.
 
 **Hooks:** Continuous verification runs automatically via PostToolUse, TaskCompleted, and TeammateIdle hooks. /vbw:qa is for deep, on-demand verification only.
 
@@ -95,7 +95,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/{name}/SKILL.md` and display: name, descripti
   /vbw:init "My project" -- Set up your project
   /vbw:map -- Analyze codebase (brownfield) or skip (greenfield)
   /vbw:plan -- Plan the next phase (auto-detects phase)
-  /vbw:build -- Execute with Agent Teams (auto-detects phase)
+  /vbw:execute -- Execute with Agent Teams (auto-detects phase)
   /vbw:qa -- Deep verify (auto-detects phase)
   /vbw:ship -- Archive and tag
 
