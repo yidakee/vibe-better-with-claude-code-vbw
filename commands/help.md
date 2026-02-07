@@ -34,7 +34,7 @@ If the command is not yet implemented, show its planned phase and description.
 | ✓      | /vbw:init     | Initialize a new VBW project with .planning directory   |
 | ✓      | /vbw:plan     | Plan a phase: research, decompose, self-review          |
 | ✓      | /vbw:build    | Execute a planned phase through Dev agents              |
-| ○      | /vbw:ship     | Complete and archive a milestone [Phase 6]              |
+| ✓      | /vbw:ship     | Complete and archive a milestone                        |
 
 ### Monitoring
 
@@ -63,12 +63,12 @@ If the command is not yet implemented, show its planned phase and description.
 | ✓      | /vbw:discuss     | Gather context before planning                       |
 | ✓      | /vbw:assumptions | Surface Claude's assumptions                         |
 | ✓      | /vbw:research    | Standalone research task                             |
-| ○      | /vbw:milestone   | Start new milestone [Phase 6]                        |
-| ○      | /vbw:switch      | Switch active milestone [Phase 6]                    |
-| ○      | /vbw:audit       | Audit milestone before shipping [Phase 6]            |
-| ○      | /vbw:add-phase   | Add phase to roadmap [Phase 6]                       |
-| ○      | /vbw:insert-phase| Insert urgent phase into roadmap [Phase 6]           |
-| ○      | /vbw:remove-phase| Remove future phase from roadmap [Phase 6]           |
+| ✓      | /vbw:milestone   | Start a new milestone with isolated state            |
+| ✓      | /vbw:switch      | Switch active milestone context                      |
+| ✓      | /vbw:audit       | Audit milestone for shipping readiness               |
+| ✓      | /vbw:add-phase   | Add phase to end of active roadmap                   |
+| ✓      | /vbw:insert-phase| Insert urgent phase with renumbering                 |
+| ✓      | /vbw:remove-phase| Remove future phase with renumbering                 |
 | ○      | /vbw:whats-new   | View changelog and recent updates [Phase 9]          |
 | ○      | /vbw:update      | Update VBW to latest version [Phase 9]               |
 
@@ -83,7 +83,7 @@ New to VBW? Follow these steps:
 3. `/vbw:plan 1` -- Plan your first phase
 4. `/vbw:build 1` -- Execute the plan
 5. `/vbw:qa 1` -- Verify the work [Phase 8]
-6. `/vbw:ship` -- Ship the milestone [Phase 6]
+6. `/vbw:ship` -- Ship the milestone
 
 Run `/vbw:help <command>` for detailed help on any command.
 

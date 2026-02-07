@@ -30,6 +30,16 @@ Phase directories:
 !`ls .planning/phases/ 2>/dev/null || echo "No phases directory"`
 ```
 
+Active milestone:
+```
+!`cat .planning/ACTIVE 2>/dev/null || echo "No active milestone (single-milestone mode)"`
+```
+
+Milestone directories:
+```
+!`ls -d .planning/*/ROADMAP.md 2>/dev/null || echo "No milestone directories"`
+```
+
 ## Guard
 
 1. **Not initialized:** If .planning/ directory doesn't exist, STOP: "Run /vbw:init first."
@@ -69,6 +79,27 @@ Gather data from multiple sources:
 - Count PLAN.md files (total plans per phase)
 - Count SUMMARY.md files (completed plans per phase)
 - This gives real-time completion data independent of STATE.md
+
+**From .planning/ACTIVE and milestone directories:**
+- Check if .planning/ACTIVE exists (multi-milestone mode)
+- If ACTIVE exists: scan for all milestone directories (.planning/*/ROADMAP.md, excluding milestones/)
+- For each milestone directory: read its STATE.md for position and progress
+- Identify the active milestone (from ACTIVE file)
+
+### Step 2.5: Resolve milestone context
+
+If `.planning/ACTIVE` exists (multi-milestone mode):
+- Set ACTIVE_SLUG to the content of `.planning/ACTIVE`
+- Set ROADMAP_PATH to `.planning/{ACTIVE_SLUG}/ROADMAP.md`
+- Set PHASES_DIR to `.planning/{ACTIVE_SLUG}/phases/`
+- Gather milestone list: all directories under `.planning/` that contain `ROADMAP.md` (excluding `.planning/milestones/` which is the archive)
+
+If `.planning/ACTIVE` does NOT exist (single-milestone mode):
+- Set ROADMAP_PATH to `.planning/ROADMAP.md`
+- Set PHASES_DIR to `.planning/phases/`
+- No milestone list needed
+
+Use the resolved ROADMAP_PATH and PHASES_DIR for all subsequent steps (Step 3 onward). This makes the existing logic milestone-aware without changing its structure.
 
 ### Step 3: Compute phase progress
 
@@ -115,6 +146,10 @@ Apply this logic to suggest the most useful next command:
 
 Format the suggestion as a copy-paste command with a brief description.
 
+Additional milestone-aware suggestions:
+- If all phases of the active milestone are complete: Suggest `/vbw:audit` before `/vbw:ship`
+- If multiple milestones exist: Include `/vbw:switch {other}` as an option when showing next actions
+
 ### Step 6: Display dashboard
 
 Render the dashboard using the Status Dashboard template from vbw-brand.md.
@@ -129,6 +164,22 @@ Render the dashboard using the Status Dashboard template from vbw-brand.md.
 ```
 
 Use the project name from STATE.md or PROJECT.md. Show the overall progress bar (10 characters wide) with percentage in the second line.
+
+**Multi-milestone overview (if multiple milestones exist):**
+
+If the milestone list from Step 2.5 contains more than one milestone, display a milestone overview section before the phase details:
+
+```
+  Milestones:
+    ◆ {active-slug}         {progress-bar} {percent}%  ({completed}/{total} phases)
+    ○ {other-slug-1}        {progress-bar} {percent}%  ({completed}/{total} phases)
+    ○ {other-slug-2}        {progress-bar} {percent}%  ({completed}/{total} phases)
+```
+
+Use ◆ for the active milestone, ○ for inactive ones. Progress bars are 10 characters wide. After the milestone overview, display the full phase breakdown for the ACTIVE milestone only (using existing Step 6 phase list logic).
+
+If only one milestone exists: skip this section and display the regular phase list (existing behavior).
+If no milestones exist (single-milestone mode): skip this section entirely (existing behavior, fully backward compatible).
 
 **Phase list:**
 
