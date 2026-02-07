@@ -40,7 +40,7 @@ Agent Teams are [experimental with known limitations](https://code.claude.com/do
 
 - **File conflicts.** Plans decompose work into tasks with explicit file ownership. Dev teammates operate on disjoint file sets by design.
 
-Agent Teams ship with seven known limitations. VBW solves them. The eighth limitation -- that you're using AI to write software -- is between you and God.
+Agent Teams ship with seven known limitations. VBW solves them. The eighth... that you're using AI to write software doesn't need a fix. It needs an intervention.
 
 ### Skills.sh integration
 

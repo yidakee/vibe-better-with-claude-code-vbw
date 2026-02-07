@@ -1,5 +1,6 @@
 # Planning docs (local-only)
 .vbw-planning/
+.planning/
 
 # Dependencies
 node_modules/
