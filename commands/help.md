@@ -41,7 +41,7 @@ If the command is not yet implemented, show its planned phase and description.
 | Status | Command       | Description                                             |
 |--------|---------------|---------------------------------------------------------|
 | ✓      | /vbw:status   | View progress dashboard with metrics                    |
-| ○      | /vbw:qa       | Run verification on completed work [Phase 8]            |
+| ✓      | /vbw:qa       | Run verification on completed work                      |
 
 ### Supporting
 
@@ -49,8 +49,8 @@ If the command is not yet implemented, show its planned phase and description.
 |--------|---------------|---------------------------------------------------------|
 | ✓      | /vbw:config   | View and modify VBW settings                            |
 | ✓      | /vbw:help     | This help guide                                         |
-| ○      | /vbw:fix      | Quick task with commit discipline [Phase 8]             |
-| ○      | /vbw:debug    | Systematic bug investigation [Phase 8]                  |
+| ✓      | /vbw:fix      | Quick task with commit discipline                       |
+| ✓      | /vbw:debug    | Systematic bug investigation                            |
 | ✓      | /vbw:todo     | Add item to persistent backlog                          |
 | ✓      | /vbw:pause    | Save session context for later                          |
 | ✓      | /vbw:resume   | Restore previous session context                        |
@@ -82,7 +82,7 @@ New to VBW? Follow these steps:
 2. `/vbw:discuss 1` -- Clarify your vision for Phase 1 (optional)
 3. `/vbw:plan 1` -- Plan your first phase
 4. `/vbw:build 1` -- Execute the plan
-5. `/vbw:qa 1` -- Verify the work [Phase 8]
+5. `/vbw:qa 1` -- Verify the work
 6. `/vbw:ship` -- Ship the milestone
 
 Run `/vbw:help <command>` for detailed help on any command.
