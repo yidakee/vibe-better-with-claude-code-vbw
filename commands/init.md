@@ -25,6 +25,16 @@ Detected project files:
 !`ls package.json pyproject.toml Cargo.toml go.mod *.sln Gemfile build.gradle pom.xml 2>/dev/null || echo "No detected project files"`
 ```
 
+Installed global skills:
+```
+!`ls ~/.claude/skills/ 2>/dev/null || echo "No global skills found"`
+```
+
+Installed project skills:
+```
+!`ls .claude/skills/ 2>/dev/null || echo "No project skills found"`
+```
+
 ## Guard
 
 1. **Already initialized:** If `.planning/` exists and contains a `PROJECT.md`, STOP and inform the user:
@@ -123,6 +133,69 @@ If an existing codebase was detected:
    - Monorepo: {yes/no}
    ```
 
+### Step 5.7: Skill discovery and suggestions
+
+Follow the protocol defined in @${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md.
+
+**5.7.1 - Discover installed skills (SKIL-01):**
+
+Scan for installed skills in three locations:
+1. Global: `~/.claude/skills/` -- list directories containing skill definitions
+2. Project: `.claude/skills/` -- project-scoped skills
+3. MCP: Read `.claude/mcp.json` if it exists and note configured MCP servers
+
+Record each discovered skill with its name and scope (global/project/mcp).
+
+**5.7.2 - Detect project stack (SKIL-02):**
+
+Read `${CLAUDE_PLUGIN_ROOT}/config/stack-mappings.json`. For each category (frameworks, testing, services, quality, devops):
+- For file-based detection patterns: use Glob to check if the file exists
+- For dependency-based patterns (e.g., `package.json:react`): read the manifest file and check if the dependency name appears in the content
+
+Collect all matched stack entries and their recommended skills.
+
+**5.7.3 - Suggest skills (SKIL-03, SKIL-04):**
+
+Read `skill_suggestions` and `auto_install_skills` from `.planning/config.json`.
+
+If `skill_suggestions` is false: skip this substep entirely.
+
+Compare recommended skills (from stack detection) against installed skills. For each skill that is recommended but NOT installed:
+
+If `auto_install_skills` is true:
+- Display: "Auto-installing {skill-name}..."
+- Run: `npx @anthropic-ai/claude-code skills add {skill-name}`
+- Display result
+
+If `auto_install_skills` is false (default):
+- Display a suggestion list after the initialization summary:
+  ```
+  Suggested skills for your stack:
+    {skill-name} -- {description}
+    {skill-name} -- {description}
+    Install: npx @anthropic-ai/claude-code skills add {skill-name}
+  ```
+
+**5.7.4 - Write capability map to STATE.md (SKIL-05):**
+
+Add a `### Skills` section to STATE.md (after the Codebase Profile section if brownfield, or after the initial state if greenfield):
+
+```markdown
+### Skills
+
+**Installed:**
+- {skill-name} ({scope})
+- ...
+(or "None detected" if no skills found)
+
+**Suggested (not installed):**
+- {skill-name} -- recommended for {detected-stack-item}
+- ...
+(or "None" if all recommended skills are installed)
+
+**Stack detected:** {comma-separated list, e.g., "Next.js, React, TypeScript, Tailwind, Vitest"}
+```
+
 ### Step 6: Present summary
 
 Display the initialization summary using brand formatting from @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md.
@@ -144,6 +217,14 @@ Show created files with checkmarks:
 - ✓ .planning/phases/
 
 Show project core value and phase overview.
+
+If skills were discovered or suggested in Step 5.7, display:
+```
+Skills:
+  Installed: {count} ({list of names})
+  Suggested: {count} ({list of names})
+  Stack:     {detected stack summary}
+```
 
 If BROWNFIELD=true, add after the created files list:
 
