@@ -51,6 +51,21 @@
       "detect": ["tsconfig.json"],
       "skills": ["typescript-skill"],
       "description": "TypeScript"
+    },
+    "astro": {
+      "detect": ["astro.config.mjs", "astro.config.ts", "package.json:astro"],
+      "skills": ["astro-skill"],
+      "description": "Astro framework"
+    },
+    "remix": {
+      "detect": ["remix.config.js", "package.json:@remix-run/react"],
+      "skills": ["remix-skill"],
+      "description": "Remix framework"
+    },
+    "nuxt": {
+      "detect": ["nuxt.config.ts", "nuxt.config.js", "package.json:nuxt"],
+      "skills": ["nuxt-skill"],
+      "description": "Nuxt.js framework"
     }
   },
   "testing": {
@@ -79,6 +94,50 @@
     "firebase": {
       "detect": ["firebase.json", "package.json:firebase"],
       "skills": ["firebase-skill"]
+    },
+    "clerk": {
+      "detect": ["package.json:@clerk/nextjs", "package.json:@clerk/clerk-react"],
+      "skills": ["clerk-skill"],
+      "description": "Clerk authentication"
+    },
+    "auth0": {
+      "detect": ["package.json:@auth0/nextjs-auth0", "package.json:auth0"],
+      "skills": ["auth0-skill"],
+      "description": "Auth0 authentication"
+    }
+  },
+  "quality": {
+    "eslint": {
+      "detect": ["package.json:eslint", ".eslintrc.js", ".eslintrc.json", "eslint.config.js"],
+      "skills": ["linting-skill"],
+      "description": "ESLint JavaScript/TypeScript linter"
+    },
+    "prettier": {
+      "detect": ["package.json:prettier", ".prettierrc", ".prettierrc.json"],
+      "skills": ["formatting-skill"],
+      "description": "Prettier code formatter"
+    },
+    "storybook": {
+      "detect": [".storybook/main.js", ".storybook/main.ts", "package.json:storybook"],
+      "skills": ["storybook-skill"],
+      "description": "Storybook component development"
+    }
+  },
+  "devops": {
+    "docker": {
+      "detect": ["Dockerfile", "docker-compose.yml", "docker-compose.yaml"],
+      "skills": ["docker-skill"],
+      "description": "Docker containerization"
+    },
+    "vercel": {
+      "detect": ["vercel.json", "package.json:vercel"],
+      "skills": ["vercel-skill"],
+      "description": "Vercel deployment"
+    },
+    "github-actions": {
+      "detect": [".github/workflows"],
+      "skills": ["github-actions-skill"],
+      "description": "GitHub Actions CI/CD"
     }
   }
 }
