@@ -38,59 +38,59 @@ Installed skills:
 
 ### Step 0: Environment setup (settings.json)
 
-Read `~/.claude/settings.json` once (create `{}` if missing). This step handles ALL settings.json changes — Agent Teams AND statusline — before proceeding to project setup.
+**CRITICAL: Complete this ENTIRE step — including writing settings.json — BEFORE moving to Step 1. Do NOT ask about the project, do NOT gather requirements, do NOT scaffold anything until Step 0 is fully resolved. Use AskUserQuestion to ask about Agent Teams and statusline. Wait for answers. Write settings.json. Only then proceed.**
+
+Read `~/.claude/settings.json` once (create `{}` if missing).
 
 **0a. Agent Teams check:**
 
-Check if `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is `"1"`.
+Check if `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is `"1"`. If already enabled, display "✓ Agent Teams — enabled" and move to 0b.
 
-If NOT enabled, display:
+If NOT enabled, ask the user (use AskUserQuestion):
 ```
 ⚠ Agent Teams is not enabled
 
-VBW uses Agent Teams for parallel builds (/vbw:build) and codebase mapping (/vbw:map).
-Without it, these commands will fail.
-
-Enable it now? This adds one line to ~/.claude/settings.json:
-  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+VBW uses Agent Teams for parallel builds and codebase mapping.
+Enable it now?
 ```
 
-Ask the user. If approved: set `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` to `"1"` and display "✓ Agent Teams enabled."
-If declined: display "○ Skipped." and continue.
+If approved: set `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` to `"1"`.
+If declined: display "○ Skipped."
 
 **0b. Statusline check:**
 
 Check the `statusLine` field. It may be a string or an object with a `command` field. Handle both.
 
 Classify:
-- **HAS_VBW**: The value (string or object's `command`) contains `vbw-statusline` → skip silently
-- **HAS_OTHER**: Non-empty value that does NOT contain `vbw-statusline` → offer to replace
-- **EMPTY**: Field is missing, null, or empty → offer to install
+- **HAS_VBW**: The value (string or object's `command`) contains `vbw-statusline` → display "✓ Statusline — installed" and skip to 0c
+- **HAS_OTHER**: Non-empty value that does NOT contain `vbw-statusline`
+- **EMPTY**: Field is missing, null, or empty
 
-If HAS_OTHER, display:
-```
-○ A statusline is already configured but it's not VBW's.
-  VBW includes a status line showing phase progress, context usage,
-  cost, duration, and more. Replace the current statusline?
-```
-
-If EMPTY, display:
+If HAS_OTHER or EMPTY, ask the user (use AskUserQuestion):
 ```
 ○ VBW includes a custom status line showing phase progress, context usage,
   cost, duration, and more — updated after every response. Install it?
 ```
+(If HAS_OTHER, mention that a different statusline is currently configured and VBW's would replace it.)
 
-If the user approves (HAS_OTHER or EMPTY):
-- Set `statusLine` to:
-  ```json
-  {"type": "command", "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'"}
-  ```
-- The object format with `type` and `command` is **required** by the settings schema; a plain string will fail validation silently
-- Display "✓ Statusline installed. Restart Claude Code to activate."
+If approved, set `statusLine` to:
+```json
+{"type": "command", "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'"}
+```
+The object format with `type` and `command` is **required** by the settings schema; a plain string will fail validation silently.
 
 If declined: display "○ Skipped. Run /vbw:config to install it later."
 
 **0c. Write settings.json** if any changes were made (Agent Teams and/or statusline). Write all changes in a single file write.
+
+Display a summary of what was configured:
+```
+Environment setup complete:
+  {✓ or ○} Agent Teams
+  {✓ or ○} Statusline {add "(restart to activate)" if newly installed}
+```
+
+**STOP. Do NOT proceed to Step 1 until this summary has been displayed and settings.json has been written.**
 
 ### Step 1: Scaffold directory
 
