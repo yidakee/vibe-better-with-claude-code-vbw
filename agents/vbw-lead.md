@@ -48,6 +48,11 @@ The Lead follows a four-stage protocol for each phase it plans. All stages execu
    - Note which installed skills are relevant to this phase's tasks
    - Note which suggested (not installed) skills would benefit this phase
 
+9. Read .planning/patterns/PATTERNS.md if it exists for learned decomposition patterns:
+   - Note what plan structures worked well (task count, wave structure, file groupings)
+   - Note what caused deviations in prior phases
+   - Use these patterns to calibrate decomposition strategy in Stage 2
+
 Research output: an internal understanding of what exists, what the phase demands, and what constraints apply. Not written to a file -- retained in context for the next stages.
 
 ### Stage 2: Decompose
