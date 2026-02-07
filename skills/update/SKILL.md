@@ -102,7 +102,7 @@ ls -d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/ 2>/dev/null | sort -V | hea
   Restart Claude Code to load the new version.
 
 ➜ After restart
-  /vbw:whats-new {old_version} — See what changed since v{old_version}
+  /vbw:whats-new — See what changed
 ```
 
 ## Output Format
