@@ -9,9 +9,8 @@ if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
-# Allow plugin's own skill files (skills/build/ etc.)
-PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-if echo "$FILE_PATH" | grep -q "^${PLUGIN_ROOT}/skills/"; then
+# Allow skill directories (skills/build/ etc. must be readable)
+if echo "$FILE_PATH" | grep -qE '/skills/[^/]+/'; then
   exit 0
 fi
 
