@@ -36,16 +36,15 @@ Installed skills:
 
 ## Steps
 
-### Step 0: Agent Teams check
+### Step 0: Environment setup (settings.json)
 
-Check if Agent Teams is enabled:
-```
-!`cat ~/.claude/settings.json 2>/dev/null | jq -r '.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS // "0"' 2>/dev/null || echo "0"`
-```
+Read `~/.claude/settings.json` once (create `{}` if missing). This step handles ALL settings.json changes — Agent Teams AND statusline — before proceeding to project setup.
 
-If the result is NOT `"1"`:
+**0a. Agent Teams check:**
 
-Display:
+Check if `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is `"1"`.
+
+If NOT enabled, display:
 ```
 ⚠ Agent Teams is not enabled
 
@@ -56,14 +55,42 @@ Enable it now? This adds one line to ~/.claude/settings.json:
   "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
 ```
 
-Ask the user for permission. If they approve:
-1. Read `~/.claude/settings.json` (create `{}` if it doesn't exist)
-2. Ensure the `env` key exists as an object
-3. Set `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` to `"1"`
-4. Write the file back
-5. Display "✓ Agent Teams enabled. Restart Claude Code for it to take effect."
+Ask the user. If approved: set `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` to `"1"` and display "✓ Agent Teams enabled."
+If declined: display "○ Skipped." and continue.
 
-If they decline: display "○ Skipped. You can enable it later in ~/.claude/settings.json" and continue.
+**0b. Statusline check:**
+
+Check the `statusLine` field. It may be a string or an object with a `command` field. Handle both.
+
+Classify:
+- **HAS_VBW**: The value (string or object's `command`) contains `vbw-statusline` → skip silently
+- **HAS_OTHER**: Non-empty value that does NOT contain `vbw-statusline` → offer to replace
+- **EMPTY**: Field is missing, null, or empty → offer to install
+
+If HAS_OTHER, display:
+```
+○ A statusline is already configured but it's not VBW's.
+  VBW includes a status line showing phase progress, context usage,
+  cost, duration, and more. Replace the current statusline?
+```
+
+If EMPTY, display:
+```
+○ VBW includes a custom status line showing phase progress, context usage,
+  cost, duration, and more — updated after every response. Install it?
+```
+
+If the user approves (HAS_OTHER or EMPTY):
+- Set `statusLine` to:
+  ```json
+  {"type": "command", "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'"}
+  ```
+- The object format with `type` and `command` is **required** by the settings schema; a plain string will fail validation silently
+- Display "✓ Statusline installed. Restart Claude Code to activate."
+
+If declined: display "○ Skipped. Run /vbw:config to install it later."
+
+**0c. Write settings.json** if any changes were made (Agent Teams and/or statusline). Write all changes in a single file write.
 
 ### Step 1: Scaffold directory
 
@@ -137,46 +164,6 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md`. Write CLAUDE.md at
 
 Keep under 200 lines.
 
-### Step 5.9: Statusline setup
-
-Read `~/.claude/settings.json` and check the `statusLine` field.
-
-**Classify the current statusLine value:**
-- The `statusLine` field may be a **string** or an **object** with a `command` field. Handle both.
-- **HAS_VBW**: The value (string or object's `command` field) contains `vbw-statusline`
-- **HAS_OTHER**: A non-empty value that does NOT contain `vbw-statusline`
-- **EMPTY**: The field is missing, null, or empty
-
-**Decision tree:**
-
-1. If HAS_VBW → **Skip silently.** Already installed.
-
-2. If HAS_OTHER → **Offer to replace.** Display:
-   ```
-   ○ A statusline is already configured but it's not VBW's.
-     VBW includes a status line showing phase progress, context usage,
-     cost, duration, and more. Replace the current statusline?
-   ```
-   If approved, proceed to install (step 4 below). If declined, skip.
-
-3. If EMPTY → **Offer to install.** Display:
-   ```
-   ○ VBW includes a custom status line showing phase progress, context usage,
-     cost, duration, and more — updated after every response. Install it?
-   ```
-   If approved, proceed to install (step 4 below). If declined, display "○ Skipped. Run /vbw:config to install it later."
-
-4. **Install procedure** (used by cases 2 and 3):
-   - Read `~/.claude/settings.json` (create `{}` if missing)
-   - Set `statusLine` to:
-     ```json
-     {"type": "command", "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'"}
-     ```
-   - The object format with `type` and `command` is **required** by the settings schema; a plain string will fail validation
-   - The command uses a glob to find the script inside the plugin cache — when VBW is uninstalled, the cache is removed and the statusline disappears automatically. No files are copied outside the plugin cache.
-   - Write the file back
-   - Display "✓ Statusline installed. Restart Claude Code to activate."
-
 ### Step 6: Present summary
 
 ```
@@ -192,8 +179,8 @@ Read `~/.claude/settings.json` and check the `statusLine` field.
   ✓ .vbw-planning/config.json
   ✓ .vbw-planning/phases/
   ✓ CLAUDE.md
-  {include next line only if statusline was installed or restored during this init}
-  ✓ ~/.claude/vbw-statusline.sh
+  {include next line only if statusline was installed during Step 0b}
+  ✓ Statusline (restart to activate)
 
   {include Skills block only if skills were discovered in Step 5.7}
   Skills:
