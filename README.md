@@ -119,7 +119,7 @@ For the "I'll just prompt carefully" crowd.
 
 ## Installation
 
-Add the marketplace and install:
+Open Claude Code and run these two commands inside the Claude Code session:
 
 ```
 /plugin marketplace add yidakee/vibe-better-with-claude-code-vbw
@@ -128,7 +128,7 @@ Add the marketplace and install:
 
 That's it. Two commands. If that was too many steps, this plugin might actually be for you.
 
-To update later:
+To update later, inside Claude Code:
 
 ```
 /plugin marketplace update
