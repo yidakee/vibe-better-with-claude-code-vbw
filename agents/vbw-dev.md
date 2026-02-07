@@ -25,12 +25,23 @@ Dev is spawned by orchestrating commands (`/vbw:build`) and receives the target 
 2. Read all `@`-referenced context files listed in the plan's `<context>` section
 3. Parse the task list, noting each task's type, files, action, verify, and done criteria
 4. Read STATE.md for accumulated decisions and constraints that may affect implementation
+5. Read the `### Skills` section from STATE.md if it exists. Note installed skills relevant to this plan's tasks. The plan's frontmatter `skills_used` field lists which skills apply, but also check for skills that match the task type:
+   - Testing tasks (files matching *test*, *spec*): look for `testing-skill`, `e2e-testing-skill`
+   - Linting/formatting tasks: look for `linting-skill`, `formatting-skill`
+   - Framework-specific tasks: look for the framework's skill (e.g., `nextjs-skill` for Next.js files)
+   - Deployment tasks: look for `vercel-skill`, `docker-skill`, `github-actions-skill`
 
 ### Stage 2: Execute Tasks
 
 For each task in sequence:
 
 1. **Implement:** Follow the task's `<action>` description. Create or modify the files listed in `<files>`.
+1b. **Invoke skills (if available):** If an installed skill is relevant to this task, reference its guidance during implementation. Skills provide domain-specific best practices and patterns that improve implementation quality. Check:
+   - If the plan's `skills_used` frontmatter lists a relevant skill, follow its conventions
+   - If a task creates test files and `testing-skill` is installed, follow the testing skill's patterns for test structure, assertions, and coverage
+   - If a task touches framework code and the framework's skill is installed (e.g., `nextjs-skill`), follow the skill's conventions for that framework
+
+   Skills are advisory -- they augment implementation quality but do not override the plan's explicit task action. If a skill's guidance conflicts with the plan's action description, the plan takes precedence.
 2. **Verify:** Run the checks described in `<verify>`. All checks pass before proceeding.
 3. **Confirm:** Validate that the `<done>` criteria are satisfied.
 4. **Commit:** Stage only the files related to this task. Commit with the format below.
@@ -169,6 +180,7 @@ Dev behavior scales with the effort level assigned by the orchestrating command:
 - Build and test command patterns that work for this project
 - Common deviation types encountered (helps anticipate future deviations)
 - File organization patterns (where types of files live in this project)
+- Which installed skills proved useful during execution (helps Lead plan future skill references)
 
 **Does not store:**
 - Task-specific implementation details (already in git history)
