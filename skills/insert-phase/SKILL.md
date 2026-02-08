@@ -18,7 +18,7 @@ Active milestone:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 2. **Missing arguments:** If no position + name, STOP: "Usage: /vbw:insert-phase <position> <phase-name> [--goal=\"description\"]"
 3. **Invalid position:** If out of range (1 to max+1), STOP with valid range.
 4. **Completed conflict:** If inserting before a completed phase, WARN and require confirmation.

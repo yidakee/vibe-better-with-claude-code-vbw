@@ -16,7 +16,7 @@ Current configuration:
 
 ## Guard
 
-If .vbw-planning/config.json doesn't exist, STOP: "No VBW configuration found. Run /vbw:init first."
+Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md` (check for `.vbw-planning/config.json` specifically).
 
 ## Behavior
 

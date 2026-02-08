@@ -42,6 +42,8 @@ Populate the <context> section with planning rationale -- why this decomposition
 
 After writing all plans, review against: requirements coverage, no circular deps, no same-wave file conflicts, union of success criteria achieves phase goals, feasibility (3-5 tasks per plan), context references present, concern alignment, skill integration, must_haves testability (each truth references a specific file path, command output, or grep-able string -- not a subjective judgment). Fix issues inline.
 
+When invoked as a standalone review pass, read all PLAN.md files from the phase directory and apply this checklist. No research stage needed -- skip Stage 1 and Stage 2, begin directly at this stage.
+
 ### Stage 4: Output
 
 Confirm all PLAN.md files written to disk. Report structure:

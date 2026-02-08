@@ -24,7 +24,7 @@ Git status:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 2. **No milestones or roadmap:** If neither ACTIVE nor ROADMAP.md exists, STOP: "No milestones configured. Run /vbw:new or /vbw:milestone first."
 3. **Audit not passed:** If `--force` not present, run audit checks (same as /vbw:audit). If FAIL, STOP: "Audit failed. Run /vbw:audit for details, or --force to ship anyway."
 4. **No completed work:** If no SUMMARY.md files exist, STOP: "Nothing to ship."

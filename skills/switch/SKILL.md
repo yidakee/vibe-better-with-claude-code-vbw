@@ -24,7 +24,7 @@ Available milestones:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 2. **No milestones:** If ACTIVE doesn't exist, STOP: "No milestones configured. Use /vbw:milestone <name>."
 3. **Missing name:** If $ARGUMENTS empty, list milestones (◆ active, ○ others) and STOP.
 4. **Invalid milestone:** If .vbw-planning/{slug}/ doesn't exist, STOP with available list.

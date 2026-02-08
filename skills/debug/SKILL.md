@@ -23,7 +23,7 @@ Recent commits:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 2. **Missing bug description:** If $ARGUMENTS is empty, STOP: "Usage: /vbw:debug \"description of the bug or error message\""
 
 ## Steps
@@ -77,7 +77,7 @@ This step has two paths based on effort level and ambiguity classification.
 
 7. If a winning hypothesis has a recommended fix: apply the fix (or spawn one more debugger to apply it), commit with `fix({scope}): {description}`.
 
-8. Send shutdown requests to all teammates, wait for approval, then TeamDelete.
+8. Follow the Agent Teams Shutdown Protocol in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 
 **Path B: Standard Investigation (all other effort levels, or DEBUGGER_EFFORT=high + non-ambiguous)**
 

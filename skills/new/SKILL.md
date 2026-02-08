@@ -39,7 +39,7 @@ Codebase index (if mapped):
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ directory doesn't exist, STOP: "Run /vbw:init first to set up your environment."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 2. **Already defined:** If .vbw-planning/PROJECT.md exists AND does NOT contain the template placeholder `{project-description}`, the project has already been defined. STOP: "Project already defined. Use /vbw:plan to plan your next phase, or pass --re-scope to redefine from scratch."
 3. **Re-scope mode:** If $ARGUMENTS contains `--re-scope`, skip guard 2 and proceed (allows redefining an existing project).
 4. **Brownfield detection:** If project files AND source files (*.ts, *.js, *.py, *.go, *.rs, *.java, *.rb) exist, set BROWNFIELD=true.

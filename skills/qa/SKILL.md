@@ -28,7 +28,7 @@ Phase directories:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 
 2. **Auto-detect phase (if no explicit phase number):** If `$ARGUMENTS` does not contain an integer phase number (flags like `--tier` are still allowed):
    1. Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md`

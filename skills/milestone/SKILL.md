@@ -29,7 +29,7 @@ Config:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 2. **Missing name:** If $ARGUMENTS has no milestone name, STOP: "Usage: /vbw:milestone <milestone-name> [--branch]"
 3. **Already exists:** If .vbw-planning/{slug}/ exists, STOP: "Milestone '{name}' already exists. Use /vbw:switch {name}."
 4. **Migration needed:** If no ACTIVE file but ROADMAP.md exists at root (single-milestone with work), migrate to "default" milestone first.

@@ -33,7 +33,7 @@ Git HEAD:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 2. **No git repo:** If not a git repo, WARN: "Not a git repo -- incremental mapping disabled." Continue in full mode.
 3. **Empty project:** If no source files detected, STOP: "No source code found to map."
 
@@ -132,14 +132,9 @@ After all teammates complete, read all 7 mapping documents and produce:
 
 **Shutdown and cleanup:**
 
-After all Scout teammates have completed their tasks:
+After all Scout teammates have completed their tasks, follow the Agent Teams Shutdown Protocol in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 
-1. Send a shutdown request to each teammate.
-2. Wait for each teammate to respond with shutdown approval.
-3. If a teammate rejects shutdown (still finishing work), wait for it to complete and re-request.
-4. Once ALL teammates have shut down, run TeamDelete to clean up the team and its shared task list.
-
-This prevents orphaned teammates and dangling task lists. Do not proceed to META.md creation until TeamDelete has succeeded.
+Do not proceed to META.md creation until TeamDelete has succeeded.
 
 Write META.md with: mapped_at timestamp, git_hash, file_count, document list, mode, monorepo flag.
 

@@ -29,7 +29,7 @@ Phase directories:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 
 2. **Auto-detect phase (if omitted):** If `$ARGUMENTS` does not contain an integer phase number (flags like `--effort` are still allowed):
    1. Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md` and follow the **Resolve Phases Directory** section to determine the correct phases path.
@@ -219,14 +219,9 @@ Persist results to `{phase-dir}/{phase}-VERIFICATION.md`.
 
 **Shutdown and cleanup (all effort levels except Turbo):**
 
-After all teammates have completed their tasks (or after all waves have finished):
+After all teammates have completed their tasks (or after all waves have finished), follow the Agent Teams Shutdown Protocol in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 
-1. Send a shutdown request to each teammate.
-2. Wait for each teammate to respond with shutdown approval.
-3. If a teammate rejects shutdown (still finishing work), wait for it to complete and re-request.
-4. Once ALL teammates have shut down, run TeamDelete to clean up the team and its shared task list.
-
-This prevents orphaned teammates and dangling task lists. Do not proceed to state updates until TeamDelete has succeeded.
+Do not proceed to state updates until TeamDelete has succeeded.
 
 **Mark execution complete:** Update `.vbw-planning/.execution-state.json` — set `"status"` to `"complete"`. The statusline will auto-delete the file on next refresh, returning to normal display.
 

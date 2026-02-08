@@ -19,7 +19,7 @@ Active milestone:
 
 ## Guard
 
-1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
 2. **Missing phase number:** STOP: "Usage: /vbw:remove-phase <phase-number>"
 3. **Phase not found:** STOP: "Phase {N} not found in roadmap."
 4. **Phase has work:** If PLAN.md or SUMMARY.md exist in phase dir, STOP: "Phase {N} has artifacts. Remove plans first."

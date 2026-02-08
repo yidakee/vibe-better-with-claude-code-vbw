@@ -31,6 +31,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/state-updater.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -108,6 +118,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/map-staleness.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreCompact": [
@@ -117,6 +136,50 @@
             "type": "command",
             "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/compaction-instructions.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'",
             "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/post-compact.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/session-stop.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/prompt-preflight.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "NotificationReceived": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/notification-log.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'",
+            "timeout": 3
           }
         ]
       }
