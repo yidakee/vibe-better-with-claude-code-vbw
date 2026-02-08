@@ -21,6 +21,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/skill-hook-dispatch.sh; do [ -f \"$f\" ] && exec bash \"$f\" PostToolUse; done'",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -41,6 +51,16 @@
             "type": "command",
             "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/security-filter.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'",
             "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/skill-hook-dispatch.sh; do [ -f \"$f\" ] && exec bash \"$f\" PreToolUse; done'",
+            "timeout": 10
           }
         ]
       }
