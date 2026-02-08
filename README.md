@@ -206,92 +206,96 @@ This is how most vibe coders run it. The agents work longer, the flow stays unbr
 VBW operates on a simple loop that will feel familiar to anyone who's ever shipped software. Or read about it on Reddit.
 
 ```
-                    ┌─────────────────────────────┐
-                    │  YOU HAVE AN IDEA           │
-                    │  (dangerous, but continue)  │
-                    └──────────────┬──────────────┘
-                                   │
-                    ┌──────────────┴──────────────┐
-                    │ Greenfield?   │  Brownfield? │
-                    └──────┬───────┴──────┬───────┘
-                           │              │
-              ┌────────────┘              └────────────┐
-              │                                        │
-              ▼                                        ▼
-┌───────────────────────┐               ┌───────────────────────┐
-│  /vbw:init            │               │  /vbw:init            │
-│  Environment setup    │               │  Environment setup    │
-│  Scaffold + skills    │               │  Scaffold + skills    │
-└──────────┬────────────┘               │                       │
-           │                            │  ⚠ Codebase detected  │
-           │                            │  Auto-chains:         │
-           ▼                            │    → /vbw:map         │
-┌───────────────────────┐               │    → /vbw:new         │
-│  /vbw:new             │               └──────────┬────────────┘
-│  Define project       │                          │
-│  Requirements,        │                          │
-│  roadmap, CLAUDE.md   │                          │
-└──────────┬────────────┘                          │
-           │                                       │
-           └───────────────────┬───────────────────┘
-                               │
-                               │ Project defined
-                               │
-              ┌────────────────┴────────────────┐
-              │                                 │
-              ▼                                 ▼
-┌──────────────────────┐         ┌──────────────────────────────┐
-│ /vbw:discuss         │         │ /vbw:implement [phase]       │
-│ Gather context       │────────▶│ Plan + execute in one step   │
-│ before planning      │         │ Auto-detects what the        │
-│ (optional)           │         │ phase needs                  │
-└──────────────────────┘         └──────────────┬───────────────┘
-                                                │
-              ┌─────────────────────────────────┘
-              │
-              │ Or separately:
-              │
-              ▼
-┌──────────────────────────────┐
-│  /vbw:plan [phase]           │
-│  Lead agent: researches,     │
-│  decomposes, self-reviews    │
-│  Outputs: PLAN.md per wave   │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│  /vbw:execute [phase]        │
-│  Agent Team: Dev teammates   │
-│  Per-plan dependency wiring  │
-│  Hooks verify continuously   │
-│  Outputs: SUMMARY.md         │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│  /vbw:qa [phase]             │
-│  Three-tier verification     │
-│  Goal-backward methodology   │
-│  Outputs: VERIFICATION.md    │
-└──────────────┬───────────────┘
-               │
-      ┌────────┴────────┐
-      │  More phases?   │
-      └────────┬────────┘
-     yes │          │ no
-         │          │
-┌────────┘          └────────┐
-│                            │
-▼                            ▼
-┌──────────────────┐  ┌──────────────────┐
-│ Loop back to     │  │ /vbw:ship        │
-│ /vbw:implement   │  │ Audits milestone │
-│ for next phase   │  │ Archives state   │
-└──────────────────┘  │ Tags the release │
-                      │ You actually     │
-                      │ shipped something│
-                      └──────────────────┘
+                        ┌─────────────────────────────┐
+                        │  YOU HAVE AN IDEA           │
+                        │  (dangerous, but continue)  │
+                        └──────────────┬──────────────┘
+                                       │
+                        ┌──────────────┴──────────────┐
+                        │ Greenfield?   │  Brownfield? │
+                        └──────┬───────┴──────┬───────┘
+                               │              │
+                  ┌────────────┘              └────────────┐
+                  │                                        │
+                  ▼                                        ▼
+     ┌───────────────────────┐               ┌───────────────────────┐
+     │  /vbw:init            │               │  /vbw:init            │
+     │  Environment setup    │               │  Environment setup    │
+     │  Scaffold + skills    │               │  Scaffold + skills    │
+     └──────────┬────────────┘               │                       │
+                │                            │  ⚠ Codebase detected  │
+                │                            │  Auto-chains:         │
+                ▼                            │    → /vbw:map         │
+     ┌───────────────────────┐               │    → /vbw:new         │
+     │  /vbw:new             │               └──────────┬────────────┘
+     │  Define project       │                          │
+     │  Requirements,        │                          │
+     │  roadmap, CLAUDE.md   │                          │
+     └──────────┬────────────┘                          │
+                │                                       │
+                └───────────────────┬───────────────────┘
+                                    │
+                                    │ Project defined
+                                    │
+                   ┌────────────────┴────────────────┐
+                   │                                 │
+                   ▼                                 ▼
+      ┌──────────────────────┐      ┌──────────────────────────────┐
+      │ /vbw:discuss         │      │ /vbw:implement [phase]       │
+      │ Gather context       │─────▶│ Plan + execute in one step   │
+      │ before planning      │      │ Auto-detects what the        │
+      │ (optional)           │      │ phase needs                  │
+      └──────────────────────┘      └──────────────┬───────────────┘
+                                                   │
+                                    ┌──────────────┘
+                                    │
+                                    │  Or separately:
+                                    │
+                   ┌────────────────┴────────────────┐
+                   │                                 │
+                   ▼                                 │
+      ┌──────────────────────────────┐               │
+      │  /vbw:plan [phase]           │               │
+      │  Lead agent: researches,     │               │
+      │  decomposes, self-reviews    │               │
+      │  Outputs: PLAN.md per wave   │               │
+      └──────────────┬───────────────┘               │
+                     │                               │
+                     ▼                               │
+      ┌──────────────────────────────┐               │
+      │  /vbw:execute [phase]        │               │
+      │  Agent Team: Dev teammates   │               │
+      │  Per-plan dependency wiring  │               │
+      │  Hooks verify continuously   │               │
+      │  Outputs: SUMMARY.md         │               │
+      └──────────────┬───────────────┘               │
+                     │                               │
+                     └───────────────┬───────────────┘
+                                     │
+                                     ▼
+                      ┌──────────────────────────────┐
+                      │  /vbw:qa [phase]             │
+                      │  Three-tier verification     │
+                      │  Goal-backward methodology   │
+                      │  Outputs: VERIFICATION.md    │
+                      └──────────────┬───────────────┘
+                                     │
+                            ┌────────┴────────┐
+                            │  More phases?   │
+                            └────────┬────────┘
+                           yes │          │ no
+                               │          │
+                      ┌────────┘          └────────┐
+                      │                            │
+                      ▼                            ▼
+           ┌──────────────────┐        ┌──────────────────┐
+           │ Loop back to     │        │ /vbw:ship        │
+           │ /vbw:implement   │        │ Audits milestone │
+           │ for next phase   │        │ Archives state   │
+           └──────────────────┘        │ Tags the release │
+                                       │ You actually     │
+                                       │ shipped something│
+                                       └──────────────────┘
 ```
 
 <br>
