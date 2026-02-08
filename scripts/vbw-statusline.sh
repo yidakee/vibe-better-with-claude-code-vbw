@@ -19,7 +19,7 @@ _VER=$(cat "$(dirname "$0")/../VERSION" 2>/dev/null | tr -d '[:space:]')
 _CACHE="/tmp/vbw-${_VER:-0}-${_UID}"
 
 # Clean stale caches from previous versions on first run
-if ! [ -f "${_CACHE}-ok" ]; then
+if ! [ -f "${_CACHE}-ok" ] || ! [ -O "${_CACHE}-ok" ]; then
   rm -f /tmp/vbw-*-"${_UID}"-* /tmp/vbw-sl-cache-"${_UID}" /tmp/vbw-usage-cache-"${_UID}" /tmp/vbw-gh-cache-"${_UID}" /tmp/vbw-team-cache-"${_UID}" 2>/dev/null
   touch "${_CACHE}-ok"
 fi
@@ -30,6 +30,8 @@ fi
 cache_fresh() {
   local cf="$1" ttl="$2"
   [ ! -f "$cf" ] && return 1
+  # Ownership check: only trust cache files we own
+  [ ! -O "$cf" ] && rm -f "$cf" 2>/dev/null && return 1
   local mt
   if [ "$_OS" = "Darwin" ]; then
     mt=$(stat -f %m "$cf" 2>/dev/null || echo 0)
@@ -158,7 +160,7 @@ if ! cache_fresh "$VBW_CF" 5; then
   printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${BR}|${PD}|${PT}|${PPD}|${QA}|${GH_URL}|${GIT_STAGED:-0}|${GIT_MODIFIED:-0}" > "$VBW_CF"
 fi
 
-IFS='|' read -r PH TT EF BR PD PT PPD QA GH_URL GIT_STAGED GIT_MODIFIED < "$VBW_CF"
+[ -O "$VBW_CF" ] && IFS='|' read -r PH TT EF BR PD PT PPD QA GH_URL GIT_STAGED GIT_MODIFIED < "$VBW_CF"
 
 # --- Execution progress (cached 2s) ---
 
@@ -178,7 +180,7 @@ if [ -f ".vbw-planning/.execution-state.json" ]; then
       ] | join("|")' .vbw-planning/.execution-state.json 2>/dev/null)"
     printf '%s\n' "${_ES:-}|${_EW:-0}|${_ETW:-0}|${_ED:-0}|${_ET:-0}|${_EC:-}" > "$EXEC_CF"
   fi
-  IFS='|' read -r EXEC_STATUS EXEC_WAVE EXEC_TWAVES EXEC_DONE EXEC_TOTAL EXEC_CURRENT < "$EXEC_CF"
+  [ -O "$EXEC_CF" ] && IFS='|' read -r EXEC_STATUS EXEC_WAVE EXEC_TWAVES EXEC_DONE EXEC_TOTAL EXEC_CURRENT < "$EXEC_CF"
 fi
 
 # --- Usage limits (cached 60s) ---
@@ -236,7 +238,8 @@ if ! cache_fresh "$USAGE_CF" 60; then
   fi
 fi
 
-USAGE_DATA=$(cat "$USAGE_CF" 2>/dev/null)
+USAGE_DATA=""
+[ -O "$USAGE_CF" ] && USAGE_DATA=$(cat "$USAGE_CF" 2>/dev/null)
 
 if [ "$USAGE_DATA" != "noauth" ]; then
   IFS='|' read -r FIVE_PCT FIVE_EPOCH WEEK_PCT WEEK_EPOCH SONNET_PCT EXTRA_ENABLED EXTRA_PCT EXTRA_USED_C EXTRA_LIMIT_C FETCH_OK <<< "$USAGE_DATA"
@@ -321,7 +324,8 @@ if ! cache_fresh "$AGENT_CF" 10; then
   printf '%s\n' "$AGENT_DATA" > "$AGENT_CF"
 fi
 
-AGENT_LINE=$(cat "$AGENT_CF" 2>/dev/null)
+AGENT_LINE=""
+[ -O "$AGENT_CF" ] && AGENT_LINE=$(cat "$AGENT_CF" 2>/dev/null)
 
 # --- Context bar (20 chars wide) ---
 
