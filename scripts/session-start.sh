@@ -58,6 +58,24 @@ if [ -d "$CACHE_DIR" ]; then
   fi
 fi
 
+# --- Cache integrity check (nuke if critical files missing) ---
+if [ -d "$CACHE_DIR" ]; then
+  LATEST_CACHE=$(ls -d "$CACHE_DIR"/*/ 2>/dev/null | sort -V | tail -1)
+  if [ -n "$LATEST_CACHE" ]; then
+    INTEGRITY_OK=true
+    for f in commands/init.md .claude-plugin/plugin.json VERSION config/defaults.json; do
+      if [ ! -f "$LATEST_CACHE$f" ]; then
+        INTEGRITY_OK=false
+        break
+      fi
+    done
+    if [ "$INTEGRITY_OK" = false ]; then
+      echo "VBW cache integrity check failed — nuking stale cache" >&2
+      rm -rf "$CACHE_DIR"
+    fi
+  fi
+fi
+
 # --- Auto-sync stale marketplace checkout ---
 # The marketplace is a git clone that can fall behind the cached plugin.
 # If stale, pull it silently so the next /vbw:update works correctly.
@@ -68,6 +86,19 @@ if [ -d "$MKT_DIR/.git" ] && [ -d "$CACHE_DIR" ]; then
   if [ "$MKT_VER" != "$CACHE_VER" ] && [ -n "$CACHE_VER" ] && [ "$CACHE_VER" != "0" ]; then
     (cd "$MKT_DIR" && git fetch origin --quiet 2>/dev/null && git reset --hard origin/main --quiet 2>/dev/null) &
   fi
+  # Content staleness: compare command counts between marketplace and cache
+  # Only compare commands/ dir (both locations have the same structure for this dir)
+  if [ -d "$MKT_DIR/commands" ] && [ -d "$CACHE_DIR" ]; then
+    LATEST_VER=$(ls -d "$CACHE_DIR"/*/ 2>/dev/null | sort -V | tail -1)
+    if [ -n "$LATEST_VER" ] && [ -d "${LATEST_VER}commands" ]; then
+      MKT_CMD_COUNT=$(ls "$MKT_DIR/commands/"*.md 2>/dev/null | wc -l | tr -d ' ')
+      CACHE_CMD_COUNT=$(ls "${LATEST_VER}commands/"*.md 2>/dev/null | wc -l | tr -d ' ')
+      if [ "${MKT_CMD_COUNT:-0}" -ne "${CACHE_CMD_COUNT:-0}" ]; then
+        echo "VBW cache stale — marketplace has ${MKT_CMD_COUNT} commands, cache has ${CACHE_CMD_COUNT}" >&2
+        rm -rf "$CACHE_DIR"
+      fi
+    fi
+  fi
 fi
 
 # --- Sync commands to ~/.claude/commands/vbw/ for /vbw:* autocomplete prefix ---
@@ -77,13 +108,9 @@ fi
 VBW_CACHE_CMD=$(ls -d "$HOME"/.claude/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
 VBW_GLOBAL_CMD="$HOME/.claude/commands/vbw"
 if [ -d "$VBW_CACHE_CMD" ]; then
-  SRC_COUNT=$(ls "$VBW_CACHE_CMD"/*.md 2>/dev/null | wc -l | tr -d ' ')
-  DEST_COUNT=$(ls "$VBW_GLOBAL_CMD"/*.md 2>/dev/null | wc -l | tr -d ' ')
-  if [ ! -d "$VBW_GLOBAL_CMD" ] || [ "${SRC_COUNT:-0}" -ne "${DEST_COUNT:-0}" ]; then
-    mkdir -p "$VBW_GLOBAL_CMD"
-    rm -f "$VBW_GLOBAL_CMD"/*.md 2>/dev/null
-    cp "$VBW_CACHE_CMD"/*.md "$VBW_GLOBAL_CMD/" 2>/dev/null
-  fi
+  mkdir -p "$VBW_GLOBAL_CMD"
+  rm -f "$VBW_GLOBAL_CMD"/*.md 2>/dev/null
+  cp "$VBW_CACHE_CMD"/*.md "$VBW_GLOBAL_CMD/" 2>/dev/null
 fi
 
 # --- Project state ---

@@ -2,6 +2,15 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.53] - 2026-02-08
+
+### Fixed
+
+- **Nuclear cache wipe during updates** — /vbw:update now completely wipes ALL cached versions before installing the new one, preventing stale file contamination. Previously, the cache directory could retain old files if the version number matched.
+- **Cache integrity verification on session start** — session-start.sh now verifies critical files exist in the cache and nukes it if any are missing. This catches scenarios where files were added in a new version but the cache was already populated.
+- **Always-sync global commands** — Global commands at ~/.claude/commands/vbw/ are now unconditionally synced from cache on every session start, not just when file counts differ. This prevents content-level staleness.
+- **New scripts/cache-nuke.sh utility** — Standalone cache wipe script that removes plugin cache, global commands, and temp files. Used by /vbw:update and available for manual recovery.
+
 ## [1.0.52] - 2026-02-08
 
 ### Added

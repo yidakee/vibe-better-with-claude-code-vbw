@@ -44,7 +44,18 @@ If `remote_version` equals `old_version`, STOP with:
 ✓ VBW is already up to date (v{old_version}).
 ```
 
-### Step 4: Perform update
+### Step 4: Nuclear cache wipe
+
+Display: "Wiping all cached versions to prevent contamination..."
+
+Run the cache-nuke script to completely wipe all VBW caches before the update:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/cache-nuke.sh
+```
+
+This removes `~/.claude/plugins/cache/vbw-marketplace/vbw/`, `~/.claude/commands/vbw/`, and `/tmp/vbw-*` temp files to ensure the subsequent plugin update creates a completely fresh cache with no stale remnants.
+
+### Step 5: Perform update
 
 Display: "Updating VBW v{old_version} -> v{remote_version}..."
 
@@ -61,13 +72,13 @@ Then try each approach in order. Stop at the first one that succeeds:
 ```bash
 claude plugin update vbw@vbw-marketplace 2>&1
 ```
-If this succeeds (exit 0), go to Step 5.
+If this succeeds (exit 0), continue below to re-sync global commands, then go to Step 6.
 
 **Approach B — Uninstall and reinstall:**
 ```bash
 claude plugin uninstall vbw@vbw-marketplace 2>&1 && claude plugin install vbw@vbw-marketplace 2>&1
 ```
-If this succeeds, go to Step 5.
+If this succeeds, continue below to re-sync global commands, then go to Step 6.
 
 **Approach C — Manual fallback:**
 If both Bash approaches fail, display the commands for the user to run manually after exiting this session:
@@ -82,23 +93,29 @@ If both Bash approaches fail, display the commands for the user to run manually 
 ```
 STOP here.
 
-### Step 5: Clean old cache versions
-
-Remove all old cached versions except the latest. This prevents stale caches from being used:
+**Re-sync global commands** (after Approach A or B succeeds):
 ```bash
-ls -d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/ 2>/dev/null | sort -V | head -n -1 | while IFS= read -r d; do rm -rf "$d"; done
-```
-
-Verify cleanup succeeded:
-```bash
-REMAINING=$(ls -1d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/ 2>/dev/null | wc -l | tr -d ' ')
-if [ "${REMAINING:-0}" -gt 1 ]; then
-  echo "WARNING: ${REMAINING} cached versions remain — attempting forced cleanup"
-  ls -d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/ 2>/dev/null | sort -V | head -n -1 | xargs rm -rf
+VBW_CACHE_CMD=$(ls -d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
+if [ -d "$VBW_CACHE_CMD" ]; then
+  mkdir -p ~/.claude/commands/vbw
+  cp "$VBW_CACHE_CMD"/*.md ~/.claude/commands/vbw/ 2>/dev/null
 fi
 ```
 
-### Step 6: Display result
+### Step 6: Verify update
+
+Read the newly cached VERSION to confirm the update landed correctly:
+```bash
+NEW_CACHED=$(cat ~/.claude/plugins/cache/vbw-marketplace/vbw/*/VERSION 2>/dev/null | sort -V | tail -1)
+```
+
+If `NEW_CACHED` does not equal `remote_version`, display:
+```
+⚠ Version mismatch: expected v{remote_version} but cache contains v{NEW_CACHED}.
+  The update may not have applied correctly. Try running /vbw:update again after restarting Claude Code.
+```
+
+### Step 7: Display result
 
 **IMPORTANT:** Do NOT re-read `${CLAUDE_PLUGIN_ROOT}/VERSION` — it still points to the old version for this session. Use `remote_version` from Step 3 instead.
 
