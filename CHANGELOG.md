@@ -2,6 +2,13 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.46] - 2026-02-08
+
+### Fixed
+
+- Existing users' `statusLine` in `~/.claude/settings.json` not updating after plugin update — users who installed with the old `for f in` glob pattern were stuck on the oldest cached version forever
+- `session-start.sh` now auto-migrates the statusLine command to the correct `sort -V | tail -1` pattern on every session start (idempotent, no-op if already correct)
+
 ## [1.0.45] - 2026-02-08
 
 ### Fixed
