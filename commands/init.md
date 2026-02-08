@@ -108,51 +108,37 @@ Create `.vbw-planning/phases/` directory.
 
 Ensure config.json includes `"agent_teams": true`.
 
-### Step 2: Brownfield detection and codebase mapping
+### Step 2: Brownfield detection + parallel discovery
 
-**2a. Brownfield detection:**
+**2a. Brownfield detection (quick):**
 
 If BROWNFIELD=true:
 1. Count source files by extension (Glob)
 2. Check for test files, CI/CD, Docker, monorepo indicators
 3. Add Codebase Profile section to STATE.md
 
-**2b. Codebase mapping (brownfield only):**
+**2b. Parallel launch — run ALL of the following concurrently (use parallel tool calls):**
 
-If BROWNFIELD=true, immediately launch `/vbw:map` by following `@${CLAUDE_PLUGIN_ROOT}/commands/map.md`.
+Launch these tasks in the SAME message so they execute in parallel:
 
-This produces `.vbw-planning/codebase/` with STACK.md, DEPENDENCIES.md, ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, CONCERNS.md, INDEX.md, and PATTERNS.md — giving a deep understanding of the existing codebase before skill discovery.
+| Track | What | How |
+|-------|------|-----|
+| **Map** (brownfield only) | Codebase mapping | Launch `/vbw:map` by following `@${CLAUDE_PLUGIN_ROOT}/commands/map.md`. Runs as a background operation with Scout teammates. |
+| **Detect** | Stack detection | Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-stack.sh "$(pwd)"` |
 
-Display:
-```
-  ✓ Codebase mapped ({file-count} source files)
-```
+If greenfield (BROWNFIELD=false), skip the Map track — only run Detect.
 
-Wait for map to complete before proceeding to Step 3.
+**2c. Process detect-stack.sh results (immediately after Detect completes):**
 
-### Step 3: Skill discovery
+The Detect track returns JSON with: `detected_stack[]`, `installed.global[]`, `installed.project[]`, `recommended_skills[]`, `suggestions[]`, `find_skills_available`.
 
-Skill discovery now runs AFTER codebase mapping (for brownfield projects), so `detect-stack.sh` results are supplemented by the deep analysis in `.vbw-planning/codebase/STACK.md`.
+Display the detected stack and installed skills.
 
-**3a. Run detect-stack.sh** to get stack detection, installed skills, and suggestions in one call:
+Display curated suggestions from `suggestions[]`. For each suggestion, show the install command: `npx skills add <skill-name> -g -y`.
 
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-stack.sh "$(pwd)"
-```
+**2d. find-skills bootstrap** — check `find_skills_available` from the JSON result:
 
-This returns JSON with: `detected_stack[]`, `installed.global[]`, `installed.project[]`, `recommended_skills[]`, `suggestions[]`, `find_skills_available`.
-
-Display the detected stack from `detected_stack[]` and installed skills from `installed.global[]` and `installed.project[]`.
-
-**3a+. Augment with map data (brownfield only):**
-
-If BROWNFIELD=true and `.vbw-planning/codebase/STACK.md` exists, read it to extract additional stack components that `detect-stack.sh` may have missed (e.g., frameworks detected through code analysis rather than manifest files). Merge these into `detected_stack[]` for use in dynamic registry search (3d).
-
-**3b. Display curated suggestions** from `suggestions[]` in the JSON result. For each suggestion, show the install command: `npx skills add <skill-name> -g -y`.
-
-**3c. find-skills bootstrap** — check `find_skills_available` from the JSON result:
-
-- If `true`: display "✓ Skills.sh registry — available" and proceed to 3d.
+- If `true`: display "✓ Skills.sh registry — available" and proceed to Step 3.
 - If `false`: ask the user with AskUserQuestion:
 ```
 ○ Skills.sh Registry
@@ -166,15 +152,28 @@ Options: "Install (Recommended)" / "Skip"
 If approved: run `npx skills add vercel-labs/skills --skill find-skills -g -y` and display the result.
 If declined: display "○ Skipped. Run /vbw:skills later to search the registry."
 
-**3d. Dynamic registry search** — if find-skills is available (either was already installed or just installed in 3c):
+### Step 3: Convergence — augment and search
 
-- If `detected_stack[]` is non-empty (including any augmented items from 3a+): for each detected stack item, run `npx skills find "<stack-item>"` and collect results. Deduplicate against already-installed skills.
+This step waits for codebase mapping to finish (if brownfield) before proceeding.
+
+**3a. Augment with map data (brownfield only):**
+
+If BROWNFIELD=true and `.vbw-planning/codebase/STACK.md` exists, read it to extract additional stack components that `detect-stack.sh` may have missed (e.g., frameworks detected through code analysis rather than manifest files). Merge these into `detected_stack[]`.
+
+Display:
+```
+  ✓ Codebase mapped ({file-count} source files)
+```
+
+**3b. Parallel registry search** — if find-skills is available (either was already installed or just installed in 2d):
+
+- If `detected_stack[]` is non-empty (including any augmented items from 3a): run `npx skills find "<stack-item>"` for ALL detected stack items **in parallel** (use multiple concurrent Bash tool calls in the SAME message). Collect and deduplicate results against already-installed skills.
 - If `detected_stack[]` is empty: run a general search based on the project type (e.g., if there are .sh files, search "shell scripting"; if .md files dominate, search "documentation").
 - Display registry results with `(registry)` attribution.
 
-**3e. Offer to install** — if there are any suggestions (curated from 3b + registry from 3d combined), ask the user with AskUserQuestion using multiSelect which ones to install. Max 4 options. Include "Skip" as an option. For selected skills, run `npx skills add <skill> -g -y`.
+**3c. Offer to install** — if there are any suggestions (curated from 2c + registry from 3b combined), ask the user with AskUserQuestion using multiSelect which ones to install. Max 4 options. Include "Skip" as an option. For selected skills, run `npx skills add <skill> -g -y`.
 
-**3f. Write Skills section to STATE.md** — using the format from `${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md` (SKIL-05).
+**3d. Write Skills section to STATE.md** — using the format from `${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md` (SKIL-05).
 
 ### Step 4: Present summary
 
