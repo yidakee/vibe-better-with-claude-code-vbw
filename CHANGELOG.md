@@ -2,6 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.45] - 2026-02-08
+
+### Fixed
+
+- All 17 hook commands and statusline resolved the **oldest** cached version instead of the latest — glob `for f in ...` expands alphabetically (`1.0.27` < `1.0.44`), so hooks always ran stale code after updates
+- Same stale-version bug in `skill-hook-dispatch.sh` internal glob loop, `/vbw:plan` map-staleness inline execution, and `/vbw:init` statusline template
+- `/vbw:update` Step 5 cache cleanup now verifies removal succeeded and retries if old versions persist
+
 ## [1.0.41] - 2026-02-08
 
 ### Added

@@ -28,7 +28,7 @@ Phase directories:
 
 Codebase map staleness:
 ```
-!`bash -c 'for f in "$HOME"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/map-staleness.sh; do [ -f "$f" ] && exec bash "$f"; done; echo "status: no_script"'`
+!`bash -c 'f=$(ls -1 "$HOME"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/map-staleness.sh 2>/dev/null | sort -V | tail -1); [ -f "$f" ] && exec bash "$f" || echo "status: no_script"'`
 ```
 
 ## Phase Auto-Detection

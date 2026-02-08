@@ -77,7 +77,7 @@ If HAS_OTHER or EMPTY, ask the user (use AskUserQuestion):
 
 If approved, set `statusLine` to:
 ```json
-{"type": "command", "command": "bash -c 'for f in \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh; do [ -f \"$f\" ] && exec bash \"$f\"; done'"}
+{"type": "command", "command": "bash -c 'f=$(ls -1 \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh 2>/dev/null | sort -V | tail -1) && [ -f \"$f\" ] && exec bash \"$f\"'"}
 ```
 The object format with `type` and `command` is **required** by the settings schema; a plain string will fail validation silently.
 

@@ -79,7 +79,16 @@ STOP here.
 
 Remove all old cached versions except the latest. This prevents stale caches from being used:
 ```bash
-ls -d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/ 2>/dev/null | sort -V | head -n -1 | xargs rm -rf 2>/dev/null
+ls -d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/ 2>/dev/null | sort -V | head -n -1 | while IFS= read -r d; do rm -rf "$d"; done
+```
+
+Verify cleanup succeeded:
+```bash
+REMAINING=$(ls -1d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/ 2>/dev/null | wc -l | tr -d ' ')
+if [ "${REMAINING:-0}" -gt 1 ]; then
+  echo "WARNING: ${REMAINING} cached versions remain — attempting forced cleanup"
+  ls -d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/ 2>/dev/null | sort -V | head -n -1 | xargs rm -rf
+fi
 ```
 
 ### Step 6: Display result

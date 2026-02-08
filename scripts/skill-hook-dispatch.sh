@@ -47,13 +47,11 @@ for SKILL_NAME in $(echo "$SKILL_HOOKS" | jq -r 'keys[]' 2>/dev/null); do
     continue
   fi
 
-  # Find and invoke the skill's hook script from plugin cache
-  for SCRIPT in "$HOME"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/"${SKILL_NAME}-hook.sh"; do
-    if [ -f "$SCRIPT" ]; then
-      echo "$INPUT" | bash "$SCRIPT" 2>/dev/null || true
-      break
-    fi
-  done
+  # Find and invoke the skill's hook script from plugin cache (latest version)
+  SCRIPT=$(ls -1 "$HOME"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/"${SKILL_NAME}-hook.sh" 2>/dev/null | sort -V | tail -1)
+  if [ -f "$SCRIPT" ]; then
+    echo "$INPUT" | bash "$SCRIPT" 2>/dev/null || true
+  fi
 done
 
 exit 0
