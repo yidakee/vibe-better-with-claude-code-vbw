@@ -2,6 +2,29 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.35] - 2026-02-08
+
+### Added
+
+- `name` field in YAML frontmatter for all 27 skills (was missing from all)
+- `disable-model-invocation: true` for 8 lifecycle skills: execute, ship, uninstall, milestone, new, init, switch, remove-phase
+- Step 3.5 in `/vbw:map`: lead writes 7 mapping documents from Scout SendMessage reports (Scouts no longer write files)
+- Delegate permissionMode explanation note in `/vbw:execute` delegation directive
+- VBW-scoped matcher on SubagentStop hook: only triggers for vbw-lead, vbw-dev, vbw-qa, vbw-scout, vbw-debugger, vbw-architect
+
+### Changed
+
+- `/vbw:map` Scout task descriptions: Scouts analyze and send findings via SendMessage instead of writing files directly (preserves platform-enforced read-only guarantee)
+- `/vbw:map` Step 3 now uses explicit TaskCreate language matching execute skill convention
+- Lead agent tools list: removed Task (was inconsistent with "Never spawns subagents" constraint)
+- plugin.json author field: split into separate `name` and `url` fields
+- Both marketplace.json files: aligned description ("27 commands"), keywords (6 terms), and category ("development")
+- README.md: command count updated from 26 to 27 across all mentions; Lead agent table and permission model updated to remove Task
+
+### Fixed
+
+- PreToolUse hook: consolidated two duplicate security-filter entries (Read|Glob|Grep + Write|Edit) into one combined matcher (4 entries → 3)
+
 ## [1.0.34] - 2026-02-08
 
 ### Added
