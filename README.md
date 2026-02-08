@@ -158,14 +158,19 @@ Cost, duration, diff stats, model info, and GitHub branch, all in one line. It's
 
 ## Installation
 
-Open Claude Code and run these two commands inside the Claude Code session:
+Open Claude Code and run these two commands inside the Claude Code session, **one at a time**:
 
+**Step 1:** Add the marketplace
 ```
 /plugin marketplace add yidakee/vibe-better-with-claude-code-vbw
+```
+
+**Step 2:** Install the plugin
+```
 /plugin install vbw@vbw-marketplace
 ```
 
-That's it. Two commands. If that was too many steps, this plugin might actually be for you.
+That's it. Two commands, two separate inputs. Do not paste them together — Claude Code will treat both lines as a single command and the URL will break.
 
 To update later, inside Claude Code:
 

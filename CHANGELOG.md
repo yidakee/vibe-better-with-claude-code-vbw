@@ -2,6 +2,12 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.59] - 2026-02-08
+
+### Fixed
+
+- **Installation instructions cause paste error** — both install commands were in a single code block, so users who copy-pasted got them concatenated into one command with a malformed URL. Split into separate code blocks with explicit Step 1/Step 2 labels and a warning not to paste together.
+
 ## [1.0.58] - 2026-02-08
 
 ### Changed
