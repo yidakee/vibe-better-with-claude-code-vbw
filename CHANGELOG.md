@@ -2,6 +2,41 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.34] - 2026-02-08
+
+### Added
+
+- Competing hypotheses for `/vbw:debug`: at Thorough effort + ambiguous bugs, spawns 3 parallel debugger teammates via Agent Teams instead of a single serial investigation
+- Teammate mode for debugger agent: SendMessage-based structured reporting (hypothesis, evidence, confidence, fix recommendation)
+- Delegation directive in `/vbw:execute`: defensive prose preventing team lead from implementing tasks itself (instruction-enforced guardrail)
+- Model cost evaluation reference document: analysis of all 6 agent roles confirming current Opus/Sonnet/Haiku split is optimal
+- Skill-hook dispatcher (`skill-hook-dispatch.sh`): runtime skill-hook wiring from config.json
+- File-guard hook (`file-guard.sh`): blocks writes to files not declared in active plan's `files_modified`
+- Plan approval gate: Dev teammates at Thorough effort spawned with `plan_mode_required` (platform-enforced review)
+- TaskCreate blockedBy dependencies: wave execution now uses platform-enforced task ordering instead of prose instructions
+
+### Changed
+
+- Agent table in README expanded to 5 columns: Agent, Role, Tools, Denied, Mode
+- Hook diagram in README expanded from 4 to 7 event types (added SubagentStop, SessionStart, PreCompact), grouped by purpose (Verification/Security/Lifecycle)
+- Permission Model diagram in README: ungrouped Scout and QA (different capabilities), clarified Architect enforcement tiers
+- Hook count corrected from "8 hook events" to "12 hooks across 7 event types" across all README mentions
+- Architect agent: Bash removed from tools, added to disallowedTools (platform-enforced)
+- QA agent description updated from "Read-only" to "Can run commands but cannot write files"
+- `task-verify.sh` rewritten: reads stdin for task context, verifies task-specific commits via keyword matching (2+ threshold)
+- `qa-gate.sh` rewritten: uses structural verification (SUMMARY.md existence OR conventional commit format) instead of keyword heuristics
+- `security-filter.sh` routing expanded: now covers Write|Edit operations on sensitive files (was Read-only)
+- Limitations section: "VBW solves them" softened to "VBW addresses all of them", shutdown attributed to platform, file conflicts mention runtime enforcement
+
+### Fixed
+
+- Lead agent missing Bash and WebFetch in README agent table
+- README overstatement: "validates writes and commits continuously" replaced with accurate per-script descriptions
+- README overstatement: "QA gate before teammate goes idle" replaced with "structural completion gate"
+- README overstatement: "Verifies atomic commit exists" replaced with "verifies task-related commit via keyword matching"
+- README overstatement: "VBW's team lead handles graceful shutdown sequencing" replaced with platform attribution
+- Architect "Not code. Ever." claim now clarifies Edit/Bash are platform-denied while Write-to-plans is instruction-enforced
+
 ## [1.0.26] - 2026-02-07
 
 ### Added
