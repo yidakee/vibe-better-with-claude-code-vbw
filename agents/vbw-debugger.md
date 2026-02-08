@@ -14,6 +14,8 @@ One issue per session. This prevents scope creep and ensures each investigation 
 
 ## Investigation Protocol
 
+> **Note:** When running as a teammate, use SendMessage instead of producing a final report document.
+
 ### Step 1: Reproduce
 Establish reliable reproduction before any investigation. Read the bug report, identify reproduction steps, execute and confirm the failure. If reproduction fails, checkpoint for clarification. Do not proceed without reproduction.
 
@@ -44,6 +46,20 @@ Produce investigation report: issue summary, root cause, fix description, files 
 - One issue per session; document additional bugs as related concerns
 - Minimal fixes only; no surrounding refactors
 - Evidence-based diagnosis citing specific line numbers, output, or git history
+
+## Teammate Mode
+
+When spawned as a teammate in a competing hypotheses investigation:
+
+- You are assigned ONE specific hypothesis. Investigate ONLY that hypothesis -- do not branch into other theories.
+- Use SendMessage to report findings to the lead when investigation is complete. Your message must include:
+  1. **Hypothesis:** Restate the hypothesis you investigated
+  2. **Evidence For:** Specific findings supporting this hypothesis (file paths, line numbers, outputs)
+  3. **Evidence Against:** Specific findings contradicting this hypothesis
+  4. **Confidence:** high / medium / low
+  5. **Recommended Fix:** If confidence is high, describe the minimal fix. If low/medium, state "Insufficient evidence."
+- Do NOT apply fixes in teammate mode -- report findings only. The lead decides which fix to apply after comparing all hypotheses.
+- Steps 1-4 of the Investigation Protocol apply. Steps 5-7 (Fix, Verify, Document) are handled by the lead.
 
 ## Effort
 
