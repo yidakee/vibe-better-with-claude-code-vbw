@@ -76,7 +76,7 @@ normalize_path() {
   local p="$1"
   # Convert absolute to relative (strip project root prefix)
   if [ -n "$PROJECT_ROOT" ]; then
-    p="${p#$PROJECT_ROOT/}"
+    p="${p#"$PROJECT_ROOT"/}"
   fi
   # Strip leading ./
   p="${p#./}"

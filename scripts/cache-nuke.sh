@@ -32,7 +32,7 @@ if [[ -d "$PLUGIN_CACHE_DIR" ]]; then
     if [[ "$COUNT" -gt 1 ]]; then
       TO_REMOVE=$(echo "$VERSIONS" | head -n $((COUNT - 1)))
       versions_removed=$((COUNT - 1))
-      echo "$TO_REMOVE" | xargs rm -rf 2>/dev/null || true
+      echo "$TO_REMOVE" | while IFS= read -r dir; do rm -rf "$dir" 2>/dev/null; done
       wiped_plugin_cache=true
     fi
   else
@@ -51,7 +51,7 @@ fi
 # --- 3. Temp caches (statusline + update check) ---
 TEMP_FILES=$(ls /tmp/vbw-*-"${UID_TAG}"-* /tmp/vbw-*-"${UID_TAG}" /tmp/vbw-update-check-"${UID_TAG}" 2>/dev/null || true)
 if [[ -n "$TEMP_FILES" ]]; then
-  echo "$TEMP_FILES" | xargs rm -f 2>/dev/null || true
+  echo "$TEMP_FILES" | while IFS= read -r f; do rm -f "$f" 2>/dev/null; done
   wiped_temp_caches=true
 fi
 

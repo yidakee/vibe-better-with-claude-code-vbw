@@ -42,7 +42,8 @@ if [ -f ".claude-plugin/plugin.json" ]; then
     if [ -n "$STAGED" ]; then
       HAS_NON_VERSION=false
       HAS_VERSION=false
-      for f in $STAGED; do
+      while IFS= read -r f; do
+        [ -z "$f" ] && continue
         case "$f" in
           VERSION|.claude-plugin/*|marketplace.json) ;;
           *) HAS_NON_VERSION=true ;;
@@ -50,7 +51,7 @@ if [ -f ".claude-plugin/plugin.json" ]; then
         if [ "$f" = "VERSION" ]; then
           HAS_VERSION=true
         fi
-      done
+      done <<< "$STAGED"
       if [ "$HAS_NON_VERSION" = true ] && [ "$HAS_VERSION" = false ]; then
         jq -n '{
           "hookSpecificOutput": {

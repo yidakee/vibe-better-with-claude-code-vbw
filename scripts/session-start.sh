@@ -1,4 +1,5 @@
 #!/bin/bash
+set -u
 # SessionStart hook: Detect VBW project state and check for updates
 
 # --- Dependency check ---
@@ -38,9 +39,10 @@ if [ ! -f "$CACHE" ] || [ $((NOW - MT)) -gt 86400 ]; then
   fi
 else
   # Read cached result
-  IFS='|' read -r LOCAL_VER REMOTE_VER < "$CACHE" 2>/dev/null
-  if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "0.0.0" ] && [ "$REMOTE_VER" != "$LOCAL_VER" ]; then
-    UPDATE_MSG=" UPDATE AVAILABLE: v${LOCAL_VER} -> v${REMOTE_VER}. Run /vbw:update to upgrade."
+  LOCAL_VER="" REMOTE_VER=""
+  IFS='|' read -r LOCAL_VER REMOTE_VER < "$CACHE" 2>/dev/null || true
+  if [ -n "${REMOTE_VER:-}" ] && [ "${REMOTE_VER:-}" != "0.0.0" ] && [ "${REMOTE_VER:-}" != "${LOCAL_VER:-}" ]; then
+    UPDATE_MSG=" UPDATE AVAILABLE: v${LOCAL_VER:-0.0.0} -> v${REMOTE_VER:-0.0.0}. Run /vbw:update to upgrade."
   fi
 fi
 
@@ -68,7 +70,7 @@ if [ -d "$CACHE_DIR" ] && mkdir "$VBW_CLEANUP_LOCK" 2>/dev/null; then
   VERSIONS=$(ls -d "$CACHE_DIR"/*/ 2>/dev/null | sort -V)
   COUNT=$(echo "$VERSIONS" | wc -l | tr -d ' ')
   if [ "$COUNT" -gt 1 ]; then
-    echo "$VERSIONS" | head -n $((COUNT - 1)) | xargs rm -rf 2>/dev/null
+    echo "$VERSIONS" | head -n $((COUNT - 1)) | while IFS= read -r dir; do rm -rf "$dir"; done
   fi
   rmdir "$VBW_CLEANUP_LOCK" 2>/dev/null
 fi
