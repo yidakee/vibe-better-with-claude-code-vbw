@@ -157,7 +157,7 @@ if ! cache_fresh "$VBW_CF" 5; then
     fi
   fi
 
-  printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${BR}|${PD}|${PT}|${PPD}|${QA}|${GH_URL}|${GIT_STAGED:-0}|${GIT_MODIFIED:-0}" > "$VBW_CF"
+  printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${BR}|${PD}|${PT}|${PPD}|${QA}|${GH_URL}|${GIT_STAGED:-0}|${GIT_MODIFIED:-0}" > "$VBW_CF" 2>/dev/null
 fi
 
 [ -O "$VBW_CF" ] && IFS='|' read -r PH TT EF BR PD PT PPD QA GH_URL GIT_STAGED GIT_MODIFIED < "$VBW_CF"
@@ -178,7 +178,7 @@ if [ -f ".vbw-planning/.execution-state.json" ]; then
         (.plans | length),
         ([.plans[] | select(.status == "running")][0].title // "")
       ] | join("|")' .vbw-planning/.execution-state.json 2>/dev/null)"
-    printf '%s\n' "${_ES:-}|${_EW:-0}|${_ETW:-0}|${_ED:-0}|${_ET:-0}|${_EC:-}" > "$EXEC_CF"
+    printf '%s\n' "${_ES:-}|${_EW:-0}|${_ETW:-0}|${_ED:-0}|${_ET:-0}|${_EC:-}" > "$EXEC_CF" 2>/dev/null
   fi
   [ -O "$EXEC_CF" ] && IFS='|' read -r EXEC_STATUS EXEC_WAVE EXEC_TWAVES EXEC_DONE EXEC_TOTAL EXEC_CURRENT < "$EXEC_CF"
 fi
@@ -229,12 +229,12 @@ if ! cache_fresh "$USAGE_CF" 60; then
           ] | join("|")
         ' 2>/dev/null)"
 
-      printf '%s\n' "${FIVE_PCT:-0}|${FIVE_EPOCH:-0}|${WEEK_PCT:-0}|${WEEK_EPOCH:-0}|${SONNET_PCT:--1}|${EXTRA_ENABLED:-0}|${EXTRA_PCT:--1}|${EXTRA_USED_C:-0}|${EXTRA_LIMIT_C:-0}|ok" > "$USAGE_CF"
+      printf '%s\n' "${FIVE_PCT:-0}|${FIVE_EPOCH:-0}|${WEEK_PCT:-0}|${WEEK_EPOCH:-0}|${SONNET_PCT:--1}|${EXTRA_ENABLED:-0}|${EXTRA_PCT:--1}|${EXTRA_USED_C:-0}|${EXTRA_LIMIT_C:-0}|ok" > "$USAGE_CF" 2>/dev/null
     else
-      printf '%s\n' "0|0|0|0|-1|0|-1|0|0|fail" > "$USAGE_CF"
+      printf '%s\n' "0|0|0|0|-1|0|-1|0|0|fail" > "$USAGE_CF" 2>/dev/null
     fi
   else
-    printf '%s\n' "noauth" > "$USAGE_CF"
+    printf '%s\n' "noauth" > "$USAGE_CF" 2>/dev/null
   fi
 fi
 
@@ -321,7 +321,7 @@ if ! cache_fresh "$AGENT_CF" 10; then
   if [ "$AGENT_N" -gt 0 ] 2>/dev/null; then
     AGENT_DATA="${C}◆${X} ${AGENT_N} agent$([ "$AGENT_N" -gt 1 ] && echo s) working"
   fi
-  printf '%s\n' "$AGENT_DATA" > "$AGENT_CF"
+  printf '%s\n' "$AGENT_DATA" > "$AGENT_CF" 2>/dev/null
 fi
 
 AGENT_LINE=""
