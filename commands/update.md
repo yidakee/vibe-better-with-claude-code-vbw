@@ -68,7 +68,7 @@ This removes `~/.claude/plugins/cache/vbw-marketplace/vbw/`, `~/.claude/commands
 ### Step 5: Perform update
 
 If `remote_version` equals `old_version`, display: "Refreshing VBW v{old_version} cache..."
-Otherwise, display: "Updating VBW v{old_version} -> v{remote_version}..."
+Otherwise, display: "Updating VBW v{old_version}..."
 
 **CRITICAL: Always refresh the marketplace FIRST.** The marketplace checkout is a local git clone that can become stale. If you skip this, `plugin update` re-caches the old version.
 
@@ -150,17 +150,19 @@ Read the newly cached VERSION to confirm the update landed correctly:
 NEW_CACHED=$(cat ~/.claude/plugins/cache/vbw-marketplace/vbw/*/VERSION 2>/dev/null | sort -V | tail -1)
 ```
 
-If `NEW_CACHED` does not equal `remote_version`, display:
+Store `NEW_CACHED` as the authoritative installed version. The marketplace `git pull` may install a newer version than what the GitHub CDN reported in Step 3 — this is normal (CDN lag). Use `NEW_CACHED` for all display output from here on.
+
+Only warn if `NEW_CACHED` is empty or equals `old_version` (meaning the update didn't change anything when it should have):
 ```
-⚠ Version mismatch: expected v{remote_version} but cache contains v{NEW_CACHED}.
-  The update may not have applied correctly. Try running /vbw:update again after restarting Claude Code.
+⚠ Update may not have applied — cache still shows v{old_version}.
+  Try running /vbw:update again after restarting Claude Code.
 ```
 
 ### Step 7: Display result
 
-**IMPORTANT:** Do NOT re-read `${CLAUDE_PLUGIN_ROOT}/VERSION` — it still points to the old version for this session. Use `remote_version` from Step 3 instead.
+**IMPORTANT:** Use `NEW_CACHED` from Step 6 for all version display — it reflects what was actually installed, not the CDN estimate. Do NOT re-read `${CLAUDE_PLUGIN_ROOT}/VERSION` (it points to the old version for this session).
 
-If `remote_version` equals `old_version` (cache refresh):
+If `NEW_CACHED` equals `old_version` (cache refresh, no version change):
 ```
 ╔═══════════════════════════════════════════╗
 ║  VBW Cache Refreshed                      ║
@@ -177,7 +179,7 @@ Otherwise (version upgrade):
 ║  VBW Updated                              ║
 ╚═══════════════════════════════════════════╝
 
-  ✓ Update applied (v{old_version} → v{remote_version}).
+  ✓ Update applied (v{old_version} → v{NEW_CACHED}).
 
   Restart Claude Code to load the new version.
 
