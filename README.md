@@ -61,6 +61,7 @@ Think of it as project management for the post-dignity era of software developme
 - [Commands](#commands)
 - [The Agents](#the-agents)
 - [Effort Profiles](#effort-profiles)
+- [Autonomy Levels](#autonomy-levels)
 - [Project Structure](#project-structure)
 - [Under the Hood](#under-the-hood)
 - [Requirements](#requirements)
@@ -504,6 +505,40 @@ Not every task deserves the same level of scrutiny. Most of yours don't. VBW pro
 /vbw:plan 3 --effort=turbo
 /vbw:implement --effort=thorough
 ```
+
+<br>
+
+---
+
+<br>
+
+## Autonomy Levels
+
+Effort controls how hard your agents think. Autonomy controls how often they stop to ask you about it.
+
+Four levels, from "review everything" to "just build the whole thing while I get coffee":
+
+| Level | What It Does | When To Use It |
+| :--- | :--- | :--- |
+| **Cautious** | Stops between plan and execute. Plan approval at Thorough AND Balanced effort. All confirmations enforced. | First time on a codebase. Production-critical work. When you want to review every step before it happens. |
+| **Standard** | Auto-chains plan into execute within a phase. Plan approval at Thorough only. Stops between phases. The default. | Most work. You trust the plan but want to see results before continuing. |
+| **Confident** | Skips "already complete" confirmations. Plan approval OFF even at Thorough. QA warnings non-blocking. | Experienced with VBW, rebuilding known-good phases, iteration speed matters more than gate checks. |
+| **Dangerously-vibe** | Loops ALL remaining phases in a single `/vbw:implement`. No confirmations. No plan approval. Only error guards (missing roadmap, uninitialized project) stop execution. | When you genuinely want to walk away and come back to a finished project. Or when you've accepted that the machines are in charge now. |
+
+```
+/vbw:config autonomy confident
+/vbw:config autonomy dangerously-vibe
+```
+
+Autonomy interacts with effort profiles. At `cautious`, plan approval expands to cover Balanced effort (not just Thorough). At `confident` and `dangerously-vibe`, plan approval is disabled regardless of effort level. Error guards — missing roadmap, uninitialized project, missing plans — always halt at every level. Autonomy controls friction, not safety.
+
+| Gate | Cautious | Standard | Confident | Dangerously-vibe |
+| :--- | :--- | :--- | :--- | :--- |
+| Plan to execute | Stop and ask | Auto-chain | Auto-chain | Auto-chain |
+| Between phases | Stop | Stop | Stop | Auto-loop |
+| "Already complete" warning | Confirm | Confirm | Skip | Skip |
+| Plan approval (Thorough) | Required | Required | Off | Off |
+| Plan approval (Balanced) | Required | Off | Off | Off |
 
 <br>
 
