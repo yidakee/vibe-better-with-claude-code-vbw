@@ -179,6 +179,61 @@ Announce scoping complete and re-evaluate state. The project now has phases, so 
 Scoping complete. {N} phases created. Transitioning to planning...
 ```
 
+## States 3-4: Plan + Execute (Existing Phases)
+
+> State 3: Triggered when phase directories exist and at least one has no `*-PLAN.md` files (needs planning + execution).
+> State 4: Triggered when phase directories exist and at least one has plans without matching `*-SUMMARY.md` (needs execution only).
+
+### Auto-detect target phase
+
+If `$ARGUMENTS` does not contain an integer phase number:
+1. Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md` and follow the **Implement Command** dual-condition detection.
+2. Announce: "Auto-detected Phase {N} ({slug}) -- {needs plan + execute | planned, needs execute}"
+
+If `$ARGUMENTS` contains an integer, validate that the phase directory exists.
+
+### Parse arguments
+
+- **Phase number** (optional; auto-detected if omitted): integer matching phase directory
+- **--effort** (optional): thorough|balanced|fast|turbo. Overrides config for this run only.
+- **--skip-qa** (optional): skip post-build verification
+
+### Determine planning state
+
+Check the target phase directory for existing `*-PLAN.md` files.
+
+- **No plans exist (State 3):** Phase needs both planning and execution. Proceed to Planning step.
+- **Plans exist but not all have SUMMARY.md (State 4):** Phase is already planned. Skip to Execution step.
+- **All plans have SUMMARY.md:** Phase is fully built. WARN: "Phase {N} already implemented. Re-running will create new commits. Continue?"
+
+### Planning step (State 3 only)
+
+> Skipped entirely if plans already exist (State 4).
+
+Reference the full planning protocol from `@${CLAUDE_PLUGIN_ROOT}/commands/plan.md`.
+
+Execute the planning flow:
+1. Parse effort and resolve context.
+2. At **Turbo** effort: use the turbo shortcut (direct plan generation).
+3. At all other effort levels: spawn the Lead agent for research, decomposition, and self-review.
+4. Validate that PLAN.md files were produced.
+5. Display brief planning summary.
+
+**Important:** Do NOT update STATE.md to "Planned". The implement command skips the intermediate "Planned" state and goes directly to "Built" after execution completes.
+
+### Execution step
+
+Reference the full execution protocol from `@${CLAUDE_PLUGIN_ROOT}/commands/execute.md`.
+
+Execute the build flow:
+1. Parse effort and load plans.
+2. Detect resume state from existing SUMMARY.md files and git log.
+3. Create Agent Team and execute plans with Dev teammates.
+4. Run post-build QA unless `--skip-qa` or Turbo effort.
+5. Update STATE.md: mark the phase as "Built".
+6. Update ROADMAP.md: mark completed plans.
+7. Clean up execution state.
+
 ## State 5: Completion (All Phases Done)
 
 > Triggered when all phase directories have all plans with matching SUMMARY.md files.
@@ -200,3 +255,56 @@ Next steps:
 ```
 
 Do NOT auto-archive. Let the user decide their next action.
+
+## Output Format
+
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md for all output.
+
+### After State 1 (Bootstrap)
+
+Display the project-defined banner then transition message.
+
+### After State 2 (Scoping)
+
+Display the phases-created summary then transition message.
+
+### After States 3-4 (Plan + Execute)
+
+Follow the Agent Teams Shutdown Protocol in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md` before presenting results.
+
+Display:
+```
+Phase {N}: {name} -- Implemented
+
+  {Planning section if State 3:}
+  Planning:
+    completed plan list
+
+  Execution:
+    completed/failed plan list
+
+  Metrics:
+    Plans:      {completed}/{total}
+    Effort:     {profile}
+    Deviations: {count from SUMMARYs}
+
+  QA:         {PASS|PARTIAL|FAIL|skipped}
+
+Next Up
+  /vbw:implement -- Continue to next phase
+  /vbw:qa {N} -- Verify this phase (if QA skipped)
+  /vbw:archive -- Complete the work (if last phase)
+```
+
+### After State 5 (Completion)
+
+Display the all-done summary with next action suggestions.
+
+### Rules
+- Phase Banner (double-line box) for phase-level completions
+- Execution Progress symbols: ◆ running, ✓ complete, ✗ failed, ○ skipped
+- Metrics Block for stats
+- Next Up Block for navigation
+- No ANSI color codes
+- Next Up references /vbw:implement (not /vbw:plan or /vbw:execute) as the primary next action
+- Next Up references /vbw:archive (not /vbw:ship) for completion
