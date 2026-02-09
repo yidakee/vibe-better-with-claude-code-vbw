@@ -21,7 +21,9 @@ MODEL=$(echo "$INPUT" | jq -r '.model // "unknown"' 2>/dev/null)
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# Append JSON line to session log
+# Append JSON line to session log (atomic: write to temp file, then append)
+TEMP_FILE="$PLANNING_DIR/.session-log.jsonl.tmp"
+
 jq -n \
   --arg ts "$TIMESTAMP" \
   --argjson dur "${DURATION:-0}" \
@@ -31,6 +33,10 @@ jq -n \
   --arg model "$MODEL" \
   --arg branch "$BRANCH" \
   '{timestamp: $ts, duration_ms: $dur, cost_usd: $cost, tokens_in: $tin, tokens_out: $tout, model: $model, branch: $branch}' \
-  >> "$PLANNING_DIR/.session-log.jsonl" 2>/dev/null
+  > "$TEMP_FILE" 2>/dev/null \
+  && [ -O "$TEMP_FILE" ] \
+  && cat "$TEMP_FILE" >> "$PLANNING_DIR/.session-log.jsonl" 2>/dev/null
+
+rm -f "$TEMP_FILE" 2>/dev/null
 
 exit 0
