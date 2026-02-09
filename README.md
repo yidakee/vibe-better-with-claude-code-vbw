@@ -351,7 +351,13 @@ From there, it's the same loop: `/vbw:implement` until done, `/vbw:archive`, `/v
 
 Closed your terminal? Switched branches? Came back after a weekend of pretending you have hobbies? `/vbw:resume` reads ground truth directly from `.vbw-planning/` -- STATE.md, ROADMAP.md, plans, summaries -- and rebuilds your full project context. No prior `/vbw:pause` needed. It detects interrupted builds, reconciles stale execution state, and tells you exactly what to do next. One command, full situational awareness, zero guessing.
 
-**Do not use `/clear`.** Opus 4.6's auto-compaction is significantly better than nuking your context window. Compaction preserves critical context while freeing space; `/clear` destroys everything and leaves you starting from scratch. If you accidentally `/clear`, run `/vbw:resume` immediately to restore project context from ground truth.
+> **⚠️ Do not use `/clear`.**
+>
+> Opus 4.6 auto-compacts your context window when it fills up. It intelligently summarizes older conversation turns while preserving critical state — active plan tasks, file paths, commit history, deviation decisions, error context — so the session continues seamlessly with full project awareness. VBW enhances this further with `PreCompact` and `PostCompact` hooks that inject agent-specific preservation priorities and verify nothing critical was lost.
+>
+> `/clear` bypasses all of this. It destroys your entire context — every file read, every decision made, every task in progress — and drops you into a blank session with no memory of what just happened. Auto-compaction is surgical; `/clear` is a sledgehammer.
+>
+> **If you accidentally `/clear`**, run `/vbw:resume` immediately. It restores project context from ground truth files in `.vbw-planning/` — state, roadmap, plans, summaries — and tells you exactly where to pick up.
 
 > **For advanced users:** The [full command reference](#commands) below has 27 commands for granular control — `/vbw:plan` and `/vbw:execute` to separate planning from building, `/vbw:qa` for on-demand verification, `/vbw:debug` for systematic bug investigation, `/vbw:discuss` for pre-planning context gathering, and more. But you never *need* them. `/vbw:implement` handles the entire lifecycle on its own.
 
