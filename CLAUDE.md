@@ -6,9 +6,10 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 
 ## Active Context
 
-**Work:** No active work — all milestones complete
-**Last completed:** v2 Command Redesign (archived 2026-02-09, tag: milestone/v2-command-redesign)
-**Next action:** /vbw:implement to start new work
+**Work:** Performance Optimization — token savings, script automation, agent cost controls
+**Phase:** 2 of 3 (Script Offloading) — not started
+**Completed:** Phase 1 (Context Diet) — 4 plans, 6 commits, 0 deviations
+**Next action:** /vbw:implement to plan and execute Phase 2
 
 ## VBW Rules
 
@@ -31,6 +32,8 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 | Milestones become internal concept | 2026-02-09 | Solo devs don't need the abstraction |
 | `/vbw:ship` → `/vbw:archive` | 2026-02-09 | Clearer verb for wrapping up work |
 | Remove `/vbw:new`, `/vbw:milestone`, `/vbw:switch` | 2026-02-09 | Absorbed into implement/plan |
+| Performance optimization: 3 phases | 2026-02-09 | Context diet → script offloading → agent cost controls |
+| Every optimization must have measured impact | 2026-02-09 | No changes for the sake of changes |
 
 ## Installed Skills
 
@@ -53,6 +56,27 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 - Plan 03-03 (validation) found zero discrepancies — Plans 01+02 across all phases were implemented accurately
 - Hook count grew from 17 to 18 during Phase 1 (frontmatter validation added)
 - Version sync enforcement at push time prevents mismatched releases
+
+## Compact Instructions
+
+When compacting context, follow these priorities:
+
+**Always preserve:**
+- Active plan file content (current task number, remaining tasks, file paths)
+- Commit hashes and messages from this session's work
+- Deviation decisions and their rationale
+- Current phase number, name, and status
+- File paths that were modified (exact paths, not summaries)
+- Any error messages or test failures being debugged
+
+**Safe to discard:**
+- Tool output details (file contents already read, grep results already processed)
+- Planning exploration that led to the current plan (keep only the final plan)
+- Verbose git diff output (keep only the summary of what changed)
+- Reference file contents that can be re-read from disk (ROADMAP.md, REQUIREMENTS.md, shared-patterns.md)
+- Previous phase summaries (already written to disk as SUMMARY.md files)
+
+**After compaction:** Re-read your assigned plan file and STATE.md from disk to restore working context.
 
 ## State
 
