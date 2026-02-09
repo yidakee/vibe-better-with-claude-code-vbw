@@ -81,7 +81,7 @@ Most Claude Code plugins were built for the subagent era, one main session spawn
 
 - **Agent Teams for real parallelism.** `/vbw:execute` creates a team of Dev teammates that execute tasks concurrently, each in their own context window. `/vbw:map` runs 4 Scout teammates in parallel to analyze your codebase. This isn't "spawn a subagent and wait" -- it's coordinated teamwork with a shared task list and direct inter-agent communication.
 
-- **Native hooks for continuous verification.** 17 hooks across 11 event types run automatically -- validating SUMMARY.md structure, checking commit format, gating task completion, blocking sensitive file access, enforcing plan file boundaries, managing session lifecycle, tracking session metrics, pre-flight prompt validation, and post-compaction context verification. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
+- **Native hooks for continuous verification.** 18 hooks across 11 event types run automatically -- validating SUMMARY.md structure, checking commit format, validating frontmatter descriptions, gating task completion, blocking sensitive file access, enforcing plan file boundaries, managing session lifecycle, tracking session metrics, pre-flight prompt validation, and post-compaction context verification. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
 
 - **Platform-enforced tool permissions.** Each agent has `tools`/`disallowedTools` in their YAML frontmatter -- 4 of 6 agents have platform-enforced deny lists. Scout and QA literally cannot write files. Sensitive file access (`.env`, credentials) is intercepted by the `security-filter` hook. `disallowedTools` is enforced by Claude Code itself, not by instructions an agent might ignore during compaction.
 
@@ -93,7 +93,7 @@ Most Claude Code plugins were built for the subagent era, one main session spawn
 
 Agent Teams are [experimental with known limitations](https://code.claude.com/docs/en/agent-teams#limitations). VBW handles them so you don't have to:
 
-- **Session resumption.** Agent Teams teammates don't survive `/resume`. VBW's `/vbw:pause` saves full session state, and `/vbw:resume` creates a fresh team from saved state -- detecting completed tasks via SUMMARY.md and git log, then assigning only remaining work.
+- **Session resumption.** Agent Teams teammates don't survive `/resume`. VBW's `/vbw:pause` saves full session state (including in-flight execution progress), and `/vbw:resume` creates a fresh team from saved state -- reconciling stale execution state by detecting tasks completed between pause and resume via SUMMARY.md files, auto-completing phases where all plans finished during the gap, and assigning only remaining work.
 
 - **Task status lag.** Teammates sometimes forget to mark tasks complete. VBW's `TaskCompleted` hook verifies task-related commits exist via keyword matching. The `TeammateIdle` hook runs a structural completion check (SUMMARY.md or conventional commit format) before any teammate goes idle.
 
@@ -130,7 +130,7 @@ For the "I'll just prompt carefully" crowd.
 | One long session, no structure | Phased roadmap with requirements traceability |
 | Manual agent spawning | 6 specialized agents with enforced permissions |
 | Hope the AI remembers context | Persistent state across sessions via `.vbw-planning/` |
-| No verification unless you ask | Continuous QA via 17 hooks + deep verification on demand |
+| No verification unless you ask | Continuous QA via 18 hooks + deep verification on demand |
 | Commits whenever, whatever | Atomic commits per task with validation |
 | "It works on my machine" | Goal-backward verification against success criteria |
 | Agents talk in free-form text | Structured JSON handoff schemas between agents |
