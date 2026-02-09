@@ -193,11 +193,13 @@ If **--no-push**: display "○ GitHub release skipped (--no-push)."
 
 Otherwise:
 1. Extract the changelog content for this version from CHANGELOG.md (everything under the `## [{new-version}]` heading until the next `## [` heading or `---`).
-2. Create a GitHub release:
+2. **Authenticate `gh`:** Extract the token from the git remote URL (`git remote get-url origin`). If the URL contains credentials in the format `https://user:TOKEN@github.com/...`, extract the TOKEN and set `GH_TOKEN={TOKEN}` as an env var prefix on the `gh` command. This is required because `gh auth login` may not be configured but the git remote already has a working PAT.
+3. Create a GitHub release:
    ```
-   gh release create v{new-version} --title "v{new-version}" --notes "{changelog-content}"
+   GH_TOKEN={extracted-token} gh release create v{new-version} --title "v{new-version}" --notes "{changelog-content}"
    ```
-3. Display "✓ GitHub release created: v{new-version}"
+   If no token is found in the remote URL, try `gh release create` without the env var (falls back to `gh auth` or keychain).
+4. Display "✓ GitHub release created: v{new-version}"
 
 If `gh` is not available or the command fails, WARN: "⚠ GitHub release failed -- create manually at the repo's releases page." Do not halt the release.
 
