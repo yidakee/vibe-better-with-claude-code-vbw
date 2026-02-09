@@ -1,10 +1,11 @@
 #!/bin/bash
-# VBW Status Line for Claude Code — 4/5-Line Dashboard
+# VBW Status Line for Claude Code — 4/5/6-Line Dashboard
 # Line 1: [VBW] Phase N/M │ Plans: done/total (N this phase) │ Effort: X │ QA: pass │ repo:branch Files: +2~3 Commits: ↑5 Diff: +156 -23
 # Line 2: Context: ▓▓▓▓▓▓▓▓░░░░░░░░░░░░ 42% 84.0K/200K │ Tokens: 15.2K in  1.2K out │ Cache: 5.0K write  2.0K read
 # Line 3: Session: ██████████████████░░  6% ~2h13m │ Weekly: ███████░░░░░░░░░░░░░ 35% ~2d 23h │ Extra: ████████████████████ 96% $578/$600
-# Line 4: Model: Opus │ Time: 12m 34s (API: 23s) │ VBW 1.0.67 │ CC 1.0.11
-# Line 5: Team: build-team │ researcher ◆ │ tester ○ │ dev-1 ✓ │ Tasks: 3/5  (conditional)
+# Line 4: Model: Opus │ Cost: $1.53 │ Time: 12m 34s (API: 23s) │ VBW 1.0.67 │ CC 1.0.11
+# Line 5: Economy: Dev $0.82 (70%) │ Lead $0.15 (13%) │ QA $0.12 (10%) │ Other $0.08 (7%) │ Cache: 85% hit │ $0.005/line  (conditional: cost > $0)
+# Line 6: Team: build-team │ researcher ◆ │ tester ○ │ dev-1 ✓ │ Tasks: 3/5  (conditional, future)
 # Cache files: {prefix}-fast (5s), {prefix}-slow (60s), {prefix}-cost (per-render), {prefix}-ok (permanent)
 
 input=$(cat)
@@ -552,5 +553,6 @@ printf '%b\n' "$L1"
 printf '%b\n' "$L2"
 printf '%b\n' "$L3"
 printf '%b\n' "$L4"
+[ -n "$L5" ] && printf '%b\n' "$L5"
 
 exit 0
