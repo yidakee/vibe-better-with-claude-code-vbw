@@ -2,6 +2,18 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Frontmatter description validation hook** — new `validate-frontmatter.sh` PostToolUse hook catches multi-line and empty `description` fields in markdown frontmatter at write time, preventing silent breakage of plugin command/skill discovery. Non-blocking (warning only).
+
+### Fixed
+
+- **jq dependency detection at all entry points** — `session-start.sh` now warns that all 17 quality gates are disabled when jq is missing. `detect-stack.sh` exits with a JSON error before any jq-dependent logic. `/vbw:init` has a pre-flight check with platform-specific install instructions (brew/apt).
+- **Version sync enforcement at commit and push time** — `validate-commit.sh` now runs `bump-version.sh --verify` and warns (non-blocking) when the 4 version files diverge. `pre-push-hook.sh` runs the same check but blocks the push (exit 1) when files are out of sync.
+- **jq guard in validate-commit.sh** — hook exits 0 silently when jq is missing instead of producing confusing error output.
+
 ## [1.0.69] - 2026-02-09
 
 ### Changed
