@@ -2,6 +2,26 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.84] - 2026-02-09
+
+### Changed
+
+- **Context Diet: `disable-model-invocation` on 13 commands** — manual-only commands (add-phase, assumptions, audit, discuss, insert-phase, map, pause, qa, release, resume, skills, todo, whats-new) no longer load descriptions into always-on context. ~7,500+ tokens/session savings.
+- **Context Diet: brand reference consolidation** — `vbw-brand-essentials.md` made self-contained (~50 lines), removing 329-line `vbw-brand.md` injection from 27 command references.
+- **Context Diet: effort profile lazy-loading** — monolithic `effort-profiles.md` split into index + 4 individual profile files. Commands load only the active profile (~270 tokens/execution savings).
+- **Context Diet: initialization guard consolidation** — `plan.md` guard deduplicated to shared-patterns reference.
+- **Script Offloading: `phase-detect.sh`** — new script pre-computes 22 key=value pairs for project state, replacing 7 inline bash substitutions in `implement.md` (~800 tokens/invocation savings).
+- **Script Offloading: SessionStart rich state injection** — `session-start.sh` now injects milestone, phase position, config values, and next-action hint via `additionalContext` (~100-200 tokens/command savings).
+- **Script Offloading: compaction instructions** — CLAUDE.md Compact Instructions section + enhanced `compaction-instructions.sh` with main session detection guide context preservation during auto-compact.
+- **Script Offloading: inline substitution cleanup** — 10 inline `config.json` cats removed from 6 commands (plan, execute, status, qa, fix, implement). Config pre-injected by SessionStart.
+- **Agent Cost Controls: model routing** — Scout→haiku, QA→sonnet (40-60% cost reduction). Lead/Dev/Debugger/Architect inherit session model.
+- **Agent Cost Controls: `maxTurns` caps** — all 6 agents capped (Scout: 15, QA: 25, Lead: 50, Dev: 50, Debugger: 75, Architect: 30). Prevents runaway spending.
+- **Agent Cost Controls: reference deduplication** — 3 redundant `@` references removed from agent files (~1,600 tokens/agent spawn savings).
+- **Agent Cost Controls: `state-updater.sh` enhancement** — auto-updates STATE.md plan counts when PLAN.md or SUMMARY.md files are written (PostToolUse hook, no LLM involvement).
+- **Agent Cost Controls: effort-profiles and model-cost docs** — updated for consistency with new Scout/QA frontmatter model fields.
+
+---
+
 ## [1.0.83] - 2026-02-09
 
 ### Added

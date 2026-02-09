@@ -6,10 +6,9 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 
 ## Active Context
 
-**Work:** Performance Optimization — token savings, script automation, agent cost controls
-**Phase:** 2 of 3 (Script Offloading) — not started
-**Completed:** Phase 1 (Context Diet) — 4 plans, 6 commits, 0 deviations
-**Next action:** /vbw:implement to plan and execute Phase 2
+**Work:** No active work — all milestones complete
+**Last completed:** Performance Optimization (archived 2026-02-09, tag: milestone/performance-optimization)
+**Next action:** /vbw:implement to start new work
 
 ## VBW Rules
 
@@ -56,6 +55,10 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 - Plan 03-03 (validation) found zero discrepancies — Plans 01+02 across all phases were implemented accurately
 - Hook count grew from 17 to 18 during Phase 1 (frontmatter validation added)
 - Version sync enforcement at push time prevents mismatched releases
+- `disable-model-invocation: true` is the highest-impact token optimization for plugins
+- Scout→haiku, QA→sonnet gives 40-60% cost reduction without quality loss
+- Pre-computing state via scripts (phase-detect.sh) saves ~800 tokens per /vbw:implement
+- SessionStart `additionalContext` injection eliminates redundant STATE.md reads
 
 ## Compact Instructions
 
