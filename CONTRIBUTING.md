@@ -15,7 +15,7 @@ Clone the repo, install the git hooks, and load it as a local plugin:
 ```bash
 git clone https://github.com/yidakee/vibe-better-with-claude-code-vbw.git
 cd vibe-better-with-claude-code-vbw
-ln -sf ../../scripts/pre-push-hook.sh .git/hooks/pre-push
+bash scripts/install-hooks.sh
 claude --plugin-dir .
 ```
 
@@ -120,8 +120,10 @@ If you forget, the hook blocks the push and tells you what to do. Use `git push 
 **Install the hook after cloning:**
 
 ```bash
-ln -sf ../../scripts/pre-push-hook.sh .git/hooks/pre-push
+bash scripts/install-hooks.sh
 ```
+
+> **Note:** If you use VBW, the hook is auto-installed by `/vbw:init` and on session start. Manual installation is only needed for contributors not using VBW.
 
 ## Code Style
 
