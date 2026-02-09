@@ -26,7 +26,7 @@ The pre-push hook is required — it prevents pushing without a version bump (se
 ```
 .claude-plugin/    Plugin manifest (plugin.json)
 agents/            6 agent definitions with native tool permissions
-commands/          30 slash commands (commands/*.md)
+commands/          27 slash commands (commands/*.md)
 config/            Default settings and stack-to-skill mappings
 hooks/             Plugin hooks (hooks.json)
 scripts/           Hook handler scripts

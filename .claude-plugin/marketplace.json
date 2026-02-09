@@ -14,7 +14,7 @@
         "source": "url",
         "url": "https://github.com/yidakee/vibe-better-with-claude-code-vbw.git"
       },
-      "description": "Development lifecycle plugin — 30 commands, 6 agents, continuous verification",
+      "description": "Development lifecycle plugin — 27 commands, 6 agents, continuous verification",
       "version": "1.0.72",
       "license": "MIT",
       "keywords": [

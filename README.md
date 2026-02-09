@@ -43,7 +43,7 @@ Whether you're a seasoned engineer who wants to push the boundaries of what AI-a
 
 Inspired by **[Ralph](https://github.com/frankbria/ralph-claude-code)** and **[Get Shit Done](https://github.com/glittercowboy/get-shit-done)**, however, an entirely new architecture.
 
-VBW is a Claude Code plugin that bolts an actual development lifecycle onto your vibe coding sessions. It gives you 30 slash commands and 6 AI agents that handle planning, building, verifying, and shipping your code, so what you produce has at least a fighting chance of surviving a code review.
+VBW is a Claude Code plugin that bolts an actual development lifecycle onto your vibe coding sessions. It gives you 27 slash commands and 6 AI agents that handle planning, building, verifying, and archiving your code, so what you produce has at least a fighting chance of surviving a code review.
 
 You describe what you want. VBW breaks it into phases. Agents plan, write, and verify the code. Commits are atomic. Verification is goal-backward. State persists across sessions. It's the entire software development lifecycle, except you replaced the engineering team with a plugin and a prayer.
 
@@ -537,7 +537,7 @@ Not every task deserves the same level of scrutiny. Most of yours don't. VBW pro
 ```
 .claude-plugin/    Plugin manifest (plugin.json)
 agents/            6 agent definitions with native tool permissions
-commands/          30 slash commands (commands/*.md)
+commands/          27 slash commands (commands/*.md)
 config/            Default settings and stack-to-skill mappings
 hooks/             Plugin hooks for continuous verification
 scripts/           Hook handler scripts (security, validation, QA gates)

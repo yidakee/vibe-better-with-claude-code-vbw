@@ -2,6 +2,27 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.72] - 2026-02-09
+
+### Changed
+
+- **v2 Command Redesign** — simplified command surface from 30 commands to 27, with `/vbw:implement` as the single primary command (state machine router that auto-detects project state)
+- **`/vbw:implement` rewritten as 5-state lifecycle router** — detects: no project (bootstrap), no phases (scoping), unplanned phase (plan), planned phase (execute), all done (completion). Absorbs `/vbw:new` first-run flow.
+- **`/vbw:plan` gains dual behavior** — no args + no phases = scoping mode (gathers requirements, creates phases). No args + phases = phase planning (existing behavior). Absorbs milestone scoping.
+- **`/vbw:ship` renamed to `/vbw:archive`** — clearer verb for wrapping up completed work. Same functionality, better name.
+- **Milestones become internal** — users never see the "milestone" concept. The `.vbw-planning/milestones/` structure remains under the hood but no commands expose it.
+- **All cross-references updated** — help.md, init.md, audit.md, resume.md, status.md, execute.md, memory-protocol.md, vbw-brand.md, and README.md all reflect the v2 architecture. Zero stale references to removed commands.
+- Command count: 30 → 27 across README, help, and both marketplace.json files
+
+### Removed
+
+- `/vbw:new` — absorbed into `/vbw:implement` bootstrap state (auto-detected on first run)
+- `/vbw:ship` — renamed to `/vbw:archive`
+- `/vbw:milestone` — milestones are now internal; no user-facing command needed
+- `/vbw:switch` — removed with milestone commands
+
+---
+
 ## [1.0.71] - 2026-02-09
 
 ### Added
