@@ -140,11 +140,12 @@ COST_FMT=$(fmt_cost "$COST")
 DUR_FMT=$(fmt_dur "$DUR_MS")
 API_DUR_FMT=$(fmt_dur "$API_MS")
 
-# --- VBW state (cached 5s) ---
+# --- Fast cache: VBW state + execution + agents (5s TTL) ---
 
-VBW_CF="${_CACHE}-sl"
+FAST_CF="${_CACHE}-fast"
 
-if ! cache_fresh "$VBW_CF" 5; then
+if ! cache_fresh "$FAST_CF" 5; then
+  # --- VBW state ---
   PH=""; TT=""; EF="balanced"; BR=""
   PD=0; PT=0; PPD=0; QA="--"; GH_URL=""
   if [ -f ".vbw-planning/STATE.md" ]; then
@@ -160,12 +161,10 @@ if ! cache_fresh "$VBW_CF" 5; then
     GIT_MODIFIED=$(git diff --numstat 2>/dev/null | wc -l | tr -d ' ')
     GIT_AHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
   fi
-
   # Plan counting
   if [ -d ".vbw-planning/phases" ]; then
     PT=$(find .vbw-planning/phases -name '*-PLAN.md' 2>/dev/null | wc -l | tr -d ' ')
     PD=$(find .vbw-planning/phases -name '*-SUMMARY.md' 2>/dev/null | wc -l | tr -d ' ')
-    # Current phase plans done
     if [ -n "$PH" ] && [ "$PH" != "0" ]; then
       PDIR=$(find .vbw-planning/phases -maxdepth 1 -type d -name "$(printf '%02d' "$PH")-*" 2>/dev/null | head -1)
       [ -n "$PDIR" ] && PPD=$(find "$PDIR" -name '*-SUMMARY.md' 2>/dev/null | wc -l | tr -d ' ')
@@ -173,19 +172,10 @@ if ! cache_fresh "$VBW_CF" 5; then
     fi
   fi
 
-  printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${BR}|${PD}|${PT}|${PPD}|${QA}|${GH_URL}|${GIT_STAGED:-0}|${GIT_MODIFIED:-0}|${GIT_AHEAD:-0}" > "$VBW_CF" 2>/dev/null
-fi
-
-[ -O "$VBW_CF" ] && IFS='|' read -r PH TT EF BR PD PT PPD QA GH_URL GIT_STAGED GIT_MODIFIED GIT_AHEAD < "$VBW_CF"
-
-# --- Execution progress (cached 2s) ---
-
-EXEC_CF="${_CACHE}-exec"
-EXEC_STATUS="" EXEC_WAVE="" EXEC_TWAVES="" EXEC_DONE="" EXEC_TOTAL="" EXEC_CURRENT=""
-
-if [ -f ".vbw-planning/.execution-state.json" ]; then
-  if ! cache_fresh "$EXEC_CF" 2; then
-    IFS='|' read -r _ES _EW _ETW _ED _ET _EC <<< \
+  # --- Execution progress ---
+  EXEC_STATUS=""; EXEC_WAVE=0; EXEC_TWAVES=0; EXEC_DONE=0; EXEC_TOTAL=0; EXEC_CURRENT=""
+  if [ -f ".vbw-planning/.execution-state.json" ]; then
+    IFS='|' read -r EXEC_STATUS EXEC_WAVE EXEC_TWAVES EXEC_DONE EXEC_TOTAL EXEC_CURRENT <<< \
       "$(jq -r '[
         (.status // ""),
         (.wave // 0),
@@ -194,22 +184,36 @@ if [ -f ".vbw-planning/.execution-state.json" ]; then
         (.plans | length),
         ([.plans[] | select(.status == "running")][0].title // "")
       ] | join("|")' .vbw-planning/.execution-state.json 2>/dev/null)"
-    printf '%s\n' "${_ES:-}|${_EW:-0}|${_ETW:-0}|${_ED:-0}|${_ET:-0}|${_EC:-}" > "$EXEC_CF" 2>/dev/null
   fi
-  [ -O "$EXEC_CF" ] && IFS='|' read -r EXEC_STATUS EXEC_WAVE EXEC_TWAVES EXEC_DONE EXEC_TOTAL EXEC_CURRENT < "$EXEC_CF"
+
+  # --- Agent count ---
+  AGENT_DATA=""
+  AGENT_N=$(( $(pgrep -u "$_UID" -cf "claude" 2>/dev/null || echo 1) - 1 ))
+  if [ "$AGENT_N" -gt 0 ] 2>/dev/null; then
+    AGENT_DATA="${AGENT_N}"
+  fi
+
+  printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${BR}|${PD}|${PT}|${PPD}|${QA}|${GH_URL}|${GIT_STAGED:-0}|${GIT_MODIFIED:-0}|${GIT_AHEAD:-0}|${EXEC_STATUS:-}|${EXEC_WAVE:-0}|${EXEC_TWAVES:-0}|${EXEC_DONE:-0}|${EXEC_TOTAL:-0}|${EXEC_CURRENT:-}|${AGENT_DATA:-0}" > "$FAST_CF" 2>/dev/null
 fi
 
-# --- Usage limits (cached 60s) ---
-# API: https://api.anthropic.com/api/oauth/usage
-# Requires: Authorization: Bearer <token>, anthropic-beta: oauth-2025-04-20
-# Response: five_hour, seven_day, seven_day_opus (utilization 0-100, resets_at ISO),
-#           extra_usage (utilization, monthly_limit, used_credits)
+if [ -O "$FAST_CF" ]; then
+  IFS='|' read -r PH TT EF BR PD PT PPD QA GH_URL GIT_STAGED GIT_MODIFIED GIT_AHEAD \
+                  EXEC_STATUS EXEC_WAVE EXEC_TWAVES EXEC_DONE EXEC_TOTAL EXEC_CURRENT \
+                  AGENT_N < "$FAST_CF"
+fi
 
-USAGE_CF="${_CACHE}-usage"
-USAGE_LINE=""
+# Reconstruct agent display line from count
+AGENT_LINE=""
+if [ "${AGENT_N:-0}" -gt 0 ] 2>/dev/null; then
+  AGENT_LINE="${C}◆${X} ${AGENT_N} agent$([ "$AGENT_N" -gt 1 ] && echo s) working"
+fi
 
-if ! cache_fresh "$USAGE_CF" 60; then
-  # Try to get OAuth token from macOS Keychain
+# --- Slow cache: usage limits + update check (60s TTL) ---
+
+SLOW_CF="${_CACHE}-slow"
+
+if ! cache_fresh "$SLOW_CF" 60; then
+  # --- Usage limits ---
   OAUTH_TOKEN=""
   if [ "$_OS" = "Darwin" ]; then
     CRED_JSON=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
@@ -218,6 +222,9 @@ if ! cache_fresh "$USAGE_CF" 60; then
     fi
   fi
 
+  FIVE_PCT=0; FIVE_EPOCH=0; WEEK_PCT=0; WEEK_EPOCH=0; SONNET_PCT=-1
+  EXTRA_ENABLED=0; EXTRA_PCT=-1; EXTRA_USED_C=0; EXTRA_LIMIT_C=0; FETCH_OK="noauth"
+
   if [ -n "$OAUTH_TOKEN" ]; then
     USAGE_RAW=$(curl -s --max-time 3 \
       -H "Authorization: Bearer ${OAUTH_TOKEN}" \
@@ -225,8 +232,6 @@ if ! cache_fresh "$USAGE_CF" 60; then
       "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
 
     if [ -n "$USAGE_RAW" ] && echo "$USAGE_RAW" | jq -e '.five_hour' >/dev/null 2>&1; then
-      # Parse all usage data in a single jq call (no eval — safe extraction via read)
-      # utilization is already 0-100 (NOT 0-1), so just floor it
       IFS='|' read -r FIVE_PCT FIVE_EPOCH WEEK_PCT WEEK_EPOCH SONNET_PCT \
                       EXTRA_ENABLED EXTRA_PCT EXTRA_USED_C EXTRA_LIMIT_C <<< \
         "$(echo "$USAGE_RAW" | jq -r '
@@ -244,68 +249,76 @@ if ! cache_fresh "$USAGE_CF" 60; then
             ((.extra_usage.monthly_limit // 0) | floor)
           ] | join("|")
         ' 2>/dev/null)"
-
-      printf '%s\n' "${FIVE_PCT:-0}|${FIVE_EPOCH:-0}|${WEEK_PCT:-0}|${WEEK_EPOCH:-0}|${SONNET_PCT:--1}|${EXTRA_ENABLED:-0}|${EXTRA_PCT:--1}|${EXTRA_USED_C:-0}|${EXTRA_LIMIT_C:-0}|ok" > "$USAGE_CF" 2>/dev/null
+      FETCH_OK="ok"
     else
-      printf '%s\n' "0|0|0|0|-1|0|-1|0|0|fail" > "$USAGE_CF" 2>/dev/null
+      FETCH_OK="fail"
     fi
-  else
-    printf '%s\n' "noauth" > "$USAGE_CF" 2>/dev/null
   fi
+
+  # --- Update check ---
+  UPDATE_AVAIL=""
+  REMOTE_VER=$(curl -sf --max-time 3 "https://raw.githubusercontent.com/yidakee/vibe-better-with-claude-code-vbw/main/VERSION" 2>/dev/null | tr -d '[:space:]')
+  if [ -n "$REMOTE_VER" ] && [ -n "$_VER" ] && [ "$REMOTE_VER" != "$_VER" ]; then
+    NEWEST=$(printf '%s\n%s\n' "$_VER" "$REMOTE_VER" | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1)
+    [ "$NEWEST" = "$REMOTE_VER" ] && UPDATE_AVAIL="$REMOTE_VER"
+  fi
+
+  printf '%s\n' "${FIVE_PCT:-0}|${FIVE_EPOCH:-0}|${WEEK_PCT:-0}|${WEEK_EPOCH:-0}|${SONNET_PCT:--1}|${EXTRA_ENABLED:-0}|${EXTRA_PCT:--1}|${EXTRA_USED_C:-0}|${EXTRA_LIMIT_C:-0}|${FETCH_OK}|${UPDATE_AVAIL:-}" > "$SLOW_CF" 2>/dev/null
 fi
 
-USAGE_DATA=""
-[ -O "$USAGE_CF" ] && USAGE_DATA=$(cat "$USAGE_CF" 2>/dev/null)
+if [ -O "$SLOW_CF" ]; then
+  IFS='|' read -r FIVE_PCT FIVE_EPOCH WEEK_PCT WEEK_EPOCH SONNET_PCT \
+                  EXTRA_ENABLED EXTRA_PCT EXTRA_USED_C EXTRA_LIMIT_C \
+                  FETCH_OK UPDATE_AVAIL < "$SLOW_CF"
+fi
 
-if [ "$USAGE_DATA" != "noauth" ]; then
-  IFS='|' read -r FIVE_PCT FIVE_EPOCH WEEK_PCT WEEK_EPOCH SONNET_PCT EXTRA_ENABLED EXTRA_PCT EXTRA_USED_C EXTRA_LIMIT_C FETCH_OK <<< "$USAGE_DATA"
+# --- Cost cache: previous snapshot for delta tracking ---
 
-  if [ "$FETCH_OK" = "ok" ]; then
-    # Countdown helper: epoch -> "~2h13m" / "~3d 2h" / "now"
-    countdown() {
-      local epoch="$1"
-      if [ "${epoch:-0}" -gt 0 ] 2>/dev/null; then
-        local diff=$((epoch - NOW))
-        if [ "$diff" -gt 0 ]; then
-          if [ "$diff" -ge 86400 ]; then
-            local dd=$((diff / 86400)) hh=$(( (diff % 86400) / 3600 ))
-            echo "~${dd}d ${hh}h"
-          else
-            local hh=$((diff / 3600)) mm=$(( (diff % 3600) / 60 ))
-            echo "~${hh}h${mm}m"
-          fi
+COST_CF="${_CACHE}-cost"
+PREV_COST=""
+[ -O "$COST_CF" ] && PREV_COST=$(cat "$COST_CF" 2>/dev/null)
+printf '%s\n' "${COST}" > "$COST_CF" 2>/dev/null
+
+# --- Usage rendering ---
+
+USAGE_LINE=""
+if [ "$FETCH_OK" = "ok" ]; then
+  # Countdown helper
+  countdown() {
+    local epoch="$1"
+    if [ "${epoch:-0}" -gt 0 ] 2>/dev/null; then
+      local diff=$((epoch - NOW))
+      if [ "$diff" -gt 0 ]; then
+        if [ "$diff" -ge 86400 ]; then
+          local dd=$((diff / 86400)) hh=$(( (diff % 86400) / 3600 ))
+          echo "~${dd}d ${hh}h"
         else
-          echo "now"
+          local hh=$((diff / 3600)) mm=$(( (diff % 3600) / 60 ))
+          echo "~${hh}h${mm}m"
         fi
+      else
+        echo "now"
       fi
-    }
-
-    FIVE_REM=$(countdown "$FIVE_EPOCH")
-    WEEK_REM=$(countdown "$WEEK_EPOCH")
-
-    # Session (5-hour rolling window)
-    USAGE_LINE="Session: $(progress_bar "${FIVE_PCT:-0}" 20) ${FIVE_PCT:-0}%"
-    [ -n "$FIVE_REM" ] && USAGE_LINE="$USAGE_LINE $FIVE_REM"
-
-    # Weekly (7-day rolling window, all models)
-    USAGE_LINE="$USAGE_LINE ${D}│${X} Weekly: $(progress_bar "${WEEK_PCT:-0}" 20) ${WEEK_PCT:-0}%"
-    [ -n "$WEEK_REM" ] && USAGE_LINE="$USAGE_LINE $WEEK_REM"
-
-    # Sonnet (7-day Sonnet-specific) — only show if present
-    if [ "${SONNET_PCT:--1}" -ge 0 ] 2>/dev/null; then
-      USAGE_LINE="$USAGE_LINE ${D}│${X} Sonnet: $(progress_bar "${SONNET_PCT}" 20) ${SONNET_PCT}%"
     fi
+  }
 
-    # Extra usage (monthly spend) — only show if enabled
-    if [ "${EXTRA_ENABLED:-0}" = "1" ] && [ "${EXTRA_PCT:--1}" -ge 0 ] 2>/dev/null; then
-      # Credits are in cents — divide by 100 for dollars
-      EXTRA_USED_D="$((EXTRA_USED_C / 100)).$( printf '%02d' $((EXTRA_USED_C % 100)) )"
-      EXTRA_LIMIT_D="$((EXTRA_LIMIT_C / 100)).$( printf '%02d' $((EXTRA_LIMIT_C % 100)) )"
-      USAGE_LINE="$USAGE_LINE ${D}│${X} Extra: $(progress_bar "${EXTRA_PCT}" 20) ${EXTRA_PCT}% \$${EXTRA_USED_D}/\$${EXTRA_LIMIT_D}"
-    fi
-  else
-    USAGE_LINE="${D}Limits: fetch failed (retry in 60s)${X}"
+  FIVE_REM=$(countdown "$FIVE_EPOCH")
+  WEEK_REM=$(countdown "$WEEK_EPOCH")
+
+  USAGE_LINE="Session: $(progress_bar "${FIVE_PCT:-0}" 20) ${FIVE_PCT:-0}%"
+  [ -n "$FIVE_REM" ] && USAGE_LINE="$USAGE_LINE $FIVE_REM"
+  USAGE_LINE="$USAGE_LINE ${D}│${X} Weekly: $(progress_bar "${WEEK_PCT:-0}" 20) ${WEEK_PCT:-0}%"
+  [ -n "$WEEK_REM" ] && USAGE_LINE="$USAGE_LINE $WEEK_REM"
+  if [ "${SONNET_PCT:--1}" -ge 0 ] 2>/dev/null; then
+    USAGE_LINE="$USAGE_LINE ${D}│${X} Sonnet: $(progress_bar "${SONNET_PCT}" 20) ${SONNET_PCT}%"
   fi
+  if [ "${EXTRA_ENABLED:-0}" = "1" ] && [ "${EXTRA_PCT:--1}" -ge 0 ] 2>/dev/null; then
+    EXTRA_USED_D="$((EXTRA_USED_C / 100)).$( printf '%02d' $((EXTRA_USED_C % 100)) )"
+    EXTRA_LIMIT_D="$((EXTRA_LIMIT_C / 100)).$( printf '%02d' $((EXTRA_LIMIT_C % 100)) )"
+    USAGE_LINE="$USAGE_LINE ${D}│${X} Extra: $(progress_bar "${EXTRA_PCT}" 20) ${EXTRA_PCT}% \$${EXTRA_USED_D}/\$${EXTRA_LIMIT_D}"
+  fi
+elif [ "$FETCH_OK" = "fail" ]; then
+  USAGE_LINE="${D}Limits: fetch failed (retry in 60s)${X}"
 else
   USAGE_LINE="${D}Limits: N/A (using API key)${X}"
 fi
@@ -325,46 +338,6 @@ if [ -n "$GH_URL" ]; then
   fi
 fi
 
-# --- Agent activity (cached 10s) ---
-# Detect running agents by counting claude processes for this user
-
-AGENT_CF="${_CACHE}-agents"
-AGENT_LINE=""
-
-if ! cache_fresh "$AGENT_CF" 10; then
-  AGENT_DATA=""
-  AGENT_N=$(( $(pgrep -u "$_UID" -cf "claude" 2>/dev/null || echo 1) - 1 ))
-  if [ "$AGENT_N" -gt 0 ] 2>/dev/null; then
-    AGENT_DATA="${C}◆${X} ${AGENT_N} agent$([ "$AGENT_N" -gt 1 ] && echo s) working"
-  fi
-  printf '%s\n' "$AGENT_DATA" > "$AGENT_CF" 2>/dev/null
-fi
-
-AGENT_LINE=""
-[ -O "$AGENT_CF" ] && AGENT_LINE=$(cat "$AGENT_CF" 2>/dev/null)
-
-# --- Update check (cached 1h) ---
-
-UPDATE_CF="${_CACHE}-update"
-UPDATE_AVAIL=""
-
-if ! cache_fresh "$UPDATE_CF" 3600; then
-  REMOTE_VER=$(curl -sf --max-time 3 "https://raw.githubusercontent.com/yidakee/vibe-better-with-claude-code-vbw/main/VERSION" 2>/dev/null | tr -d '[:space:]')
-  if [ -n "$REMOTE_VER" ] && [ -n "$_VER" ] && [ "$REMOTE_VER" != "$_VER" ]; then
-    # Compare versions: remote is newer if sort -V puts it last
-    NEWEST=$(printf '%s\n%s\n' "$_VER" "$REMOTE_VER" | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1)
-    if [ "$NEWEST" = "$REMOTE_VER" ]; then
-      printf '%s\n' "$REMOTE_VER" > "$UPDATE_CF" 2>/dev/null
-    else
-      printf '%s\n' "" > "$UPDATE_CF" 2>/dev/null
-    fi
-  else
-    printf '%s\n' "" > "$UPDATE_CF" 2>/dev/null
-  fi
-fi
-
-[ -O "$UPDATE_CF" ] && UPDATE_AVAIL=$(cat "$UPDATE_CF" 2>/dev/null | tr -d '[:space:]')
-
 # --- Context bar (20 chars wide) ---
 
 [ "$PCT" -ge 90 ] && BC="$R" || { [ "$PCT" -ge 70 ] && BC="$Y" || BC="$G"; }
@@ -382,7 +355,7 @@ if [ "$EXEC_STATUS" = "running" ] && [ "${EXEC_TOTAL:-0}" -gt 0 ] 2>/dev/null; t
   [ -n "$EXEC_CURRENT" ] && L1="$L1 ${D}│${X} ${C}◆${X} ${EXEC_CURRENT}"
 elif [ "$EXEC_STATUS" = "complete" ]; then
   # Auto-cleanup: remove finished execution state
-  rm -f .vbw-planning/.execution-state.json "$EXEC_CF" 2>/dev/null
+  rm -f .vbw-planning/.execution-state.json "$FAST_CF" 2>/dev/null
   EXEC_STATUS=""
   # Fall through to normal display
   L1="${C}${B}[VBW]${X}"
