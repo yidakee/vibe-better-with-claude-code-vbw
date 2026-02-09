@@ -57,7 +57,7 @@ If `.vbw-planning/.execution-state.json` exists:
 
 ### Step 4: Check for unfilled templates
 
-If PROJECT.md contains the template placeholder `{project-description}`, the project was initialized but never defined. In this case, suggest `/vbw:new` as the next action instead of the resume file's instructions.
+If PROJECT.md contains the template placeholder `{project-description}`, the project was initialized but never defined. In this case, suggest `/vbw:implement` as the next action instead of the resume file's instructions.
 
 ### Step 5: Present resume context
 
@@ -87,7 +87,7 @@ If PROJECT.md contains the template placeholder `{project-description}`, the pro
     {goal from resume file}
 
 ➜ Next Up
-  {If templates unfilled: "/vbw:new -- Define your project (name, requirements, roadmap)"}
+  {If templates unfilled: "/vbw:implement -- Define your project (auto-detects setup needed)"}
   {If build completed since pause: "/vbw:qa {N} -- Verify the completed build"}
   {If build was interrupted: "/vbw:execute {N} -- Resume the interrupted build"}
   {Otherwise: specific next command from resume instructions}
