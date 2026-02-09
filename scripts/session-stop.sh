@@ -39,4 +39,15 @@ jq -n \
 
 rm -f "$TEMP_FILE" 2>/dev/null
 
+# Persist cost summary from agent-attributed ledger (if it exists)
+if [ -f "$PLANNING_DIR/.cost-ledger.json" ]; then
+  COST_DATA=$(cat "$PLANNING_DIR/.cost-ledger.json" 2>/dev/null)
+  if [ -n "$COST_DATA" ] && echo "$COST_DATA" | jq empty 2>/dev/null; then
+    jq -n --arg ts "$TIMESTAMP" --argjson costs "$COST_DATA" \
+      '{timestamp: $ts, type: "cost_summary", costs: $costs}' \
+      >> "$PLANNING_DIR/.session-log.jsonl" 2>/dev/null
+  fi
+  rm -f "$PLANNING_DIR/.cost-ledger.json" "$PLANNING_DIR/.active-agent" 2>/dev/null
+fi
+
 exit 0
