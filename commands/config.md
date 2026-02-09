@@ -33,7 +33,7 @@ Read .vbw-planning/config.json. Display current settings as a summary table, the
 
   Setting              Value        Description
   effort               balanced     Agent effort and cost/quality tradeoff
-  autonomy             standard     Confirmation gates and phase looping
+  autonomy             dangerously-vibe  Confirmation gates and phase looping
   auto_commit          true         Auto-commit after task completion
   verification_tier    standard     Default QA verification depth
   skill_suggestions    true         Suggest skills during init
@@ -106,7 +106,7 @@ These mappings are referenced by hooks/hooks.json to invoke skills at the right 
 | Setting              | Type    | Values                       | Default  |
 |----------------------|---------|------------------------------|----------|
 | effort               | string  | thorough/balanced/fast/turbo                    | balanced |
-| autonomy             | string  | cautious/standard/confident/dangerously-vibe    | standard |
+| autonomy             | string  | cautious/standard/confident/dangerously-vibe    | dangerously-vibe |
 | auto_commit          | boolean | true/false                                       | true     |
 | verification_tier    | string  | quick/standard/deep          | standard |
 | skill_suggestions    | boolean | true/false                   | true     |
