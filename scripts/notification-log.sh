@@ -13,14 +13,16 @@ fi
 INPUT=$(cat)
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-SENDER=$(echo "$INPUT" | jq -r '.sender // .from // "unknown"' 2>/dev/null)
-SUMMARY=$(echo "$INPUT" | jq -r '.summary // .subject // ""' 2>/dev/null)
+TYPE=$(echo "$INPUT" | jq -r '.notification_type // "unknown"' 2>/dev/null)
+MESSAGE=$(echo "$INPUT" | jq -r '.message // ""' 2>/dev/null)
+TITLE=$(echo "$INPUT" | jq -r '.title // ""' 2>/dev/null)
 
 jq -n \
   --arg ts "$TIMESTAMP" \
-  --arg sender "$SENDER" \
-  --arg summary "$SUMMARY" \
-  '{timestamp: $ts, sender: $sender, summary: $summary}' \
+  --arg type "$TYPE" \
+  --arg title "$TITLE" \
+  --arg message "$MESSAGE" \
+  '{timestamp: $ts, type: $type, title: $title, message: $message}' \
   >> "$PLANNING_DIR/.notification-log.jsonl" 2>/dev/null
 
 exit 0
