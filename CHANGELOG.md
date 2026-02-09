@@ -2,6 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.88] - 2026-02-09
+
+### Added
+
+- **`README Quick Start`** -- prominent warning against using `/clear`, explaining Opus 4.6 auto-compaction and directing users to `/vbw:resume` for context recovery.
+
+---
+
 ## [1.0.87] - 2026-02-09
 
 ### Fixed
