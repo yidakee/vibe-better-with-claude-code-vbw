@@ -12,11 +12,6 @@ allowed-tools: Read, Edit
 
 Working directory: `!`pwd``
 
-Current state:
-```
-!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
-```
-
 ## Guard
 
 1. **Not initialized:** Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.

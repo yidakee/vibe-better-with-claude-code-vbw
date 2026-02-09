@@ -11,11 +11,6 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch
 
 Working directory: `!`pwd``
 
-Current state:
-```
-!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
-```
-
 Config: Pre-injected by SessionStart hook (effort, autonomy, verification_tier).
 
 ## Guard

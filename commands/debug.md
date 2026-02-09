@@ -11,11 +11,6 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch
 
 Working directory: `!`pwd``
 
-Current state:
-```
-!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
-```
-
 Recent commits:
 ```
 !`git log --oneline -10 2>/dev/null || echo "No git history"`

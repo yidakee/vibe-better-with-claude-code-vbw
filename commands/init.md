@@ -149,8 +149,8 @@ Save the full JSON result but do NOT display curated suggestions yet. Only displ
 **2c. Launch codebase mapping (adaptive):**
 
 - If **greenfield** (BROWNFIELD=false): skip mapping entirely. Display: `○ Greenfield — skipping codebase mapping`
-- If `SOURCE_FILE_COUNT < 200`: run map **inline** (synchronous). Follow `@${CLAUDE_PLUGIN_ROOT}/commands/map.md` directly. Solo mode completes fast. Display per-document progress as the map command outputs it.
-- If `SOURCE_FILE_COUNT >= 200`: launch map **in background**. Follow `@${CLAUDE_PLUGIN_ROOT}/commands/map.md` as a background operation with Scout teammates. Display: `◆ Codebase mapping started in background ({SOURCE_FILE_COUNT} files)`
+- If `SOURCE_FILE_COUNT < 200`: run map **inline** (synchronous). Read `${CLAUDE_PLUGIN_ROOT}/commands/map.md` and follow it directly. Solo mode completes fast. Display per-document progress as the map command outputs it.
+- If `SOURCE_FILE_COUNT >= 200`: launch map **in background**. Read `${CLAUDE_PLUGIN_ROOT}/commands/map.md` and follow it as a background operation with Scout teammates. Display: `◆ Codebase mapping started in background ({SOURCE_FILE_COUNT} files)`
 
 **2d. find-skills bootstrap** — check `find_skills_available` from the detect-stack JSON result:
 
@@ -263,7 +263,7 @@ Keep under 200 lines. Add `✓ CLAUDE.md` to the summary output.
   {○ Skills.sh registry (skipped) — if find-skills was declined or unavailable}
 ```
 
-Then auto-launch `/vbw:implement` by following `@${CLAUDE_PLUGIN_ROOT}/commands/implement.md`.
+Then auto-launch `/vbw:implement` by reading `${CLAUDE_PLUGIN_ROOT}/commands/implement.md` and following it.
 
 If greenfield:
 ```

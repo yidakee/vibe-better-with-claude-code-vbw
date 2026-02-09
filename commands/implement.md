@@ -115,7 +115,7 @@ Re-evaluate state. The project now has PROJECT.md but may have no phases (if the
 
 > Triggered when PROJECT.md exists but no phase directories exist in the resolved phases path.
 
-Reference the full scoping protocol from `@${CLAUDE_PLUGIN_ROOT}/commands/plan.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/commands/plan.md` for the full scoping protocol (Scoping Mode section).
 
 Execute the scoping flow:
 1. Load project context (PROJECT.md, REQUIREMENTS.md, codebase map if available).
@@ -163,7 +163,7 @@ Check the target phase directory for existing `*-PLAN.md` files.
 
 > Skipped entirely if plans already exist (State 4).
 
-Reference the full planning protocol from `@${CLAUDE_PLUGIN_ROOT}/commands/plan.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/commands/plan.md` for the full planning protocol (Phase Planning Mode section).
 
 Display:
 ```
@@ -194,7 +194,7 @@ At all other autonomy levels (`standard`, `confident`, `dangerously-vibe`): auto
 
 ### Execution step
 
-Reference the full execution protocol from `@${CLAUDE_PLUGIN_ROOT}/commands/execute.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/commands/execute.md` for the full execution protocol.
 
 Execute the build flow:
 1. Parse effort and load plans.
