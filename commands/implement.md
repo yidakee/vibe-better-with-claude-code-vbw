@@ -142,38 +142,16 @@ Re-evaluate state. The project now has PROJECT.md but may have no phases (if the
 
 > Triggered when PROJECT.md exists but no phase directories exist in the resolved phases path.
 
-### Scoping Steps
+Reference the full scoping protocol from `@${CLAUDE_PLUGIN_ROOT}/commands/plan.md`.
 
-**Step S1: Load project context**
+Execute the scoping flow:
+1. Load project context (PROJECT.md, REQUIREMENTS.md, codebase map if available).
+2. Ask "What do you want to build?" (or use $ARGUMENTS as scope description).
+3. Decompose into 3-5 phases with names, goals, and success criteria.
+4. Write ROADMAP.md and create phase directories.
+5. Update STATE.md.
 
-Read `.vbw-planning/PROJECT.md` and `.vbw-planning/REQUIREMENTS.md` to understand the project. If `.vbw-planning/codebase/` exists, read INDEX.md and ARCHITECTURE.md for codebase context.
-
-**Step S2: Gather scope**
-
-If $ARGUMENTS provided (excluding flags like --effort), use as scope description. Otherwise ask:
-
-"What do you want to build next? Describe the work you want to accomplish."
-
-If REQUIREMENTS.md has uncovered requirements (not yet mapped to phases), present them as suggestions.
-
-**Step S3: Decompose into phases**
-
-Based on the user's answer and existing requirements:
-1. Propose 3-5 phases with name, goal, and success criteria
-2. Each phase should be independently plannable and executable
-3. Map requirements (REQ-IDs) to phases where applicable
-
-**Step S4: Write roadmap and create phase directories**
-
-Update ROADMAP.md with the proposed phases. Create phase directories in the resolved phases path (`.vbw-planning/phases/{NN}-{slug}/` for each phase).
-
-**Step S5: Update state**
-
-Update STATE.md: set position to Phase 1, status to "Pending planning".
-
-**Step S6: Transition**
-
-Announce scoping complete and re-evaluate state. The project now has phases, so the state machine should route to State 3-4 (plan + execute for the first unplanned phase).
+After scoping completes, re-evaluate state. The project now has phases, so the state machine should route to State 3-4.
 
 ```
 Scoping complete. {N} phases created. Transitioning to planning...
