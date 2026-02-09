@@ -8,6 +8,12 @@
 
 set -eo pipefail
 
+# --- jq dependency check ---
+if ! command -v jq &>/dev/null; then
+  echo '{"error":"jq is required but not installed. Install: brew install jq (macOS) / apt install jq (Linux)"}' >&2
+  exit 1
+fi
+
 PROJECT_DIR="${1:-.}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 MAPPINGS="$SCRIPT_DIR/../config/stack-mappings.json"
