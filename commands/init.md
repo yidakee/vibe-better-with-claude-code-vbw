@@ -111,33 +111,32 @@ Create `.vbw-planning/phases/` directory.
 
 Ensure config.json includes `"agent_teams": true`.
 
-### Step 2: Brownfield detection + parallel discovery
+### Step 2: Brownfield detection + discovery
 
-**2a. Brownfield detection (quick):**
+**2a. Brownfield detection and file count:**
 
 If BROWNFIELD=true:
-1. Count source files by extension (Glob)
-2. Check for test files, CI/CD, Docker, monorepo indicators
-3. Add Codebase Profile section to STATE.md
+1. Count source files by extension (Glob), excluding `.vbw-planning/`, `node_modules/`, `.git/`, `vendor/`, `dist/`, `build/`, `target/`, `.next/`, `__pycache__/`, `.venv/`, `coverage/`.
+2. Store `SOURCE_FILE_COUNT` from this count.
+3. Check for test files, CI/CD, Docker, monorepo indicators.
+4. Add Codebase Profile section to STATE.md.
 
-**2b. Parallel launch — run ALL of the following concurrently (use parallel tool calls):**
+**2b. Run detect-stack (foreground):**
 
-Launch these tasks in the SAME message so they execute in parallel:
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-stack.sh "$(pwd)"`.
 
-| Track | What | How |
-|-------|------|-----|
-| **Map** | Codebase mapping | Launch `/vbw:map` by following `@${CLAUDE_PLUGIN_ROOT}/commands/map.md`. Runs as a background operation with Scout teammates. Always runs regardless of brownfield status — the map command handles empty projects via its own guard. |
-| **Detect** | Stack detection | Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-stack.sh "$(pwd)"` |
+Save the full JSON result but do NOT display curated suggestions yet. Only display the detected stack:
+```
+  ✓ Stack: {comma-separated detected_stack items}
+```
 
-**2c. Process detect-stack.sh results (immediately after Detect completes):**
+**2c. Launch codebase mapping (adaptive):**
 
-The Detect track returns JSON with: `detected_stack[]`, `installed.global[]`, `installed.project[]`, `recommended_skills[]`, `suggestions[]`, `find_skills_available`.
+- If **greenfield** (BROWNFIELD=false): skip mapping entirely. Display: `○ Greenfield — skipping codebase mapping`
+- If `SOURCE_FILE_COUNT < 200`: run map **inline** (synchronous). Follow `@${CLAUDE_PLUGIN_ROOT}/commands/map.md` directly. Solo mode completes fast. Display per-document progress as the map command outputs it.
+- If `SOURCE_FILE_COUNT >= 200`: launch map **in background**. Follow `@${CLAUDE_PLUGIN_ROOT}/commands/map.md` as a background operation with Scout teammates. Display: `◆ Codebase mapping started in background ({SOURCE_FILE_COUNT} files)`
 
-Display the detected stack and installed skills.
-
-Display curated suggestions from `suggestions[]`. For each suggestion, show the install command: `npx skills add <skill-name> -g -y`.
-
-**2d. find-skills bootstrap** — check `find_skills_available` from the JSON result:
+**2d. find-skills bootstrap** — check `find_skills_available` from the detect-stack JSON result:
 
 - If `true`: display "✓ Skills.sh registry — available" and proceed to Step 3.
 - If `false`: ask the user with AskUserQuestion:
@@ -155,26 +154,31 @@ If declined: display "○ Skipped. Run /vbw:skills later to search the registry.
 
 ### Step 3: Convergence — augment and search
 
-This step waits for codebase mapping to finish (if brownfield) before proceeding.
+**3a. Wait for mapping (if background):**
 
-**3a. Augment with map data:**
+- If map ran inline (solo mode) or was skipped: proceed immediately.
+- If map ran in background: wait for it to complete. Display:
+  ```
+  ◆ Waiting for codebase mapping...
+  ```
+  Then when complete:
+  ```
+  ✓ Codebase mapped ({document-count} documents)
+  ```
+
+**3b. Augment with map data:**
 
 If `.vbw-planning/codebase/STACK.md` exists (mapping completed), read it to extract additional stack components that `detect-stack.sh` may have missed (e.g., frameworks detected through code analysis rather than manifest files). Merge these into `detected_stack[]`.
 
-Display:
-```
-  ✓ Codebase mapped ({file-count} source files)
-```
+**3c. Parallel registry search** — if find-skills is available (either was already installed or just installed in 2d):
 
-**3b. Parallel registry search** — if find-skills is available (either was already installed or just installed in 2d):
-
-- If `detected_stack[]` is non-empty (including any augmented items from 3a): run `npx skills find "<stack-item>"` for ALL detected stack items **in parallel** (use multiple concurrent Bash tool calls in the SAME message). Collect and deduplicate results against already-installed skills.
+- If `detected_stack[]` is non-empty (including any augmented items from 3b): run `npx skills find "<stack-item>"` for ALL detected stack items **in parallel** (use multiple concurrent Bash tool calls in the SAME message). Collect and deduplicate results against already-installed skills.
 - If `detected_stack[]` is empty: run a general search based on the project type (e.g., if there are .sh files, search "shell scripting"; if .md files dominate, search "documentation").
 - Display registry results with `(registry)` attribution.
 
-**3c. Offer to install** — if there are any suggestions (curated from 2c + registry from 3b combined), ask the user with AskUserQuestion using multiSelect which ones to install. Max 4 options. Include "Skip" as an option. For selected skills, run `npx skills add <skill> -g -y`.
+**3d. Unified skill prompt** — combine curated suggestions from detect-stack (saved in 2b) with registry results (from 3c) into a single AskUserQuestion using multiSelect. Tag each with `(curated)` or `(registry)`. Max 4 options. Include "Skip" as an option. For selected skills, run `npx skills add <skill> -g -y`.
 
-**3d. Write Skills section to STATE.md** — using the format from `${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md` (SKIL-05).
+**3e. Write Skills section to STATE.md** — using the format from `${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md` (SKIL-05).
 
 ### Step 3.5: Generate bootstrap CLAUDE.md
 
@@ -182,7 +186,7 @@ Write a CLAUDE.md at the project root. This is auto-loaded by Claude Code into e
 
 `/vbw:new` will later regenerate CLAUDE.md with project-specific content. This bootstrap version establishes behavioral rules only.
 
-Write the following to `CLAUDE.md` (adjust installed skills list from Step 3d):
+Write the following to `CLAUDE.md` (adjust installed skills list from Step 3e):
 
 ```markdown
 # VBW-Managed Project

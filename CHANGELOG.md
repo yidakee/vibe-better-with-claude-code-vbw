@@ -2,6 +2,20 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.69] - 2026-02-09
+
+### Changed
+
+- **Adaptive map sizing** — `/vbw:map` now sizes the mapping strategy to the codebase: solo (< 200 files, no Agent Team), duo (200–1000 files, 2 scouts), quad (1000+ files, 4 scouts). Previously always spawned 4 Scout teammates regardless of project size, causing 6+ minutes of overhead for small codebases.
+- **`--tier=solo|duo|quad` override** — force a specific mapping tier via argument, bypassing auto-detection.
+- **Solo mode maps inline** — orchestrator analyzes all 4 domains sequentially and writes documents directly, skipping TeamCreate/SendMessage/shutdown overhead entirely.
+- **Agent Teams guard in map** — forces solo mode with `⚠` note when Agent Teams is not enabled.
+- **`mapping_tier` in META.md** — map output now records which tier was used, displayed in the completion banner.
+- **Init flow reorder** — `/vbw:init` no longer shows skill suggestions before codebase mapping completes. Detect-stack results are saved silently (only stack summary shown), mapping runs, then curated + registry suggestions are combined into a single unified prompt.
+- **Adaptive mapping in init** — small codebases (< 200 files) run map inline synchronously (~30s), larger codebases launch map in background. Greenfield projects skip mapping entirely.
+- **Unified skill prompt** — curated and registry skill suggestions now appear in one AskUserQuestion with `(curated)` / `(registry)` tags, instead of showing curated suggestions early and registry results later.
+- **Continuous progress output** — both map and init now display progress per-document (solo) or per-scout (duo/quad) with no silent gaps.
+
 ## [1.0.67] - 2026-02-09
 
 ### Fixed
