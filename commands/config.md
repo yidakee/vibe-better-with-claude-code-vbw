@@ -67,6 +67,20 @@ For each setting the user changed from its current value:
 
 If nothing changed, display: "✓ No changes made."
 
+**Step 4: Profile drift detection**
+
+After applying changes, check if any of the profile-tracked settings (effort, autonomy, verification_tier) were modified:
+
+1. Read `active_profile` from config.json (default: "default")
+2. Compare the new effort/autonomy/verification_tier values against the active profile's expected values (see built-in profiles in `/vbw:profile` or `custom_profiles` in config.json)
+3. If the values no longer match the active profile, ask via AskUserQuestion:
+   - Question: "Your settings no longer match the '{active_profile}' profile. Save as a new profile?"
+   - Options: "Save as new profile" (routes to `/vbw:profile save`), "No thanks" (set `active_profile` to "custom")
+4. If the user chooses to save, tell them to run `/vbw:profile save`
+5. If the user declines, update `active_profile` to "custom" in config.json
+
+Skip this step if no profile-tracked settings were changed, or if `active_profile` is already "custom".
+
 Then show:
 ```
 ```
