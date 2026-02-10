@@ -1,47 +1,25 @@
-<!-- VBW ROADMAP TEMPLATE (ARTF-07) -- Phase-based project roadmap -->
-<!-- Created by Architect agent during /vbw scope -->
-
 # {Project Name} Roadmap
 
-## Overview
-
-<!-- 2-3 sentences: what the roadmap covers, total phases, timeline -->
-{roadmap-overview}
-
+{overview-sentence}
 ## Phases
+- [ ] Phase 1: {name}
+- [ ] Phase 2: {name}
+- [ ] Phase 3: {name}
 
-<!-- Quick reference checklist -->
-- [ ] Phase 1: {phase-name}
-- [ ] Phase 2: {phase-name}
-- [ ] Phase 3: {phase-name}
+### Phase 1: {Name}
+**Goal:** {what-this-achieves}
+**Deps:** {prerequisites-or-none}
+**Reqs:** REQ-{XX}, REQ-{XX}
+**Success:** {measurable-criterion}
 
-## Phase Details
-
-### Phase 1: {Phase Name}
-
-**Goal:** {what-this-phase-achieves}
-**Depends on:** {prerequisites-or-none}
-
-**Requirements:**
-- REQ-{XX}: {requirement-description}
-- REQ-{XX}: {requirement-description}
-
-**Success Criteria:**
-1. {measurable-criterion}
-2. {measurable-criterion}
-
-**Plans:**
-- [ ] Plan 01: {plan-name}
-- [ ] Plan 02: {plan-name}
-
-<!-- Repeat Phase Details block for each phase -->
+### Phase 2: {Name}
+**Goal:** {what-this-achieves}
+**Deps:** Phase 1
+**Reqs:** REQ-{XX}
+**Success:** {measurable-criterion}
 
 ## Progress
-
-| Phase | Plans Complete | Status | Completed |
-|-------|---------------|--------|-----------|
-| 1 - {name} | {0}/{total} | {pending/active/complete} | {date-or-dash} |
-| 2 - {name} | {0}/{total} | {pending/active/complete} | {date-or-dash} |
-
----
-*Last updated: {date} after {event}*
+| Phase | Done | Status | Date |
+|-------|------|--------|------|
+| 1 - {name} | {0}/{N} | {pending/active/complete} | {date} |
+| 2 - {name} | {0}/{N} | {pending/active/complete} | {date} |
