@@ -2,13 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
-## [Unreleased]
+## [1.0.98] - 2026-02-10
 
 ### Added
 
 - **Token economy engine** -- per-agent cost attribution in the statusline. Each render cycle computes cost delta and attributes it to the active agent (Dev, Lead, QA, Scout, Debugger, Architect, or Other). Accumulated in `.vbw-planning/.cost-ledger.json`. Displays `Cost: $X.XX` on Line 4 and a full economy breakdown on Line 5 (per-agent costs sorted descending, percentages, cache hit rate, $/line metric). Economy line suppressed when total cost is $0.00.
 - **Agent lifecycle hooks** -- `SubagentStart` hook writes active agent type to `.vbw-planning/.active-agent` via `scripts/agent-start.sh`. `SubagentStop` hook clears the marker via `scripts/agent-stop.sh`. Enables cost attribution to know which agent incurred each cost delta.
 - **`/vbw:status` economy section** -- status command reads `.cost-ledger.json` and displays per-agent cost breakdown when cost data is available. Guarded on file existence and non-zero total.
+- **GSD isolation** -- three-layer defense preventing GSD from accessing `.vbw-planning/`. Layer 1: `.claude/CLAUDE.md` instruction injection. Layer 2: project `CLAUDE.md` reinforcement. Layer 3: `security-filter.sh` PreToolUse hard block (exit 2) when `.gsd-isolation` flag exists and no VBW markers present. Two marker files (`.active-agent` for subagents, `.vbw-session` for commands) prevent false positives. Opt-in during `/vbw:init` with automatic GSD detection.
 
 ### Changed
 
@@ -17,6 +18,7 @@ All notable changes to VBW will be documented in this file.
 - **`session-stop.sh` cost persistence** -- session stop hook now reads `.cost-ledger.json` and appends a cost summary line to `.session-log.jsonl` before cleanup.
 - **`post-compact.sh` cost cleanup** -- compaction hook resets cost-tracking temp files (`.active-agent`, stale cache entries) to prevent attribution drift after context compaction.
 - **README statusline documentation** -- updated hook counts (18/10 to 20/11), added SubagentStart to hook diagram, documented economy line in statusline description.
+- **`/vbw:init` GSD detection** -- Step 1.7 checks `~/.claude/commands/gsd/` and `.planning/` to detect GSD. Prompts for isolation consent only when GSD is present; silent skip otherwise.
 
 ---
 
