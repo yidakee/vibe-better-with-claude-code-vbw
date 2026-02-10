@@ -65,7 +65,11 @@ Full analysis with methodology, per-mechanism breakdowns, architecture diagrams,
 
 VBW is open source because the best tools are built by the people who use them.
 
-Whether you're a seasoned engineer who wants to push the boundaries of what AI-assisted development can do, or someone who just discovered that a terminal isn't just for airport departures, you belong here. This project exists to make AI coding better for everyone, and "everyone" means exactly that.
+This project exists to make AI coding better for everyone, and "everyone" means exactly that.
+
+**For absolute beginners:** VBW may look intimidating, expecially if you've never used Claude Code, but it is, in fact, incredibly easy to use. And your results will be significantly better than using an IDE with a chatbot.
+
+**For seasoned developers:** Four effort profiles control agent depth and cost tradeoff. Four autonomy levels gate confirmation prompts from cautious (plan approval at balanced effort) to pure-vibe (full phase looping, zero stops). Verification tiers scale from quick sanity checks to deep goal-backward QA. Work profiles bundle effort, autonomy, and verification into switchable presets. Model routing pins Scout to Haiku and QA to Sonnet while Dev runs on Opus. Skill-hook wiring lets you trigger installed skills on PostToolUse and PreToolUse events with custom matchers. Convention enforcement auto-detects your codebase patterns during init and injects them into every agent's context via. Platform-enforced `disallowedTools` on 4 of 6 agents, not prompt-based restrictions. The beginners get guardrails; you get a control surface.
 
 **For contributors:** VBW is a living project. The plugin system, the agents, the verification pipeline - all of it is open to improvement. If you've found a better way to plan, build, or verify code with Claude, bring it. File an issue, open a PR, or just show up and share what you've learned. Every contribution makes the next person's experience better.
 
