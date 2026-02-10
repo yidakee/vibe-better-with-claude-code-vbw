@@ -2,6 +2,25 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.10.5] - 2026-02-10
+
+### Added
+
+- **`discovery`** -- intelligent questioning system for `/vbw:implement`. Discovery protocol reference (`references/discovery-protocol.md`) with profile-gated depth (yolo=skip, prototype=1-2, default=3-5, production=thorough), scenario-then-checklist format, and example questions.
+- **`config`** -- `discovery_questions` toggle (default: `true`) in `config/defaults.json`. Disabling skips all discovery prompts.
+- **`implement`** -- bootstrap discovery (State 1) rewrites static B2 questions with intelligent scenario+checklist flow, feeding answers into REQUIREMENTS.md.
+- **`implement`** -- phase-level discovery (States 3-4) asks 1-3 lightweight questions scoped to the phase goal before planning. Checks `discovery.json` to avoid re-asking.
+- **`discuss`** -- answers now written to `discovery.json` for cross-command memory, so `/vbw:discuss` and implement share the same question history.
+
+### Changed
+
+- **`hooks`** -- `state-updater.sh` auto-advances STATE.md to the next incomplete phase when all plans in a phase have summaries. Sets status to "active" on plan writes.
+- **`hooks`** -- `pre-push-hook.sh` simplified to a thin delegator routing to the latest cached plugin script via `sort -V | tail -1`.
+- **`profile`** -- added Discovery depth column to built-in effort profiles table.
+- **`config`** -- added `discovery_questions` to settings reference table.
+
+---
+
 ## [1.10.4] - 2026-02-10
 
 ### Changed
