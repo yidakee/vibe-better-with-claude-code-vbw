@@ -51,7 +51,29 @@ Phases directory already resolved by phase-detect.sh (`phases_dir`, `active_mile
 
 **Steps:**
 - **B1: PROJECT.md** — If $ARGUMENTS provided (excluding flags), use as description. Otherwise ask name + core purpose. Write immediately.
-- **B2: REQUIREMENTS.md** — Ask 3-5 questions: must-have features, users/audience, tech constraints, integrations, out of scope. Populate with REQ-ID format. Write immediately.
+- **B1.5: Discovery Depth Resolution** — Read `discovery_questions` and `active_profile` from config. Map:
+
+  | Profile | Depth | Questions |
+  |---------|-------|-----------|
+  | yolo | skip | 0 |
+  | prototype | quick | 1-2 |
+  | default | standard | 3-5 |
+  | production | thorough | 5-8 |
+
+  If `discovery_questions=false`: force depth=skip. Store DISCOVERY_DEPTH for B2.
+
+- **B2: REQUIREMENTS.md (Discovery)** — Behavior depends on DISCOVERY_DEPTH:
+
+  **If skip:** Ask 2 minimal static questions via AskUserQuestion: (1) "What are the must-have features?" (2) "Who will use this?" Populate REQUIREMENTS.md with REQ-IDs. Create `.vbw-planning/discovery.json` with `{"answered":[],"inferred":[]}`. Write immediately.
+
+  **If quick/standard/thorough:** Read `${CLAUDE_PLUGIN_ROOT}/references/discovery-protocol.md` (deferred load, TAU-01). Follow Bootstrap Discovery flow:
+  1. Analyze user's description (from B1) for domain, scale, users, complexity signals
+  2. **Round 1 — Scenarios:** Generate scenario questions per protocol wording guidelines. Present as AskUserQuestion with descriptive options where each option's description explains "this means..." consequences. Number of scenarios: quick=1, standard=2, thorough=3-4
+  3. **Round 2 — Checklists:** Based on Round 1 answers, generate targeted pick-many questions. Present as AskUserQuestion with `multiSelect: true`. Number of checklists: quick=1, standard=1-2, thorough=2-3
+  4. **Synthesize:** Translate all answers into technical REQUIREMENTS.md with REQ-IDs. Questions are friendly, requirements are precise.
+  5. **Store:** Create `.vbw-planning/discovery.json` with `answered[]` (each entry: question, answer, category, phase="bootstrap", date) and `inferred[]` (facts derived from answers). Write immediately.
+
+  **Wording rules (all depths):** No jargon in questions. Plain language first. Concrete situations over abstract concepts. Cause and effect for every choice. Assume user is not a developer. See protocol for full guidelines and examples.
 - **B3: ROADMAP.md** — Suggest 3-5 phases based on requirements. If `.vbw-planning/codebase/` exists, read INDEX.md, PATTERNS.md, ARCHITECTURE.md, CONCERNS.md. Each phase: name, goal, mapped reqs, success criteria. Write immediately. Create phase dirs.
 - **B4: STATE.md** — Update: project name, Phase 1 position, today's date, empty decisions, 0%.
 - **B5: Brownfield summary** — If BROWNFIELD=true AND no codebase/: count files by ext, check tests/CI/Docker/monorepo, add Codebase Profile to STATE.md.
