@@ -157,7 +157,12 @@ If greenfield: write `{"conventions": []}`. Display: `○ Conventions — none y
 
 **3d. Unified skill prompt:** Combine curated (from 2b) + registry (from 3c) results into single AskUserQuestion multiSelect. Tag `(curated)` or `(registry)`. Max 4 options + "Skip". Install selected: `npx skills add <skill> -g -y`.
 
-**3e.** Write Skills section to STATE.md per `${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md` (SKIL-05).
+**3e.** Write Skills section to STATE.md (SKIL-05 capability map). Protocol:
+  1. **Discovery (SKIL-01):** Scan `~/.claude/skills/` (global), `.claude/skills/` (project), `.claude/mcp.json` (mcp). Record name, scope, path per skill.
+  2. **Stack detection (SKIL-02):** Read `${CLAUDE_PLUGIN_ROOT}/config/stack-mappings.json`. For each category, match `detect` patterns via Glob/file content. Collect `recommended_skills[]`.
+  3. **find-skills bootstrap (SKIL-06):** Check `~/.claude/skills/find-skills/` or `~/.agents/skills/find-skills/`. If missing + `skill_suggestions=true`: offer install (`npx skills add vercel-labs/skills --skill find-skills -g -y`).
+  4. **Suggestions (SKIL-03/04):** Compare recommended vs installed. Tag each `(curated)` or `(registry)`. If `auto_install_skills=true`: auto-install. Else: display with install commands.
+  5. **Write STATE.md section:** Format: `### Skills` / `**Installed:** {list or "None detected"}` / `**Suggested:** {list or "None"}` / `**Stack detected:** {comma-separated}` / `**Registry available:** yes/no`
 
 ### Step 3.5: Generate bootstrap CLAUDE.md
 
