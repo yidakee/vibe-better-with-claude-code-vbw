@@ -25,7 +25,7 @@ Phase directories:
 
 ## Guard
 
-- Not initialized: follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`
+- Not initialized (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 - **Auto-detect phase** (no explicit number): Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md`. Resolve phases dir (check .vbw-planning/ACTIVE). Scan numerically for first phase with `*-SUMMARY.md` but no `*-VERIFICATION.md`. Found: announce "Auto-detected Phase {N} ({slug})". All verified: STOP "All phases verified. Specify: `/vbw:qa N`"
 - Phase not built (no SUMMARYs): STOP "Phase {N} has no completed plans. Run /vbw:execute {N} first."
 

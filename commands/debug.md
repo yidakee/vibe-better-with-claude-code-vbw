@@ -18,7 +18,7 @@ Recent commits:
 
 ## Guard
 
-- Not initialized: follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`
+- Not initialized (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 - No $ARGUMENTS: STOP "Usage: /vbw:debug \"description of the bug or error message\""
 
 ## Steps
@@ -36,7 +36,7 @@ Recent commits:
 - Spawn 3 vbw-debugger teammates, one task each
 - Wait for completion. Synthesize: strongest evidence + highest confidence wins. Multiple confirmed = contributing factors.
 - Winning hypothesis with fix: apply + commit `fix({scope}): {description}`
-- Follow Agent Teams Shutdown Protocol in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`
+- Shutdown: send shutdown to each teammate, wait for approval, re-request if rejected, then TeamDelete.
 
 **Path B: Standard** (all other cases):
 Spawn vbw-debugger as subagent via Task tool:

@@ -35,7 +35,7 @@ Active milestone:
 
 ## Guard
 
-- Not initialized: follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`
+- Not initialized (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 - No ROADMAP.md or has template placeholders: STOP "No roadmap found. Run /vbw:implement to set up your project."
 
 ## Steps

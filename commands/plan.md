@@ -48,7 +48,7 @@ First match wins:
 ## Scoping Mode
 
 Guard:
-- Not initialized: follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`
+- Not initialized (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 - No PROJECT.md or contains `{project-description}`: STOP "No project defined. Run /vbw:implement to set up your project."
 
 Steps:
@@ -72,7 +72,7 @@ If $ARGUMENTS has no integer phase number:
 
 ### Guard
 
-- Not initialized: follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`
+- Not initialized (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 - No ROADMAP.md or has template placeholders: STOP "No roadmap found. Run /vbw:implement to set up your project."
 - Phase {N} not in roadmap: STOP "Phase {N} not found in roadmap."
 - Already has PLAN.md + SUMMARY.md: WARN "Phase {N} already completed. Re-planning preserves existing plans as .bak."

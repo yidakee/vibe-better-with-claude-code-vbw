@@ -15,7 +15,7 @@ Active milestone: `!`cat .vbw-planning/ACTIVE 2>/dev/null || echo "No active mil
 
 ## Guard
 
-1. **Not initialized:** Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
+1. **Not initialized** (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 2. **Missing args:** STOP: "Usage: /vbw:insert-phase <position> <phase-name> [--goal=\"description\"]"
 3. **Invalid position:** Out of range (1 to max+1) → STOP with valid range.
 4. **Completed conflict:** Inserting before completed phase → WARN + confirm.

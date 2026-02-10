@@ -15,7 +15,7 @@ Active milestone: `!`cat .vbw-planning/ACTIVE 2>/dev/null || echo "No active mil
 
 ## Guard
 
-1. **Not initialized:** Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
+1. **Not initialized** (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 2. **Missing number:** STOP: "Usage: /vbw:remove-phase <phase-number>"
 3. **Not found:** STOP: "Phase {N} not found in roadmap."
 4. **Has work:** PLAN.md or SUMMARY.md in phase dir → STOP: "Phase {N} has artifacts. Remove plans first."

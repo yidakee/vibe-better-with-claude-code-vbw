@@ -26,7 +26,7 @@ Phase directories:
 
 ## Guard
 
-1. **Not initialized:** Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
+1. **Not initialized** (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 2. **Auto-detect phase (if omitted):** If no integer phase in $ARGUMENTS:
    - Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md`, follow **Resolve Phases Directory**
    - Scan phase dirs numerically. First phase with `*-PLAN.md` but missing `*-SUMMARY.md` = target
@@ -145,7 +145,7 @@ If `--skip-qa` or turbo: "○ QA verification skipped ({reason})"
 
 ### Step 5: Update state and present summary
 
-**Shutdown:** Follow Agent Teams Shutdown Protocol in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`. Wait for TeamDelete before state updates.
+**Shutdown:** Send shutdown to each teammate, wait for approval, re-request if rejected, then TeamDelete. Wait for TeamDelete before state updates.
 
 **Mark complete:** Set .execution-state.json `"status"` to `"complete"` (statusline auto-deletes on next refresh).
 **Update STATE.md:** phase position, plan completion counts, effort used.

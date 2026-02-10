@@ -17,7 +17,7 @@ Config:
 
 ## Guard
 
-Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md` (check `.vbw-planning/config.json`).
+If no .vbw-planning/ dir: STOP "Run /vbw:init first." (check `.vbw-planning/config.json`)
 
 ## Behavior
 

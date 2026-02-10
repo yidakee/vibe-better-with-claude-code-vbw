@@ -14,7 +14,7 @@ Config: Pre-injected by SessionStart hook.
 
 ## Guard
 
-- Not initialized: follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`
+- Not initialized (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 - No $ARGUMENTS: STOP "Usage: /vbw:fix \"description of what to fix\""
 
 ## Steps

@@ -125,7 +125,7 @@ Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md for all output.
 
 - **After State 1:** project-defined banner + transition
 - **After State 2:** phases-created summary + transition
-- **After States 3-4:** Follow Agent Teams Shutdown Protocol in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md` first. Then:
+- **After States 3-4:** Shutdown: send shutdown to each teammate, wait for approval, re-request if rejected, then TeamDelete. Then:
 ```
 Phase {N}: {name} -- Implemented
   {Planning section if State 3: completed plan list}

@@ -19,7 +19,7 @@ Git status:
 
 ## Guard
 
-1. **Not initialized:** Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
+1. **Not initialized** (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 2. **No roadmap:** Neither ACTIVE nor ROADMAP.md → STOP: "No milestones configured. Run /vbw:implement."
 3. **Audit not passed:** Without --force, run audit checks. FAIL → STOP: "Audit failed. Run /vbw:audit or --force."
 4. **No work:** No SUMMARY.md files → STOP: "Nothing to ship."

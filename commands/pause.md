@@ -15,7 +15,7 @@ Active milestone: `!`cat .vbw-planning/ACTIVE 2>/dev/null || echo "No active mil
 
 ## Guard
 
-1. **Not initialized:** Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
+1. **Not initialized** (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 
 ## Steps
 

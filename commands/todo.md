@@ -14,7 +14,7 @@ Working directory: `!`pwd``
 
 ## Guard
 
-1. **Not initialized:** Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
+1. **Not initialized** (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 2. **Missing description:** STOP: "Usage: /vbw:todo <description> [--priority=high|normal|low]"
 
 ## Steps

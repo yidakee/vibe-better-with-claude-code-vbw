@@ -22,7 +22,7 @@ Agent Teams: `!`echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-0}"``
 
 ## Guard
 
-1. **Not initialized:** Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`.
+1. **Not initialized** (no .vbw-planning/ dir): STOP "Run /vbw:init first."
 2. **No git:** WARN "Not a git repo -- incremental mapping disabled." Continue in full mode.
 3. **Empty project:** No source files → STOP: "No source code found to map."
 
@@ -105,7 +105,7 @@ Read all 7 docs. Produce:
 
 ### Step 5: Create META.md and present summary
 
-**Shutdown:** Solo: no team. Duo/Quad: follow Agent Teams Shutdown Protocol in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md`. Wait for TeamDelete.
+**Shutdown:** Solo: no team. Duo/Quad: send shutdown to each teammate, wait for approval, re-request if rejected, then TeamDelete.
 
 Write META.md: mapped_at, git_hash, file_count, document list, mode, monorepo flag, mapping_tier.
 
