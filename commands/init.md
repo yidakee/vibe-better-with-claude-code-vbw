@@ -158,8 +158,9 @@ If declined: display "○ GSD isolation skipped" and skip to Step 2.
 
 If approved:
 1. Create the flag file: `echo "enabled" > .vbw-planning/.gsd-isolation`
-2. Create `.claude/` directory if it does not exist: `mkdir -p .claude`
-3. Write `.claude/CLAUDE.md` with the following exact content:
+2. Create the VBW session marker so the security filter allows VBW writes for the rest of this session: `echo "session" > .vbw-planning/.vbw-session`
+3. Create `.claude/` directory if it does not exist: `mkdir -p .claude`
+4. Write `.claude/CLAUDE.md` with the following exact content:
 
 ```markdown
 ## Plugin Isolation
@@ -169,7 +170,7 @@ If approved:
 - This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.
 ```
 
-4. Display:
+5. Display:
 ```
 ✓ GSD isolation enabled
   ✓ .vbw-planning/.gsd-isolation (flag)

@@ -542,7 +542,7 @@ if [ -f "$LEDGER_FILE" ] && jq empty "$LEDGER_FILE" 2>/dev/null; then
     fi
 
     L5="Economy: ${ECON_TOP}"
-    L5="$L5 ${D}│${X} Cache: ${CACHE_COLOR}${CACHE_HIT_PCT}% hit${X}"
+    L5="$L5 ${D}│${X} Prompt Cache: ${CACHE_COLOR}${CACHE_HIT_PCT}% hit${X}"
     [ -n "$CPL_STR" ] && L5="$L5 ${D}│${X} ${CPL_STR}"
   fi
 fi

@@ -25,11 +25,14 @@ if echo "$FILE_PATH" | grep -qE '\.env$|\.env\.|\.pem$|\.key$|\.cert$|\.p12$|\.p
   exit 2
 fi
 
-# Block GSD's .planning/ directory — prevent cross-tool contamination.
-# Match any path containing .planning/ but exclude .vbw-planning/ (VBW's own).
+# Block GSD's .planning/ directory when VBW is actively running.
+# Only enforce when VBW markers are present (session or agent), so GSD can
+# still write to its own directory when VBW is not the active caller.
 if echo "$FILE_PATH" | grep -qF '.planning/' && ! echo "$FILE_PATH" | grep -qF '.vbw-planning/'; then
-  echo "Blocked: .planning/ is managed by GSD, not VBW ($FILE_PATH)" >&2
-  exit 2
+  if [ -f ".vbw-planning/.active-agent" ] || [ -f ".vbw-planning/.vbw-session" ]; then
+    echo "Blocked: .planning/ is managed by GSD, not VBW ($FILE_PATH)" >&2
+    exit 2
+  fi
 fi
 
 # Block .vbw-planning/ when GSD isolation is enabled and no VBW markers present.
