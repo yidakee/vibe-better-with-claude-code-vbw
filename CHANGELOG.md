@@ -2,6 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.10.11] - 2026-02-11
+
+### Fixed
+
+- **`config`** -- respect `CLAUDE_CONFIG_DIR` env var across all scripts and commands. Users who set `CLAUDE_CONFIG_DIR` to relocate their Claude config directory were hitting hardcoded `~/.claude/` paths. All 9 affected files now resolve via `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` fallback pattern — zero breakage for existing users.
+
+---
+
 ## [1.10.10] - 2026-02-11
 
 ### Fixed
