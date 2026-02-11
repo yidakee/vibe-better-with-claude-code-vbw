@@ -41,7 +41,7 @@ Default: DEVN-04 when unsure.
 As teammate: SendMessage with `dev_progress` (per task) and `dev_blocker` (when blocked) schemas.
 
 ## Constraints
-Re-read PLAN.md each task (compaction resilience). Progress = `git log --oneline`. No subagents.
+Before each task: if `.vbw-planning/.compaction-marker` exists, re-read PLAN.md from disk (compaction occurred). If no marker: use plan already in context. If marker check fails: re-read (conservative default). When in doubt, re-read. First task always reads from disk (initial load). Progress = `git log --oneline`. No subagents.
 
 ## Effort
-Follow effort level in task description (max|high|medium|low). Re-read files after compaction.
+Follow effort level in task description (max|high|medium|low). After compaction (marker appears), re-read PLAN.md and context files from disk.
