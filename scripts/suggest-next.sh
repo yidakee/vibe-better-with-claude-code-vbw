@@ -178,10 +178,10 @@ suggest() {
 
 case "$CMD" in
   init)
-    suggest "/vbw:implement -- Define your project and start building"
+    suggest "/vbw:vibe -- Define your project and start building"
     ;;
 
-  implement|execute)
+  vibe|implement|execute)
     case "$effective_result" in
       fail)
         if [ -n "$failing_plan_ids" ]; then
@@ -200,15 +200,15 @@ case "$CMD" in
           suggest "/vbw:fix -- Address partial failures"
         fi
         if [ "$all_done" != true ]; then
-          suggest "/vbw:implement -- Continue to next phase"
+          suggest "/vbw:vibe -- Continue to next phase"
         fi
         ;;
       *)
         if [ "$all_done" = true ]; then
           if [ "$deviation_count" -eq 0 ]; then
-            suggest "/vbw:archive -- All phases complete, zero deviations"
+            suggest "/vbw:vibe --archive -- All phases complete, zero deviations"
           else
-            suggest "/vbw:archive -- Archive completed work ($deviation_count deviation(s) logged)"
+            suggest "/vbw:vibe --archive -- Archive completed work ($deviation_count deviation(s) logged)"
             suggest "/vbw:qa -- Review before archiving"
           fi
         elif [ -n "$next_unbuilt" ] || [ -n "$next_unplanned" ]; then
@@ -220,12 +220,12 @@ case "$CMD" in
               pn=$(basename "$dir" | sed 's/[^0-9].*//')
               if [ "$pn" = "$target" ]; then
                 tname=$(basename "$dir" | sed 's/^[0-9]*-//')
-                suggest "/vbw:implement -- Continue to Phase $target: $(fmt_phase_name "$tname")"
+                suggest "/vbw:vibe -- Continue to Phase $target: $(fmt_phase_name "$tname")"
                 break
               fi
             done
           else
-            suggest "/vbw:implement -- Continue to next phase"
+            suggest "/vbw:vibe -- Continue to next phase"
           fi
         fi
         if [ "$RESULT" = "skipped" ]; then
@@ -237,9 +237,9 @@ case "$CMD" in
 
   plan)
     if [ "$active_phase_plans" -gt 0 ]; then
-      suggest "/vbw:implement -- Execute $active_phase_plans plans ($effort effort)"
+      suggest "/vbw:vibe -- Execute $active_phase_plans plans ($effort effort)"
     else
-      suggest "/vbw:implement -- Execute the planned phase"
+      suggest "/vbw:vibe -- Execute the planned phase"
     fi
     ;;
 
@@ -248,9 +248,9 @@ case "$CMD" in
       pass)
         if [ "$all_done" = true ]; then
           if [ "$deviation_count" -eq 0 ]; then
-            suggest "/vbw:archive -- All phases complete, zero deviations"
+            suggest "/vbw:vibe --archive -- All phases complete, zero deviations"
           else
-            suggest "/vbw:archive -- Archive completed work ($deviation_count deviation(s) logged)"
+            suggest "/vbw:vibe --archive -- Archive completed work ($deviation_count deviation(s) logged)"
           fi
         else
           target="${next_unbuilt:-$next_unplanned}"
@@ -260,12 +260,12 @@ case "$CMD" in
               pn=$(basename "$dir" | sed 's/[^0-9].*//')
               if [ "$pn" = "$target" ]; then
                 tname=$(basename "$dir" | sed 's/^[0-9]*-//')
-                suggest "/vbw:implement -- Continue to Phase $target: $(fmt_phase_name "$tname")"
+                suggest "/vbw:vibe -- Continue to Phase $target: $(fmt_phase_name "$tname")"
                 break
               fi
             done
           else
-            suggest "/vbw:implement -- Continue to next phase"
+            suggest "/vbw:vibe -- Continue to next phase"
           fi
         fi
         ;;
@@ -284,42 +284,42 @@ case "$CMD" in
         else
           suggest "/vbw:fix -- Address partial failures"
         fi
-        suggest "/vbw:implement -- Continue despite warnings"
+        suggest "/vbw:vibe -- Continue despite warnings"
         ;;
       *)
-        suggest "/vbw:implement -- Continue building"
+        suggest "/vbw:vibe -- Continue building"
         ;;
     esac
     ;;
 
   fix)
     suggest "/vbw:qa -- Verify the fix"
-    suggest "/vbw:implement -- Continue building"
+    suggest "/vbw:vibe -- Continue building"
     ;;
 
   debug)
     suggest "/vbw:fix -- Apply the fix"
-    suggest "/vbw:implement -- Continue building"
+    suggest "/vbw:vibe -- Continue building"
     ;;
 
   config)
     if [ "$has_project" = true ]; then
       suggest "/vbw:status -- View project state"
     else
-      suggest "/vbw:implement -- Define your project and start building"
+      suggest "/vbw:vibe -- Define your project and start building"
     fi
     ;;
 
   archive)
-    suggest "/vbw:implement -- Start new work"
+    suggest "/vbw:vibe -- Start new work"
     ;;
 
   status)
     if [ "$all_done" = true ]; then
       if [ "$deviation_count" -eq 0 ]; then
-        suggest "/vbw:archive -- All phases complete, zero deviations"
+        suggest "/vbw:vibe --archive -- All phases complete, zero deviations"
       else
-        suggest "/vbw:archive -- Archive completed work"
+        suggest "/vbw:vibe --archive -- Archive completed work"
       fi
     elif [ -n "$next_unbuilt" ] || [ -n "$next_unplanned" ]; then
       target="${next_unbuilt:-$next_unplanned}"
@@ -328,37 +328,37 @@ case "$CMD" in
         pn=$(basename "$dir" | sed 's/[^0-9].*//')
         if [ "$pn" = "$target" ]; then
           tname=$(basename "$dir" | sed 's/^[0-9]*-//')
-          suggest "/vbw:implement -- Continue Phase $target: $(fmt_phase_name "$tname")"
+          suggest "/vbw:vibe -- Continue Phase $target: $(fmt_phase_name "$tname")"
           break
         fi
       done
     else
-      suggest "/vbw:implement -- Start building"
+      suggest "/vbw:vibe -- Start building"
     fi
     ;;
 
   map)
-    suggest "/vbw:implement -- Start building"
+    suggest "/vbw:vibe -- Start building"
     suggest "/vbw:status -- View project state"
     ;;
 
   discuss|assumptions)
-    suggest "/vbw:plan -- Plan this phase"
-    suggest "/vbw:implement -- Plan and execute in one flow"
+    suggest "/vbw:vibe --plan -- Plan this phase"
+    suggest "/vbw:vibe -- Plan and execute in one flow"
     ;;
 
   resume)
-    suggest "/vbw:implement -- Continue building"
+    suggest "/vbw:vibe -- Continue building"
     suggest "/vbw:status -- View current progress"
     ;;
 
   *)
     # Fallback for help, whats-new, update, etc.
     if [ "$has_project" = true ]; then
-      suggest "/vbw:implement -- Continue building"
+      suggest "/vbw:vibe -- Continue building"
       suggest "/vbw:status -- View project progress"
     else
-      suggest "/vbw:implement -- Start a new project"
+      suggest "/vbw:vibe -- Start a new project"
     fi
     ;;
 esac
