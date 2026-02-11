@@ -23,6 +23,10 @@ All notable changes to VBW will be documented in this file.
 
 - **`hooks`** -- `pre-push-hook.sh` restored to actual validation logic (was replaced by delegator wrapper causing infinite recursion).
 
+### Removed
+
+- **`commands`** -- 29 commands consolidated to 20. Ten lifecycle commands hard-deleted: `implement`, `plan`, `execute`, `discuss`, `assumptions`, `add-phase`, `insert-phase`, `remove-phase`, `archive`, `audit`. All absorbed into `/vbw:vibe` (single intelligent router with 11 modes). Global commands mirror cleaned. No aliases, no deprecation shims.
+
 ---
 
 ## [1.10.6] - 2026-02-10
