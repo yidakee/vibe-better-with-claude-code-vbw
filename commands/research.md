@@ -24,13 +24,19 @@ Current project:
 
 1. **Parse:** Topic (required). --parallel: spawn multiple Scouts on sub-topics.
 2. **Scope:** Single question = 1 Scout. Multi-faceted or --parallel = 2-4 sub-topics.
-3. **Spawn Scout:** Spawn vbw-scout as subagent(s) via Task tool:
+3. **Spawn Scout:**
+   - Resolve Scout model:
+     ```bash
+     SCOUT_MODEL=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh scout .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+     if [ $? -ne 0 ]; then echo "$SCOUT_MODEL" >&2; exit 1; fi
+     ```
+   - Spawn vbw-scout as subagent(s) via Task tool. **Add `model: "${SCOUT_MODEL}"` parameter.**
 ```
 Research: {topic or sub-topic}.
 Project context: {tech stack, constraints from PROJECT.md if relevant}.
 Return structured findings.
 ```
-Parallel: up to 4 simultaneous Tasks. Model: fast/turbo → `Model: haiku`; thorough/balanced → inherit session model.
+   - Parallel: up to 4 simultaneous Tasks, each with same `model: "${SCOUT_MODEL}"`.
 4. **Synthesize:** Single: present directly. Parallel: merge, note contradictions, rank by confidence.
 5. **Persist:** Ask "Save findings? (y/n)". If yes: write to .vbw-planning/phases/{phase-dir}/RESEARCH.md or .vbw-planning/RESEARCH.md.
 ```

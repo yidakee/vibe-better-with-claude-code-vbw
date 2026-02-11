@@ -40,7 +40,13 @@ Note: Continuous verification handled by hooks. This command is for deep, on-dem
 
 1. **Resolve tier:** Priority: --tier flag > --effort flag > config default > Standard. Effort mapping: turbo=skip (exit "QA skipped in turbo mode"), fast=quick, balanced=standard, thorough=deep. Read `${CLAUDE_PLUGIN_ROOT}/references/effort-profile-{profile}.md`. Context overrides: >15 requirements or last phase before ship → Deep.
 2. **Resolve milestone:** If .vbw-planning/ACTIVE exists, use milestone-scoped paths.
-3. **Spawn QA:** Spawn vbw-qa as subagent via Task tool:
+3. **Spawn QA:**
+   - Resolve QA model:
+     ```bash
+     QA_MODEL=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh qa .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+     if [ $? -ne 0 ]; then echo "$QA_MODEL" >&2; exit 1; fi
+     ```
+   - Spawn vbw-qa as subagent via Task tool. **Add `model: "${QA_MODEL}"` parameter.**
 ```
 Verify phase {N}. Tier: {ACTIVE_TIER}.
 Plans: {paths to PLAN.md files}
@@ -50,7 +56,7 @@ Convention baseline: .vbw-planning/codebase/CONVENTIONS.md (if exists)
 Verification protocol: ${CLAUDE_PLUGIN_ROOT}/references/verification-protocol.md
 Return findings using the qa_result schema (see ${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md).
 ```
-QA agent reads all files itself.
+   - QA agent reads all files itself.
 
 4. **Persist:** Parse QA output as JSON (qa_result schema). Fallback: extract from markdown. Write `{phase-dir}/{phase}-VERIFICATION.md` with frontmatter: phase, tier, result (PASS|FAIL|PARTIAL), passed, failed, total, date. Body: QA output.
 5. **Present:** Per @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
