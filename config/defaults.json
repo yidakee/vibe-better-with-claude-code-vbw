@@ -13,5 +13,7 @@
   "branch_per_milestone": false,
   "plain_summary": true,
   "active_profile": "default",
-  "custom_profiles": {}
+  "custom_profiles": {},
+  "model_profile": "balanced",
+  "model_overrides": {}
 }
