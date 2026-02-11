@@ -168,9 +168,13 @@ If greenfield: write `{"conventions": []}`. Display: `○ Conventions — none y
 
 ### Step 3.5: Generate bootstrap CLAUDE.md
 
-Write `CLAUDE.md` at project root (auto-loaded every session). /vbw:vibe regenerates later with project content.
+VBW needs its rules and state sections in a CLAUDE.md file. /vbw:vibe regenerates later with project content.
 
-Template — write this verbatim, substituting `{...}` placeholders:
+**Brownfield handling:** Read root `CLAUDE.md` via the Read tool.
+- **Exists:** The user already has a CLAUDE.md. Do NOT overwrite it. Instead, append VBW sections (`## VBW Rules`, `## State`, `## Installed Skills`, `## Project Conventions`, `## Commands`, and optionally `## Plugin Isolation`) to the END of the existing file, separated by a `---` line. Preserve all existing content verbatim. Display `✓ CLAUDE.md (VBW sections appended to existing)`.
+- **Does not exist:** Write a new `CLAUDE.md` at project root with the full template below. Display `✓ CLAUDE.md (created)`.
+
+Template for NEW files — write verbatim, substituting `{...}` placeholders:
 ```markdown
 # VBW-Managed Project
 This project uses VBW (Vibe Better with Claude Code) for structured development.
@@ -198,7 +202,25 @@ Run /vbw:help for all available commands.
 - VBW agents and commands MUST NOT read, write, glob, grep, or reference any files in `.planning/`
 - This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.
 ```
-Keep under 200 lines. Add `✓ CLAUDE.md` to summary.
+
+Sections to append when **existing** CLAUDE.md found (same content, no `# VBW-Managed Project` header):
+```markdown
+
+---
+
+## VBW Rules
+{same rules as above}
+## State
+{same state as above}
+## Installed Skills
+{same}
+## Project Conventions
+{same}
+## Commands
+{same}
+{## Plugin Isolation if applicable}
+```
+Keep total VBW addition under 40 lines. Add `✓ CLAUDE.md` to summary.
 
 ### Step 4: Present summary
 
