@@ -2,6 +2,29 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.10.7] - 2026-02-11
+
+### Added
+
+- **Context compiler milestone** -- 3-phase optimization reducing agent context loading by 25-35% across all project sizes. 14 feat/refactor commits, 65/65 QA checks (3 phases, all PASS). Agents now receive deterministic, role-specific context instead of loading full project state.
+- **`scripts/compile-context.sh`** -- new script producing `.context-lead.md` (filtered requirements + decisions), `.context-dev.md` (phase goal + conventions + bundled skills), `.context-qa.md` (verification targets). Config-gated with `context_compiler` toggle.
+- **`config`** -- `context_compiler` toggle (default: `true`) in `config/defaults.json`. Setting to `false` reverts all compilation to direct file reads.
+- **`compiler`** -- skill bundling reads `skills_used` from PLAN.md frontmatter, resolves from `~/.claude/skills/`, bundles into Dev context. No-op when no skills referenced.
+- **`hooks`** -- compaction marker system: `compaction-instructions.sh` writes `.compaction-marker` with timestamp on PreCompact. `session-start.sh` cleans marker at session start for fresh-session guarantee.
+
+### Changed
+
+- **`commands`** -- all 6 commands (execute, plan, qa, discuss, assumptions, implement) now use pre-computed `phase-detect.sh` output instead of loading 89-line `phase-detection.md` reference doc.
+- **`commands`** -- plan.md, execute.md, implement.md call `compile-context.sh` before agent spawn with config-gated fallback to direct file reads.
+- **`agents/vbw-dev.md`** -- removed STATE.md from Stage 1 (never used). Added marker-based conditional re-read with "when in doubt, re-read" conservative default.
+- **`agents/vbw-qa.md`** -- replaced `verification-protocol.md` runtime reference with inline 12-line format spec. Tier provided in task description instead of loaded from full protocol.
+
+### Fixed
+
+- **`hooks`** -- `pre-push-hook.sh` restored to actual validation logic (was replaced by delegator wrapper causing infinite recursion).
+
+---
+
 ## [1.10.6] - 2026-02-10
 
 ### Fixed
