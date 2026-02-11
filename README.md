@@ -27,7 +27,7 @@
 
 VBW wraps Claude Code's native Agent Teams with 18 optimization mechanisms across 8 architectural layers -- shell pre-computation, model routing, context diet, deterministic context routing, compaction resilience, scope enforcement, structured coordination, and effort scaling. Aggressive content compression (v1.10.2) cut every instruction file by 50%+, and the Context Compiler (v1.10.7) routes only role-relevant content to each agent via pre-compiled context files. The result: same coordination capability, ~86% fewer tokens burned on overhead.
 
-Stock teams load all command descriptions into every request, run every agent on Opus, coordinate via expensive message round-trips, and let each agent independently discover project state by reading the same files. VBW replaces all of that with 3,065 lines of bash that execute at zero model token cost, hardcoded model routing (Scout on Haiku, QA on Sonnet), disk-based coordination, pre-computed state injection, deterministic context compilation, and terse compressed instructions across all 20 commands, 6 agents, and 9 reference files.
+Stock teams load all command descriptions into every request, run every agent on Opus, coordinate via expensive message round-trips, and let each agent independently discover project state by reading the same files. VBW replaces all of that with 3,065 lines of bash that execute at zero model token cost, hardcoded model routing (Scout on Haiku, QA on Sonnet), disk-based coordination, pre-computed state injection, deterministic context compilation, and terse compressed instructions across all 20 commands, 6 agents, and 10 reference files.
 
 | Category | Stock Agent Teams | VBW | Saving |
 | :--- | ---: | ---: | ---: |
@@ -39,7 +39,7 @@ Stock teams load all command descriptions into every request, run every agent on
 | Agent model cost per phase | $2.78 | $1.40 | **50%** |
 | **Total coordination overhead** | **87,100 tokens** | **12,100 tokens** | **86%** |
 
-The five highest-impact optimizations: `compile-context.sh` produces role-specific context files so each agent loads only what its role needs (Lead gets filtered requirements, Dev gets phase goal + conventions, QA gets verification targets); `disable-model-invocation` on 11 of 20 commands removes ~9,000 tokens from every API request; content compression cut commands 53%, agents 47%, and references 72%; model routing sends Scout to Haiku (60x cheaper than Opus) and QA to Sonnet (5x cheaper); and shell pre-computation via `phase-detect.sh` and `session-start.sh` replaces 5-7 file reads with 22 pre-computed key-value pairs.
+The five highest-impact optimizations: `compile-context.sh` produces role-specific context files so each agent loads only what its role needs (Lead gets filtered requirements, Dev gets phase goal + conventions, QA gets verification targets); `disable-model-invocation` on 15 of 20 commands removes ~9,000 tokens from every API request; content compression cut commands 53%, agents 47%, and references 72%; model routing sends Scout to Haiku (60x cheaper than Opus) and QA to Sonnet (5x cheaper); and shell pre-computation via `phase-detect.sh` and `session-start.sh` replaces 5-7 file reads with 22 pre-computed key-value pairs.
 
 **What this means for your bill:**
 

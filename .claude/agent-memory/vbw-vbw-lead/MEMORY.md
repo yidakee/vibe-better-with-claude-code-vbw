@@ -1,7 +1,7 @@
 # VBW Lead Agent Memory
 
 ## Project Context
-- VBW is a Claude Code plugin: 6 agents, 27 commands, 18 hooks, file-based state machine
+- VBW is a Claude Code plugin: 6 agents, 20 commands, 20 hooks, file-based state machine
 - Single external dependency: jq. Everything else is bash + markdown
 - 4 version files must stay in sync: VERSION, plugin.json, marketplace.json x2
 - All hooks use version-sorted cache resolution: `ls | sort -V | tail -1`
@@ -35,5 +35,5 @@
 - scripts/bump-version.sh: Version sync, --verify flag checks 4-file consistency
 - scripts/pre-push-hook.sh: Git pre-push, blocks push without VERSION in changes
 - scripts/validate-frontmatter.sh: Does not exist yet (Plan 01-03 creates it)
-- hooks/hooks.json: 17 hook entries across 8 event types
+- hooks/hooks.json: 20 hook entries across 11 event types
 - commands/init.md: /vbw:init flow, no jq guard currently
