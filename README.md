@@ -27,7 +27,7 @@
 
 VBW wraps Claude Code's native Agent Teams with 18 optimization mechanisms across 8 architectural layers -- shell pre-computation, model routing, context diet, deterministic context routing, compaction resilience, scope enforcement, structured coordination, and effort scaling. Aggressive content compression (v1.10.2) cut every instruction file by 50%+, and the Context Compiler (v1.10.7) routes only role-relevant content to each agent via pre-compiled context files. The result: same coordination capability, ~86% fewer tokens burned on overhead.
 
-Stock teams load all command descriptions into every request, run every agent on Opus, coordinate via expensive message round-trips, and let each agent independently discover project state by reading the same files. VBW replaces all of that with 3,065 lines of bash that execute at zero model token cost, hardcoded model routing (Scout on Haiku, QA on Sonnet), disk-based coordination, pre-computed state injection, deterministic context compilation, and terse compressed instructions across all 29 commands, 6 agents, and 9 reference files.
+Stock teams load all command descriptions into every request, run every agent on Opus, coordinate via expensive message round-trips, and let each agent independently discover project state by reading the same files. VBW replaces all of that with 3,065 lines of bash that execute at zero model token cost, hardcoded model routing (Scout on Haiku, QA on Sonnet), disk-based coordination, pre-computed state injection, deterministic context compilation, and terse compressed instructions across all 20 commands, 6 agents, and 9 reference files.
 
 | Category | Stock Agent Teams | VBW | Saving |
 | :--- | ---: | ---: | ---: |
@@ -39,7 +39,7 @@ Stock teams load all command descriptions into every request, run every agent on
 | Agent model cost per phase | $2.78 | $1.40 | **50%** |
 | **Total coordination overhead** | **87,100 tokens** | **12,100 tokens** | **86%** |
 
-The five highest-impact optimizations: `compile-context.sh` produces role-specific context files so each agent loads only what its role needs (Lead gets filtered requirements, Dev gets phase goal + conventions, QA gets verification targets); `disable-model-invocation` on 19 of 29 commands removes ~9,000 tokens from every API request; content compression cut commands 53%, agents 47%, and references 72%; model routing sends Scout to Haiku (60x cheaper than Opus) and QA to Sonnet (5x cheaper); and shell pre-computation via `phase-detect.sh` and `session-start.sh` replaces 5-7 file reads with 22 pre-computed key-value pairs.
+The five highest-impact optimizations: `compile-context.sh` produces role-specific context files so each agent loads only what its role needs (Lead gets filtered requirements, Dev gets phase goal + conventions, QA gets verification targets); `disable-model-invocation` on 11 of 20 commands removes ~9,000 tokens from every API request; content compression cut commands 53%, agents 47%, and references 72%; model routing sends Scout to Haiku (60x cheaper than Opus) and QA to Sonnet (5x cheaper); and shell pre-computation via `phase-detect.sh` and `session-start.sh` replaces 5-7 file reads with 22 pre-computed key-value pairs.
 
 **What this means for your bill:**
 
@@ -123,7 +123,7 @@ Think of it as project management for the post-dignity era of software developme
 
 Most Claude Code plugins were built for the subagent era, one main session spawning helper agents that report back and die. Much like the codebases they produce. VBW is designed from the ground up for the platform features that changed the game:
 
-- **Agent Teams for real parallelism.** `/vbw:execute` creates a team of Dev teammates that execute tasks concurrently, each in their own context window. `/vbw:map` runs 4 Scout teammates in parallel to analyze your codebase. This isn't "spawn a subagent and wait" -- it's coordinated teamwork with a shared task list and direct inter-agent communication.
+- **Agent Teams for real parallelism.** `/vbw:vibe` creates a team of Dev teammates that execute tasks concurrently, each in their own context window. `/vbw:map` runs 4 Scout teammates in parallel to analyze your codebase. This isn't "spawn a subagent and wait" -- it's coordinated teamwork with a shared task list and direct inter-agent communication.
 
 - **Native hooks for continuous verification.** 20 hooks across 11 event types run automatically -- validating SUMMARY.md structure, checking commit format, validating frontmatter descriptions, gating task completion, blocking sensitive file access, enforcing plan file boundaries, managing session lifecycle, tracking agent lifecycle and cost attribution, tracking session metrics, pre-flight prompt validation, and post-compaction context verification. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
 
@@ -245,17 +245,17 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
      │  Skills               │               │                       │
      │                       │               │  ⚠ Codebase detected  │
      │  Auto-chains:         │               │  Auto-chains:         │
-     │    → /vbw:implement   │               │    → /vbw:map         │
+     │    → /vbw:vibe        │               │    → /vbw:map         │
      └──────────┬────────────┘               │    → Skills (informed │
                 │                            │      by map data)     │
-                │                            │    → /vbw:implement   │
+                │                            │    → /vbw:vibe        │
                 │                            └──────────┬────────────┘
                 │                                       │
                 └───────────────────┬───────────────────┘
                                     │
                                     ▼
                  ┌──────────────────────────────────────┐
-                 │  /vbw:implement                      │
+                 │  /vbw:vibe                           │
                  │  The one command — auto-detects:     │
                  │                                      │
                  │  No project?  → Bootstrap setup      │
@@ -265,9 +265,9 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                  │  All done?    → Suggest archive      │
                  └──────────────────┬───────────────────┘
                                     │
-                                    │  Or for more control:
-                                    │  /vbw:discuss (gather context)
-                                    │  /vbw:plan + /vbw:execute
+                                    │  Or use flags:
+                                    │  /vbw:vibe --discuss
+                                    │  /vbw:vibe --plan --execute
                                     │
                                     ▼
                      ┌──────────────────────────────┐
@@ -286,9 +286,9 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                      │                            │
                      ▼                            ▼
           ┌──────────────────┐        ┌──────────────────┐
-          │ Loop back to     │        │ /vbw:archive     │
-          │ /vbw:implement   │        │ Audits completion│
-          │ for next phase   │        │ Archives state   │
+          │ Loop back to     │        │ /vbw:vibe        │
+          │ /vbw:vibe        │        │ --archive        │
+          │ for next phase   │        │ Audits, archives │
           └──────────────────┘        │ Tags the release │
                                       │ Work archived    │
                                       └──────────────────┘
@@ -302,7 +302,7 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
 
 ## Quick Tutorial
 
-You only need to remember two commands. Seriously. VBW auto-detects where your project is and does the right thing. No decision trees, no memorizing workflows. Just init, then implement until it's done.
+You only need to remember two commands. Seriously. VBW auto-detects where your project is and does the right thing. No decision trees, no memorizing workflows. Just init, then vibe until it's done.
 
 ### Starting a brand new project
 
@@ -313,7 +313,7 @@ You only need to remember two commands. Seriously. VBW auto-detects where your p
 Run this once. VBW sets up your environment — Agent Teams, statusline, git hooks — and scaffolds a `.vbw-planning/` directory. It detects your tech stack and suggests relevant Claude Code skills. You answer a few questions, and you're ready to build.
 
 ```
-/vbw:implement
+/vbw:vibe
 ```
 
 This is the one command. Run it, and VBW figures out what to do next:
@@ -323,16 +323,16 @@ This is the one command. Run it, and VBW figures out what to do next:
 - **Plans ready but not built?** Dev teammates execute in parallel with atomic commits and continuous verification.
 - **Everything built?** It tells you and suggests wrapping up.
 
-You don't need to know which state your project is in. VBW knows. Just keep running `/vbw:implement` and it handles the rest — planning, building, verifying — one phase at a time. Or if you're feeling brave, set your autonomy to `pure-vibe` and it'll loop through every remaining phase without stopping.
+You don't need to know which state your project is in. VBW knows. Just keep running `/vbw:vibe` and it handles the rest — planning, building, verifying — one phase at a time. Or if you're feeling brave, set your autonomy to `pure-vibe` and it'll loop through every remaining phase without stopping.
 
 ```
-/vbw:implement
+/vbw:vibe
 ```
 
-Yes, the same command again. When Phase 1 finishes, run it again for Phase 2. And again for Phase 3. Each invocation picks up where the last one left off. State persists in `.vbw-planning/` across sessions, so you can close your terminal, come back tomorrow, and `/vbw:implement` still knows exactly where you are.
+Yes, the same command again. When Phase 1 finishes, run it again for Phase 2. And again for Phase 3. Each invocation picks up where the last one left off. State persists in `.vbw-planning/` across sessions, so you can close your terminal, come back tomorrow, and `/vbw:vibe` still knows exactly where you are.
 
 ```
-/vbw:archive
+/vbw:vibe --archive
 ```
 
 When all phases are built, archive the work. VBW runs a completion audit, archives state to `.vbw-planning/milestones/`, tags the git release, and updates project docs. You shipped. With actual verification. Your future self won't want to set the codebase on fire. Probably.
@@ -343,7 +343,7 @@ When all phases are built, archive the work. VBW runs a completion audit, archiv
 
 Ready to publish? This runs a pre-release audit first — checking that your changelog covers all commits since the last release and that README counts aren't stale. If anything's missing, it offers to generate entries for your review. Then it bumps the version, finalizes the changelog, creates an annotated git tag, commits, pushes, and creates a GitHub release with the changelog notes. Supports `--dry-run` to preview, `--skip-audit` to bypass the audit, `--major` or `--minor` for non-patch bumps.
 
-That's it. `init` → `implement` (repeat) → `archive` → `release`. Four commands for an entire development lifecycle.
+That's it. `init` → `vibe` (repeat) → `vibe --archive` → `release`. Three commands for an entire development lifecycle.
 
 ### Picking up an existing codebase
 
@@ -353,9 +353,9 @@ Same flow, one difference:
 /vbw:init
 ```
 
-VBW detects the existing codebase and auto-chains everything: `/vbw:map` launches 4 Scout teammates to analyze your code across tech stack, architecture, quality, and concerns. Skill suggestions are based on what's actually in your codebase, not just which manifest files exist. Then `/vbw:implement` runs automatically with full codebase awareness. One command, four workflows, zero manual sequencing.
+VBW detects the existing codebase and auto-chains everything: `/vbw:map` launches 4 Scout teammates to analyze your code across tech stack, architecture, quality, and concerns. Skill suggestions are based on what's actually in your codebase, not just which manifest files exist. Then `/vbw:vibe` runs automatically with full codebase awareness. One command, four workflows, zero manual sequencing.
 
-From there, it's the same loop: `/vbw:implement` until done, `/vbw:archive`, `/vbw:release`.
+From there, it's the same loop: `/vbw:vibe` until done, `/vbw:vibe --archive`, `/vbw:release`.
 
 ### Coming back to a project
 
@@ -373,7 +373,7 @@ Closed your terminal? Switched branches? Came back after a weekend of pretending
 >
 > **If you accidentally `/clear`**, run `/vbw:resume` immediately. It restores project context from ground truth files in `.vbw-planning/` — state, roadmap, plans, summaries — and tells you exactly where to pick up.
 
-> **For advanced users:** The [full command reference](#commands) below has 29 commands for granular control — `/vbw:plan` and `/vbw:execute` to separate planning from building, `/vbw:qa` for on-demand verification, `/vbw:debug` for systematic bug investigation, `/vbw:discuss` for pre-planning context gathering, and more. But you never *need* them. `/vbw:implement` handles the entire lifecycle on its own.
+> **For advanced users:** The [full command reference](#commands) below has 20 commands for granular control — `/vbw:vibe` with flags for explicit mode selection (`--plan`, `--execute`, `--discuss`, `--assumptions`), `/vbw:qa` for on-demand verification, `/vbw:debug` for systematic bug investigation, and more. But you never *need* the flags. `/vbw:vibe` with no arguments handles the entire lifecycle on its own.
 
 <br>
 
@@ -389,14 +389,9 @@ These are the commands you'll use every day. This is the job now.
 
 | Command | Description |
 | :--- | :--- |
-| `/vbw:init` | Set up environment and scaffold `.vbw-planning/` directory with templates and config. Configures Agent Teams and statusline. Automatically installs git hooks (pre-push version enforcement). For existing codebases, maps the codebase first, then uses the map data to inform stack detection and skill suggestions before auto-chaining to `/vbw:implement`. |
-| `/vbw:implement [phase]` | The one command. Auto-detects project state and does the right thing -- bootstraps new projects, gathers requirements, plans phases, executes builds. Smart router through the full lifecycle. |
-| `/vbw:plan [phase]` | Plan a phase. The Lead agent researches context, decomposes work into tasks grouped by wave, and self-reviews the plan. Produces PLAN.md files with YAML frontmatter. Accepts `--effort` flag (thorough/balanced/fast/turbo). Phase is auto-detected when omitted. |
-| `/vbw:execute [phase]` | Execute a planned phase. Creates an Agent Team with Dev teammates for parallel execution with per-plan dependency wiring. At Thorough effort, Devs enter plan-approval mode before writing code. Atomic commits per task. Continuous QA via hooks. Produces SUMMARY.md. Resumes from last checkpoint if interrupted. Phase is auto-detected when omitted. |
-| `/vbw:archive` | Close out completed work. Runs audit, archives state to `.vbw-planning/milestones/`, tags the git release, and updates project docs. |
+| `/vbw:init` | Set up environment and scaffold `.vbw-planning/` directory with templates and config. Configures Agent Teams and statusline. Automatically installs git hooks (pre-push version enforcement). For existing codebases, maps the codebase first, then uses the map data to inform stack detection and skill suggestions before auto-chaining to `/vbw:vibe`. |
+| `/vbw:vibe [intent or flags]` | The one command. Auto-detects project state, parses natural language intent, or accepts explicit flags. 11 modes: bootstrap, scope, discuss, assumptions, plan, execute, add/insert/remove phase, archive. Flags: `--plan`, `--execute`, `--discuss`, `--assumptions`, `--scope`, `--add`, `--insert`, `--remove`, `--archive`, `--yolo`, `--effort`, `--skip-qa`, `--skip-audit`. Phase numbers optional -- auto-detected when omitted. |
 | `/vbw:release` | Bump version, finalize changelog, tag, commit, push, and create a GitHub release. Runs a pre-release audit that checks changelog completeness against commits since last release and detects stale README counts, offering to fix issues before shipping. Runs `bump-version.sh` across all 4 version files, renames `[Unreleased]` to the new version in CHANGELOG.md, creates an annotated git tag, pushes, and creates a GitHub release with changelog notes via `gh`. Supports `--dry-run`, `--no-push`, `--major`, `--minor`, `--skip-audit`. |
-
-Phase numbers are optional -- when omitted, VBW auto-detects the next phase based on artifact state.
 
 <br>
 
@@ -431,13 +426,7 @@ Phase numbers are optional -- when omitted, VBW auto-detects the next phase base
 | Command | Description |
 | :--- | :--- |
 | `/vbw:map` | Analyze a codebase with 4 parallel Scout teammates (Tech, Architecture, Quality, Concerns). Produces synthesis documents (INDEX.md, PATTERNS.md). Supports monorepo per-package mapping. Security-enforced via hooks: never reads `.env` or credentials. |
-| `/vbw:discuss [phase]` | Gather context through adaptive questioning before planning. For when you want to think before you type. Revolutionary concept. Phase is auto-detected when omitted. |
-| `/vbw:assumptions [phase]` | Surface Claude's assumptions about your phase approach. Useful for catching misunderstandings before they become commits. Phase is auto-detected when omitted. |
 | `/vbw:research` | Standalone research task, decoupled from planning. For when you need answers but aren't ready to commit to a plan. |
-| `/vbw:audit` | Audit completion readiness. 6-check matrix with PASS/WARN/FAIL results. WARN passes, FAIL blocks. |
-| `/vbw:add-phase` | Append a new phase to the active roadmap. |
-| `/vbw:insert-phase` | Insert an urgent phase between existing ones with automatic renumbering. For when production is on fire. |
-| `/vbw:remove-phase` | Remove a future phase and renumber. Refuses to delete phases containing completed work, because even VBW has principles. |
 | `/vbw:whats-new` | View changelog entries since your installed version. |
 | `/vbw:update` | Update VBW to the latest version with automatic cache refresh. |
 | `/vbw:uninstall` | Clean removal of VBW -- statusline, settings, and project data. For when you want to go back to prompting manually like it's 2024. |
@@ -468,7 +457,7 @@ VBW uses 6 specialized agents, each with native tool permissions enforced via YA
 Here's when each one shows up to work:
 
 ```
-  /vbw:map                        /vbw:plan              /vbw:execute (or /vbw:implement)
+  /vbw:map                        /vbw:vibe --plan       /vbw:vibe --execute (or /vbw:vibe)
   ┌─────────┐                     ┌─────────┐                     ┌─────────┐
   │         │                     │         │                     │         │
   │  SCOUT  │ ──reads codebase──▶ │  LEAD   │ ──produces plan──▶  │   DEV   │
@@ -548,8 +537,8 @@ Not every task deserves the same level of scrutiny. Most of yours don't. VBW pro
 | **Turbo** | Single Dev agent, no Lead or QA. Just builds. | Trivial changes. Adding a config value. Fixing a typo. Things that don't need a committee. |
 
 ```
-/vbw:plan 3 --effort=turbo
-/vbw:implement --effort=thorough
+/vbw:vibe --plan 3 --effort=turbo
+/vbw:vibe --effort=thorough
 ```
 
 Or switch effort, autonomy, and verification together with `/vbw:profile`:
@@ -577,7 +566,7 @@ Four levels, from "review everything" to "just build the whole thing while I get
 | **Cautious** | Stops between plan and execute. Plan approval at Thorough AND Balanced effort. All confirmations enforced. | First time on a codebase. Production-critical work. When you want to review every step before it happens. |
 | **Standard** | Auto-chains plan into execute within a phase. Plan approval at Thorough only. Stops between phases. The default. | Most work. You trust the plan but want to see results before continuing. |
 | **Confident** | Skips "already complete" confirmations. Plan approval OFF even at Thorough. QA warnings non-blocking. | Experienced with VBW, rebuilding known-good phases, iteration speed matters more than gate checks. |
-| **Pure Vibe** | Loops ALL remaining phases in a single `/vbw:implement`. No confirmations. No plan approval. Only error guards (missing roadmap, uninitialized project) stop execution. | When you want to walk away and come back to a finished project. Full autonomy with VBW's safety nets still active. |
+| **Pure Vibe** | Loops ALL remaining phases in a single `/vbw:vibe`. No confirmations. No plan approval. Only error guards (missing roadmap, uninitialized project) stop execution. | When you want to walk away and come back to a finished project. Full autonomy with VBW's safety nets still active. |
 
 ```
 /vbw:config autonomy confident
@@ -620,7 +609,7 @@ For the "I'll just prompt carefully" crowd.
 | Raw agent names in cost tracking | Workflow categories (Build/Plan/Verify) with efficiency insights |
 | Hook failure blocks your session | Universal hook wrapper -- errors logged, session always continues |
 | Install plugin, stare at blank screen | Branded welcome with single call to action on first run |
-| Memorize flags for each command | Consistent argument hints on all 29 commands with discoverable flags |
+| Memorize flags for each command | Consistent argument hints on all 20 commands with discoverable flags |
 | Change 3-4 settings to switch work mode | Work profiles: one command to switch between prototype, production, and yolo modes |
 | Conventions live as free text in CLAUDE.md | Structured conventions auto-detected from codebase, conflict-checked, QA-verified |
 
@@ -635,7 +624,7 @@ For the "I'll just prompt carefully" crowd.
 ```
 .claude-plugin/    Plugin manifest (plugin.json)
 agents/            6 agent definitions with native tool permissions
-commands/          29 slash commands (commands/*.md)
+commands/          20 slash commands (commands/*.md)
 config/            Default settings and stack-to-skill mappings
 hooks/             Plugin hooks for continuous verification
 scripts/           Hook handler scripts (security, validation, QA gates)
