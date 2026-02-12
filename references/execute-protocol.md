@@ -103,6 +103,12 @@ Use targeted `message` not `broadcast`. Reserve broadcast for critical blocking 
 
 Hooks handle continuous verification: PostToolUse validates SUMMARY.md, TaskCompleted verifies commits, TeammateIdle runs quality gate.
 
+**V3 Metrics instrumentation (REQ-09):** If `v3_metrics=true` in config:
+- At phase start: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/collect-metrics.sh execute_phase_start {phase} plan_count={N} effort={effort}`
+- At each plan completion: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/collect-metrics.sh execute_plan_complete {phase} {plan} task_count={N} commit_count={N}`
+- At phase end: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/collect-metrics.sh execute_phase_complete {phase} plans_completed={N} total_tasks={N} total_commits={N} deviations={N}`
+All metrics calls should be `2>/dev/null || true` — never block execution.
+
 ### Step 3b: SUMMARY.md verification gate (mandatory)
 
 **This is a hard gate. Do NOT proceed to QA or mark a plan as complete in .execution-state.json without verifying its SUMMARY.md.**
