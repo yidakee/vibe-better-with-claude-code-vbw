@@ -38,7 +38,10 @@ create_test_config() {
   "v3_contract_lite": false,
   "v3_lock_lite": false,
   "v3_validation_gates": false,
-  "v3_smart_routing": false
+  "v3_smart_routing": false,
+  "v3_event_log": false,
+  "v3_schema_validation": false,
+  "v3_snapshot_resume": false
 }
 CONF
 }

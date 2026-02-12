@@ -324,6 +324,9 @@ echo "✓ Model override: $AGENT ➜ $MODEL"
 | v3_lock_lite | boolean | true/false | false |
 | v3_validation_gates | boolean | true/false | false |
 | v3_smart_routing | boolean | true/false | false |
+| v3_event_log | boolean | true/false | false |
+| v3_schema_validation | boolean | true/false | false |
+| v3_snapshot_resume | boolean | true/false | false |
 
 ## Output Format
 
