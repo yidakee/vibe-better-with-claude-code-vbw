@@ -250,7 +250,13 @@ Keep total VBW addition under 40 lines. Add `✓ CLAUDE.md` to summary.
 
 ### Step 4: Present summary
 
-Display Phase Banner then file checklist (✓ for each created file), conditional lines for GSD isolation, statusline, codebase mapping, conventions, skills. Then auto-launch `/vbw:vibe` by reading `${CLAUDE_PLUGIN_ROOT}/commands/vibe.md` and following it. If greenfield, run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh init` and display output.
+Display Phase Banner then file checklist (✓ for each created file).
+
+**GSD import status** (conditional):
+- If GSD_IMPORTED=true: Display "✓ GSD project archived ({file count} files imported)" where file count = `find .vbw-planning/gsd-archive -type f | wc -l`
+- If .planning exists but GSD_IMPORTED=false: Display "○ GSD import skipped"
+
+Then show conditional lines for GSD isolation, statusline, codebase mapping, conventions, skills. Then auto-launch `/vbw:vibe` by reading `${CLAUDE_PLUGIN_ROOT}/commands/vibe.md` and following it. If greenfield, run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh init` and display output.
 
 ## Output Format
 
