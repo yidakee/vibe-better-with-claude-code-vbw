@@ -186,6 +186,25 @@ All metrics calls should be `2>/dev/null || true` — never block execution.
   Where `{modified_files}` comes from `git diff --name-only HEAD~1` after the task's commit.
 - Violations are advisory only (logged to metrics, not blocking).
 
+**V2 Hard Gates (REQ-02, REQ-03):** If `v2_hard_gates=true` in config:
+- **Pre-task gate sequence (before each task starts):**
+  1. `contract_compliance` gate: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/hard-gate.sh contract_compliance {phase} {plan} {task} {contract_path}`
+  2. `protected_file` gate: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/hard-gate.sh protected_file {phase} {plan} {task} {contract_path}`
+  - If any gate fails (exit 2): attempt auto-repair:
+    `REPAIR=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-repair.sh {gate_type} {phase} {plan} {task} {contract_path})`
+  - If `repaired=true`: re-run the failed gate to confirm, then proceed.
+  - If `repaired=false`: emit blocker, halt task execution. Send Lead a message with the failure evidence and next action from the blocker event.
+- **Post-task gate sequence (after each task commit):**
+  1. `required_checks` gate: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/hard-gate.sh required_checks {phase} {plan} {task} {contract_path}`
+  2. `commit_hygiene` gate: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/hard-gate.sh commit_hygiene {phase} {plan} {task} {contract_path}`
+  - Gate failures trigger auto-repair with same flow as pre-task.
+- **Post-plan gate (after all tasks complete, before marking plan done):**
+  1. `artifact_persistence` gate: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/hard-gate.sh artifact_persistence {phase} {plan} {task} {contract_path}`
+  2. `verification_threshold` gate: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/hard-gate.sh verification_threshold {phase} {plan} {task} {contract_path}`
+  - These gates fire AFTER SUMMARY.md verification but BEFORE updating execution-state.json to "complete".
+- **YOLO mode:** Hard gates ALWAYS fire regardless of autonomy level. YOLO only skips confirmation prompts.
+- **Fallback:** If hard-gate.sh or auto-repair.sh errors (not a gate fail, but a script error), log to metrics and continue (fail-open on script errors, hard-stop only on gate verdicts).
+
 **V3 Lock-Lite (REQ-11):** If `v3_lock_lite=true` in config:
 - **Before each task:** Acquire lock with claimed files:
   `bash ${CLAUDE_PLUGIN_ROOT}/scripts/lock-lite.sh acquire {task_id} {claimed_files...} 2>/dev/null || true`
