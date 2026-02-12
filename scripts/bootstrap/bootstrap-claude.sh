@@ -10,8 +10,7 @@ set -euo pipefail
 #     CORE_VALUE     One-line core value statement
 #     EXISTING_PATH  (Optional) Path to existing CLAUDE.md to preserve non-VBW content
 #
-#   bootstrap-claude.sh --write-isolation-guard OUTPUT_PATH
-#     OUTPUT_PATH    Path to write an isolation-only CLAUDE guard (e.g., .claude/CLAUDE.md)
+
 
 # VBW-managed section headers (order matters for generation)
 VBW_SECTIONS=(
@@ -58,24 +57,8 @@ generate_plugin_isolation_section() {
 ISOEOF
 }
 
-write_isolation_guard() {
-  local output_path="$1"
-  mkdir -p "$(dirname "$output_path")"
-  generate_plugin_isolation_section > "$output_path"
-}
-
-if [[ "${1:-}" == "--write-isolation-guard" ]]; then
-  if [[ $# -ne 2 ]]; then
-    echo "Usage: bootstrap-claude.sh --write-isolation-guard OUTPUT_PATH" >&2
-    exit 1
-  fi
-  write_isolation_guard "$2"
-  exit 0
-fi
-
 if [[ $# -lt 3 ]]; then
   echo "Usage: bootstrap-claude.sh OUTPUT_PATH PROJECT_NAME CORE_VALUE [EXISTING_PATH]" >&2
-  echo "       bootstrap-claude.sh --write-isolation-guard OUTPUT_PATH" >&2
   exit 1
 fi
 

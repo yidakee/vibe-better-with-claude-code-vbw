@@ -152,10 +152,7 @@ Options: "Enable (Recommended)" / "Skip". If declined: "○ GSD isolation skippe
 **1.7c. Create isolation:** If approved:
 1. `echo "enabled" > .vbw-planning/.gsd-isolation`
 2. `echo "session" > .vbw-planning/.vbw-session`
-3. Run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-claude.sh --write-isolation-guard .claude/CLAUDE.md`
-4. Display: `✓ GSD isolation enabled (file + context)` + `✓ .vbw-planning/.gsd-isolation (flag)` + `✓ .claude/CLAUDE.md (instruction guard)`
-
-Isolation guard compatibility file is created above via `--write-isolation-guard`.
+3. Display: `✓ GSD isolation enabled (file + context)` + `✓ .vbw-planning/.gsd-isolation (flag)`
 
 ### Step 2: Brownfield detection + discovery
 
@@ -208,7 +205,6 @@ Use script-first generation only (no inline templates).
 - Root `CLAUDE.md` is generated in **Step 7f** via `scripts/bootstrap/bootstrap-claude.sh`.
 - Brownfield behavior is handled by the script: pass existing root `CLAUDE.md` as `EXISTING_PATH` to preserve non-VBW content and replace only managed VBW/GSD sections.
 - Greenfield behavior is handled by the script: omit `EXISTING_PATH` to generate a new file.
-- Isolation guard compatibility content is generated in **Step 1.7** via `--write-isolation-guard`.
 
 Add `✓ CLAUDE.md` to summary after Step 7f completes.
 
@@ -330,7 +326,6 @@ Write the final confirmed/corrected data to `.vbw-planning/inference.json` for S
 <!-- bootstrap-roadmap.sh: OUTPUT_PATH PROJECT_NAME PHASES_JSON (phases.json: [{name, goal, requirements[], success_criteria[]}]) -->
 <!-- bootstrap-state.sh: OUTPUT_PATH PROJECT_NAME MILESTONE_NAME PHASE_COUNT -->
 <!-- bootstrap-claude.sh: OUTPUT_PATH PROJECT_NAME CORE_VALUE [EXISTING_PATH] -->
-<!-- bootstrap-claude.sh: --write-isolation-guard OUTPUT_PATH -->
 <!-- Temporary JSON files (discovery.json, phases.json, inference.json) are cleaned up in 7g -->
 
 Generate all project-defining files using confirmed data from Step 6 or discovery questions.

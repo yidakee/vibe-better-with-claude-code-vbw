@@ -42,15 +42,8 @@ TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 OUT="$TMP_DIR/CLAUDE.md"
-GUARD="$TMP_DIR/.claude/CLAUDE.md"
 
-# 1) Isolation guard generation
-bash "$BOOTSTRAP" --write-isolation-guard "$GUARD"
-check "guard file created" test -f "$GUARD"
-check "guard has Plugin Isolation header" grep -q '^## Plugin Isolation$' "$GUARD"
-check "guard has Context Isolation header" grep -q '^### Context Isolation$' "$GUARD"
-
-# 2) Greenfield generation
+# 1) Greenfield generation
 bash "$BOOTSTRAP" "$OUT" "Demo Project" "Demo core value"
 check "greenfield creates output" test -f "$OUT"
 check "greenfield has project title" grep -q '^# Demo Project$' "$OUT"
@@ -156,11 +149,7 @@ check "preserve custom generic Constraints section" grep -q '^## Constraints$' "
 check "preserve custom generic Context content" grep -q 'team-specific context' "$OUT"
 check "preserve custom generic Constraints content" grep -q 'team-specific constraints' "$OUT"
 
-# 6) Argument validation: --write-isolation-guard with wrong arg count
-check_absent "guard rejects zero extra args" bash "$BOOTSTRAP" --write-isolation-guard
-check_absent "guard rejects too many args" bash "$BOOTSTRAP" --write-isolation-guard "$TMP_DIR/a" "$TMP_DIR/b"
-
-# 7) Edge case: empty PROJECT_NAME and CORE_VALUE should be rejected
+# 5) Edge case: empty PROJECT_NAME and CORE_VALUE should be rejected
 check_absent "rejects empty PROJECT_NAME" bash "$BOOTSTRAP" "$OUT" "" "Some value"
 check_absent "rejects empty CORE_VALUE" bash "$BOOTSTRAP" "$OUT" "Some Name" ""
 
