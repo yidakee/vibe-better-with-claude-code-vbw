@@ -89,6 +89,20 @@ AskUserQuestion with 4 questions:
 
 Store selections in variables `LEAD_MODEL`, `DEV_MODEL`, `QA_MODEL`, `SCOUT_MODEL`.
 
+**Individual Configuration - Round 2 (2 agents):**
+
+Get current models for Debugger and Architect:
+```bash
+CURRENT_DEBUGGER=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh debugger .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+CURRENT_ARCHITECT=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh architect .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+```
+
+AskUserQuestion with 2 questions:
+- Debugger model (current: $CURRENT_DEBUGGER): opus | sonnet | haiku
+- Architect model (current: $CURRENT_ARCHITECT): opus | sonnet | haiku
+
+Store selections in variables `DEBUGGER_MODEL`, `ARCHITECT_MODEL`.
+
 **Step 3:** Apply changes to config.json. Display ✓ per changed setting with ➜. No changes: "✓ No changes made."
 
 **Step 4: Profile drift detection** — if effort/autonomy/verification_tier changed:
