@@ -142,15 +142,6 @@ if [ -d "$MKT_DIR/.git" ] && [ -d "$CACHE_DIR" ]; then
   fi
 fi
 
-# --- Sync commands to CLAUDE_DIR/commands/vbw/ for autocomplete prefix ---
-VBW_CACHE_CMD=$(ls -d "$CLAUDE_DIR"/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
-VBW_GLOBAL_CMD="$CLAUDE_DIR/commands/vbw"
-if [ -d "$VBW_CACHE_CMD" ]; then
-  mkdir -p "$VBW_GLOBAL_CMD"
-  rm -f "$VBW_GLOBAL_CMD"/*.md 2>/dev/null
-  cp "$VBW_CACHE_CMD"/*.md "$VBW_GLOBAL_CMD/" 2>/dev/null
-fi
-
 # --- Auto-install git hooks if missing ---
 PROJECT_GIT_DIR=$(git rev-parse --show-toplevel 2>/dev/null) || PROJECT_GIT_DIR=""
 if [ -n "$PROJECT_GIT_DIR" ] && [ ! -f "$PROJECT_GIT_DIR/.git/hooks/pre-push" ] && [ -f "$SCRIPT_DIR/install-hooks.sh" ]; then
