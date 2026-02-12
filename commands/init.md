@@ -419,6 +419,32 @@ If SKIP_INFERENCE=false (confirmed/corrected inference data):
 - Remove `.vbw-planning/discovery.json`, `.vbw-planning/phases.json`, `.vbw-planning/inference.json`, `.vbw-planning/gsd-inference.json` (if they exist)
 - These are intermediate build artifacts, not project state
 
+### Step 8: Completion summary
+
+Display a Phase Banner (double-line box per @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md) with the title "VBW Initialization Complete".
+
+```
+╔══════════════════════════════════════╗
+║   VBW Initialization Complete        ║
+╚══════════════════════════════════════╝
+```
+
+**File checklist:** Display all created/updated files:
+- `✓ .vbw-planning/PROJECT.md`
+- `✓ .vbw-planning/REQUIREMENTS.md`
+- `✓ .vbw-planning/ROADMAP.md`
+- `✓ .vbw-planning/STATE.md`
+- `✓ CLAUDE.md`
+- `✓ .vbw-planning/config.json`
+- If GSD_IMPORTED=true: `✓ GSD project archived`
+- If BROWNFIELD=true: `✓ Codebase mapped`
+
+**Next steps:**
+```
+➜ Next: Run /vbw:vibe to start planning your first milestone
+  Or:   Run /vbw:status to review project state
+```
+
 ## Output Format
 
 Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md — Phase Banner (double-line box), File Checklist (✓), ○ for pending, Next Up Block, no ANSI color codes.
