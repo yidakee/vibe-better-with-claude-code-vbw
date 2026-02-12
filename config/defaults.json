@@ -15,5 +15,9 @@
   "active_profile": "default",
   "custom_profiles": {},
   "model_profile": "quality",
-  "model_overrides": {}
+  "model_overrides": {},
+  "v3_delta_context": false,
+  "v3_context_cache": false,
+  "v3_plan_research_persist": false,
+  "v3_metrics": false
 }

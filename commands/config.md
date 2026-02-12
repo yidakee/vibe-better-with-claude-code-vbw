@@ -316,6 +316,10 @@ echo "✓ Model override: $AGENT ➜ $MODEL"
 | plain_summary | boolean | true/false | true |
 | active_profile | string | profile name or "custom" | default |
 | custom_profiles | object | user-defined profiles | {} |
+| v3_delta_context | boolean | true/false | false |
+| v3_context_cache | boolean | true/false | false |
+| v3_plan_research_persist | boolean | true/false | false |
+| v3_metrics | boolean | true/false | false |
 
 ## Output Format
 
