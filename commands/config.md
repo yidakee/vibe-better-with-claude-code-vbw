@@ -69,7 +69,25 @@ Store selection in variable `PROFILE_METHOD`.
 
 **Branching:**
 - If `PROFILE_METHOD = "Use preset profile"`: AskUserQuestion with 3 options (quality | balanced | budget). Apply selected profile using model profile switching logic (lines 88-130).
-- If `PROFILE_METHOD = "Configure each agent individually"`: Proceed to individual agent configuration flow (see Task 2+ logic below).
+- If `PROFILE_METHOD = "Configure each agent individually"`: Proceed to individual agent configuration flow (Round 1 below).
+
+**Individual Configuration - Round 1 (4 agents):**
+
+Get current models for Lead, Dev, QA, Scout:
+```bash
+CURRENT_LEAD=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh lead .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+CURRENT_DEV=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh dev .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+CURRENT_QA=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh qa .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+CURRENT_SCOUT=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh scout .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+```
+
+AskUserQuestion with 4 questions:
+- Lead model (current: $CURRENT_LEAD): opus | sonnet | haiku
+- Dev model (current: $CURRENT_DEV): opus | sonnet | haiku
+- QA model (current: $CURRENT_QA): opus | sonnet | haiku
+- Scout model (current: $CURRENT_SCOUT): opus | sonnet | haiku
+
+Store selections in variables `LEAD_MODEL`, `DEV_MODEL`, `QA_MODEL`, `SCOUT_MODEL`.
 
 **Step 3:** Apply changes to config.json. Display ✓ per changed setting with ➜. No changes: "✓ No changes made."
 
