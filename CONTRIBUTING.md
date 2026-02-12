@@ -39,7 +39,7 @@ Key conventions:
 
 - **Commands** live in `commands/*.md`. The plugin name (`vbw`) auto-prefixes them, so `commands/init.md` becomes `/vbw:init`. Don't duplicate the prefix.
 - **Agents** in `agents/` use YAML frontmatter for tool permissions enforced by the platform.
-- **Hooks** in `hooks/hooks.json` reference scripts via `${CLAUDE_PLUGIN_ROOT}/scripts/`.
+- **Hooks** in `hooks/hooks.json` self-resolve scripts via `ls | sort -V | tail -1` against the plugin cache (they do not use `CLAUDE_PLUGIN_ROOT`).
 
 ## Making Changes
 
