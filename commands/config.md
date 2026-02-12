@@ -73,6 +73,32 @@ Store selection in variable `PROFILE_METHOD`.
 
 **Individual Configuration - Round 1 (4 agents):**
 
+Calculate OLD_COST before making changes (cost weights: opus=100, sonnet=20, haiku=2):
+```bash
+CURRENT_PROFILE=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json)
+PROFILES_PATH="${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json"
+
+# Get current models (before changes)
+LEAD_OLD=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh lead .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+DEV_OLD=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh dev .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+QA_OLD=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh qa .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+SCOUT_OLD=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh scout .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+DEBUGGER_OLD=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh debugger .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+ARCHITECT_OLD=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh architect .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+
+# Calculate cost based on model
+get_model_cost() {
+  case "$1" in
+    opus) echo 100 ;;
+    sonnet) echo 20 ;;
+    haiku) echo 2 ;;
+    *) echo 0 ;;
+  esac
+}
+
+OLD_COST=$(( $(get_model_cost "$LEAD_OLD") + $(get_model_cost "$DEV_OLD") + $(get_model_cost "$QA_OLD") + $(get_model_cost "$SCOUT_OLD") + $(get_model_cost "$DEBUGGER_OLD") + $(get_model_cost "$ARCHITECT_OLD") ))
+```
+
 Get current models for Lead, Dev, QA, Scout:
 ```bash
 CURRENT_LEAD=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh lead .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
@@ -131,6 +157,32 @@ echo "✓ Model override: debugger ➜ $DEBUGGER_MODEL"
 
 jq ".model_overrides.architect = \"$ARCHITECT_MODEL\"" .vbw-planning/config.json > .vbw-planning/config.json.tmp && mv .vbw-planning/config.json.tmp .vbw-planning/config.json
 echo "✓ Model override: architect ➜ $ARCHITECT_MODEL"
+```
+
+**Cost Estimate Display:**
+
+Calculate NEW_COST using selected models:
+```bash
+NEW_COST=$(( $(get_model_cost "$LEAD_MODEL") + $(get_model_cost "$DEV_MODEL") + $(get_model_cost "$QA_MODEL") + $(get_model_cost "$SCOUT_MODEL") + $(get_model_cost "$DEBUGGER_MODEL") + $(get_model_cost "$ARCHITECT_MODEL") ))
+
+# Calculate percentage difference
+if [ $OLD_COST -gt 0 ]; then
+  DIFF=$(( (NEW_COST - OLD_COST) * 100 / OLD_COST ))
+else
+  DIFF=0
+fi
+
+echo ""
+echo "Cost estimate (per phase):"
+echo "  Before: ${OLD_COST} units (~${CURRENT_PROFILE} profile)"
+if [ $DIFF -lt 0 ]; then
+  DIFF_ABS=$(( -DIFF ))
+  echo "  After:  ${NEW_COST} units (${DIFF_ABS}% reduction)"
+elif [ $DIFF -gt 0 ]; then
+  echo "  After:  ${NEW_COST} units (+${DIFF}% increase)"
+else
+  echo "  After:  ${NEW_COST} units (no change)"
+fi
 ```
 
 **Step 3:** Apply changes to config.json. Display ✓ per changed setting with ➜. No changes: "✓ No changes made."
