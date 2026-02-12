@@ -3,19 +3,21 @@ set -euo pipefail
 
 # bootstrap-project.sh — Generate PROJECT.md for a VBW project
 #
-# Usage: bootstrap-project.sh OUTPUT_PATH NAME DESCRIPTION
+# Usage: bootstrap-project.sh OUTPUT_PATH NAME DESCRIPTION [CORE_VALUE]
 #   OUTPUT_PATH   Path to write PROJECT.md
 #   NAME          Project name
 #   DESCRIPTION   One-line project description
+#   CORE_VALUE    (Optional) Core value statement; defaults to DESCRIPTION
 
 if [[ $# -lt 3 ]]; then
-  echo "Usage: bootstrap-project.sh OUTPUT_PATH NAME DESCRIPTION" >&2
+  echo "Usage: bootstrap-project.sh OUTPUT_PATH NAME DESCRIPTION [CORE_VALUE]" >&2
   exit 1
 fi
 
 OUTPUT_PATH="$1"
 NAME="$2"
 DESCRIPTION="$3"
+CORE_VALUE="${4:-$DESCRIPTION}"
 
 CREATED=$(date +%Y-%m-%d)
 
@@ -27,7 +29,7 @@ cat > "$OUTPUT_PATH" <<EOF
 
 ${DESCRIPTION}
 
-**Core value:** ${DESCRIPTION}
+**Core value:** ${CORE_VALUE}
 
 ## Requirements
 

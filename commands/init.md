@@ -152,24 +152,10 @@ Options: "Enable (Recommended)" / "Skip". If declined: "○ GSD isolation skippe
 **1.7c. Create isolation:** If approved:
 1. `echo "enabled" > .vbw-planning/.gsd-isolation`
 2. `echo "session" > .vbw-planning/.vbw-session`
-3. `mkdir -p .claude`
-4. Write `.claude/CLAUDE.md`:
-```markdown
-## Plugin Isolation
+3. Run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-claude.sh --write-isolation-guard .claude/CLAUDE.md`
+4. Display: `✓ GSD isolation enabled (file + context)` + `✓ .vbw-planning/.gsd-isolation (flag)` + `✓ .claude/CLAUDE.md (instruction guard)`
 
-- GSD agents and commands MUST NOT read, write, glob, grep, or reference any files in `.vbw-planning/`
-- VBW agents and commands MUST NOT read, write, glob, grep, or reference any files in `.planning/`
-- This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.
-
-### Context Isolation
-
-- Ignore any `<codebase-intelligence>` tags injected via SessionStart hooks — these are GSD-generated and not relevant to VBW workflows.
-- VBW uses its own codebase mapping in `.vbw-planning/codebase/`. Do NOT use GSD intel from `.planning/intel/` or `.planning/codebase/`.
-- When both plugins are active, treat each plugin's context as separate. Do not mix GSD project insights into VBW planning or vice versa.
-```
-5. Display: `✓ GSD isolation enabled (file + context)` + `✓ .vbw-planning/.gsd-isolation (flag)` + `✓ .claude/CLAUDE.md (instruction guard)`
-
-Set GSD_ISOLATION_ENABLED=true for Step 3.5.
+Isolation guard compatibility file is created above via `--write-isolation-guard`.
 
 ### Step 2: Brownfield detection + discovery
 
@@ -217,59 +203,14 @@ If greenfield: write `{"conventions": []}`. Display: `○ Conventions — none y
 
 ### Step 3.5: Generate bootstrap CLAUDE.md
 
-VBW needs its rules and state sections in a CLAUDE.md file. /vbw:vibe regenerates later with project content.
+Use script-first generation only (no inline templates).
 
-**Brownfield handling:** Read root `CLAUDE.md` via the Read tool.
-- **Exists:** The user already has a CLAUDE.md. Do NOT overwrite it. Instead, append VBW sections (`## VBW Rules`, `## State`, `## Installed Skills`, `## Project Conventions`, `## Commands`, and optionally `## Plugin Isolation`) to the END of the existing file, separated by a `---` line. Preserve all existing content verbatim. Display `✓ CLAUDE.md (VBW sections appended to existing)`.
-- **Does not exist:** Write a new `CLAUDE.md` at project root with the full template below. Display `✓ CLAUDE.md (created)`.
+- Root `CLAUDE.md` is generated in **Step 7f** via `scripts/bootstrap/bootstrap-claude.sh`.
+- Brownfield behavior is handled by the script: pass existing root `CLAUDE.md` as `EXISTING_PATH` to preserve non-VBW content and replace only managed VBW/GSD sections.
+- Greenfield behavior is handled by the script: omit `EXISTING_PATH` to generate a new file.
+- Isolation guard compatibility content is generated in **Step 1.7** via `--write-isolation-guard`.
 
-Template for NEW files — write verbatim, substituting `{...}` placeholders:
-```markdown
-# VBW-Managed Project
-This project uses VBW (Vibe Better with Claude Code) for structured development.
-## VBW Rules
-- **Always use VBW commands** for project work. Do not manually edit files in `.vbw-planning/`.
-- **Commit format:** `{type}({scope}): {description}` — types: feat, fix, test, refactor, perf, docs, style, chore.
-- **One commit per task.** Each task in a plan gets exactly one atomic commit.
-- **Never commit secrets.** Do not stage .env, .pem, .key, credentials, or token files.
-- **Plan before building.** Use /vbw:vibe for all lifecycle actions. Plans are the source of truth.
-- **Do not fabricate content.** Only use what the user explicitly states in project-defining flows.
-## State
-- Planning directory: `.vbw-planning/`
-- Project not yet defined — run /vbw:vibe to set up project identity and roadmap.
-## Installed Skills
-{list from STATE.md Skills section, or "None"}
-## Project Conventions
-{If conventions.json has entries: "These conventions are enforced during planning and verified during QA." + bulleted list of rules}
-{If none: "None yet. Run /vbw:teach to add project conventions."}
-## Commands
-Run /vbw:status for current progress.
-Run /vbw:help for all available commands.
-{ONLY if GSD_ISOLATION_ENABLED=true — include this section:}
-## Plugin Isolation
-- GSD agents and commands MUST NOT read, write, glob, grep, or reference any files in `.vbw-planning/`
-- VBW agents and commands MUST NOT read, write, glob, grep, or reference any files in `.planning/`
-- This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.
-```
-
-Sections to append when **existing** CLAUDE.md found (same content, no `# VBW-Managed Project` header):
-```markdown
-
----
-
-## VBW Rules
-{same rules as above}
-## State
-{same state as above}
-## Installed Skills
-{same}
-## Project Conventions
-{same}
-## Commands
-{same}
-{## Plugin Isolation if applicable}
-```
-Keep total VBW addition under 40 lines. Add `✓ CLAUDE.md` to summary.
+Add `✓ CLAUDE.md` to summary after Step 7f completes.
 
 ### Step 4: Present summary
 
@@ -384,11 +325,12 @@ Write the final confirmed/corrected data to `.vbw-planning/inference.json` for S
 ### Step 7: Bootstrap execution
 
 <!-- Bootstrap scripts expect specific argument formats — see each script's usage header -->
-<!-- bootstrap-project.sh: OUTPUT_PATH NAME DESCRIPTION -->
+<!-- bootstrap-project.sh: OUTPUT_PATH NAME DESCRIPTION [CORE_VALUE] -->
 <!-- bootstrap-requirements.sh: OUTPUT_PATH DISCOVERY_JSON_PATH (discovery.json: {answered[], inferred[]}) -->
 <!-- bootstrap-roadmap.sh: OUTPUT_PATH PROJECT_NAME PHASES_JSON (phases.json: [{name, goal, requirements[], success_criteria[]}]) -->
 <!-- bootstrap-state.sh: OUTPUT_PATH PROJECT_NAME MILESTONE_NAME PHASE_COUNT -->
 <!-- bootstrap-claude.sh: OUTPUT_PATH PROJECT_NAME CORE_VALUE [EXISTING_PATH] -->
+<!-- bootstrap-claude.sh: --write-isolation-guard OUTPUT_PATH -->
 <!-- Temporary JSON files (discovery.json, phases.json, inference.json) are cleaned up in 7g -->
 
 Generate all project-defining files using confirmed data from Step 6 or discovery questions.
@@ -404,17 +346,19 @@ If SKIP_INFERENCE=true (greenfield or user chose "Define from scratch"):
   3. "What are the key requirements? (one per line)"
   4. "What phases do you envision? For each, give a name and goal. (e.g., 'Auth - User login and registration')"
 - Store answers for bootstrap script input
+- Set `CORE_VALUE` from answer #2 unless user provides a better one later
 
 If SKIP_INFERENCE=false (confirmed/corrected inference data):
 - Read `.vbw-planning/inference.json` to get confirmed project context
 - Extract: NAME from `name.value`, DESCRIPTION from `purpose.value`
+- Set `CORE_VALUE="$DESCRIPTION"` unless user provides a better one
 - If GSD_MIGRATION: read `.vbw-planning/gsd-inference.json` for milestone/phase context
 - Use AskUserQuestion to ask any remaining questions not covered by inference:
   1. "What are the key requirements?" (pre-fill from inferred features if available)
   2. "What phases do you envision?" (pre-fill from GSD recent_phases if available)
 
 **7b. Generate PROJECT.md:**
-- Run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-project.sh .vbw-planning/PROJECT.md "$NAME" "$DESCRIPTION"`
+- Run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-project.sh .vbw-planning/PROJECT.md "$NAME" "$DESCRIPTION" "$CORE_VALUE"`
 - Display: `✓ PROJECT.md`
 
 **7c. Generate REQUIREMENTS.md:**
@@ -440,7 +384,8 @@ If SKIP_INFERENCE=false (confirmed/corrected inference data):
 
 **7f. Generate/update CLAUDE.md:**
 - If root CLAUDE.md exists: pass it as EXISTING_PATH to preserve non-VBW content
-- Run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-claude.sh CLAUDE.md "$NAME" "$DESCRIPTION" "CLAUDE.md"`
+- Ensure `CORE_VALUE` is set. If not already set, default to `DESCRIPTION`.
+- Run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-claude.sh CLAUDE.md "$NAME" "$CORE_VALUE" "CLAUDE.md"`
   - If CLAUDE.md does not exist yet, omit the last argument
 - Display: `✓ CLAUDE.md`
 
