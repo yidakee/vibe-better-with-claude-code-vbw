@@ -26,4 +26,34 @@ if [[ ! -d "$GSD_ARCHIVE_DIR" ]]; then
   exit 0
 fi
 
-echo "$EMPTY_JSON" | jq .
+# --- Extract latest milestone from INDEX.json ---
+LATEST_MILESTONE="null"
+INDEX_FILE="$GSD_ARCHIVE_DIR/INDEX.json"
+
+if [[ -f "$INDEX_FILE" ]]; then
+  milestone_name=$(jq -r '.milestones[-1] // empty' "$INDEX_FILE" 2>/dev/null || true)
+  if [[ -n "$milestone_name" ]]; then
+    phases_total=$(jq -r '.phases_total // 0' "$INDEX_FILE" 2>/dev/null || echo "0")
+    phases_complete=$(jq -r '.phases_complete // 0' "$INDEX_FILE" 2>/dev/null || echo "0")
+    if [[ "$phases_complete" -eq "$phases_total" ]] && [[ "$phases_total" -gt 0 ]]; then
+      milestone_status="complete"
+    else
+      milestone_status="in_progress"
+    fi
+    LATEST_MILESTONE=$(jq -n \
+      --arg name "$milestone_name" \
+      --argjson phase_count "$phases_total" \
+      --arg status "$milestone_status" \
+      '{"name": $name, "phase_count": $phase_count, "status": $status}')
+  fi
+fi
+
+# --- Build output ---
+jq -n \
+  --argjson latest_milestone "$LATEST_MILESTONE" \
+  '{
+    "latest_milestone": $latest_milestone,
+    "recent_phases": [],
+    "key_decisions": [],
+    "current_work": null
+  }'
