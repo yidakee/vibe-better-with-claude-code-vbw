@@ -36,4 +36,42 @@ if [[ ! -d "$CODEBASE_DIR" ]]; then
   exit 1
 fi
 
+# --- Project name extraction (priority: git repo > plugin.json > directory) ---
+NAME_VALUE=""
+NAME_SOURCE=""
+
+# Try git repo name
+if [[ -z "$NAME_VALUE" ]]; then
+  repo_url=$(git -C "$REPO_ROOT" remote get-url origin 2>/dev/null || true)
+  if [[ -n "$repo_url" ]]; then
+    repo_name=$(echo "$repo_url" | sed 's/.*\///' | sed 's/\.git$//')
+    if [[ -n "$repo_name" ]]; then
+      NAME_VALUE="$repo_name"
+      NAME_SOURCE="repo"
+    fi
+  fi
+fi
+
+# Try plugin.json name
+if [[ -z "$NAME_VALUE" ]]; then
+  plugin_json="$REPO_ROOT/.claude-plugin/plugin.json"
+  if [[ -f "$plugin_json" ]]; then
+    pname=$(jq -r '.name // empty' "$plugin_json" 2>/dev/null || true)
+    if [[ -n "$pname" ]]; then
+      NAME_VALUE="$pname"
+      NAME_SOURCE="plugin.json"
+    fi
+  fi
+fi
+
+# Fallback to directory name
+if [[ -z "$NAME_VALUE" ]]; then
+  NAME_VALUE=$(basename "$REPO_ROOT")
+  NAME_SOURCE="directory"
+fi
+
+# Build name JSON
+NAME_JSON=$(jq -n --arg v "$NAME_VALUE" --arg s "$NAME_SOURCE" \
+  '{value: $v, source: $s}')
+
 exit 0
