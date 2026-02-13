@@ -7,8 +7,8 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 ## Active Context
 
 **Work:** No active milestone
-**Last shipped:** Full Spec Compliance — 5 phases, 51 tasks, 46 commits, 188/188 QA
-**Previous:** Spec Completion — 3 phases, 12 tasks, 12 commits, 92/92 QA
+**Last shipped:** Human UAT Gate — 1 phase, 2 plans, 5 tasks, 5 commits. Added /vbw:verify command with CHECKPOINT UX, Step 4.5 UAT gate in execution flow, and Verify Mode in vibe.md.
+**Previous:** Full Spec Compliance — 5 phases, 51 tasks, 46 commits, 188/188 QA
 **Next action:** Run /vbw:vibe to start a new milestone
 
 ## VBW Rules
