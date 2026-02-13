@@ -160,6 +160,110 @@ Deferred ideas recorded with:
 - No judgment: framed as "could be its own phase" not "out of scope"
 - User has final say: "Include in this phase" option always available
 
+#### Example Flows by Phase Type
+
+Sample question flows for each phase type, demonstrating domain-typed questions in plain language following Wording Guidelines.
+
+**UI Phase Example: "Phase 2: User Dashboard"**
+
+1. "How should the layout adapt when someone switches from desktop to phone?"
+   - Same layout scaled down
+   - Simplified mobile version
+   - Mobile app instead
+   - Let me explain
+
+2. "What happens when data is loading?"
+   - Show spinner
+   - Show skeleton placeholders
+   - Show cached data with refresh indicator
+   - Let me explain
+
+3. "How should users navigate between sections?"
+   - Sidebar menu
+   - Top tabs
+   - Hamburger menu
+   - Let me explain
+
+**API Phase Example: "Phase 3: Data Sync Service"**
+
+1. "What should the system return when a sync request succeeds?"
+   - Just success/fail status
+   - Full updated data
+   - Change summary
+   - Let me explain
+
+2. "What happens if someone's API key is invalid?"
+   - Return error code
+   - Lock account
+   - Send email alert
+   - Let me explain
+
+3. "How should the system handle too many requests from one source?"
+   - Slow them down automatically
+   - Block after limit
+   - Require upgrade
+   - Let me explain
+
+**CLI Phase Example: "Phase 2: Build Command"**
+
+1. "What should the command print when a build finishes?"
+   - Summary line only
+   - Detailed file list
+   - Machine-readable JSON
+   - Let me explain
+
+2. "How should errors appear in the terminal?"
+   - Red text with explanation
+   - Error code with docs link
+   - Stack trace
+   - Let me explain
+
+3. "What happens when someone runs the command with no arguments?"
+   - Show help automatically
+   - Start interactive wizard
+   - Use default settings
+   - Let me explain
+
+**Data Phase Example: "Phase 3: User Profiles Schema"**
+
+1. "What should happen to someone's data when they delete their account?"
+   - Delete immediately
+   - Keep for 30 days
+   - Anonymize and keep
+   - Let me explain
+
+2. "How should the system handle two people trying to update the same profile at once?"
+   - Last edit wins
+   - Lock while editing
+   - Merge changes
+   - Let me explain
+
+3. "What fields must always have a value?"
+   - Name and email
+   - Just email
+   - No required fields
+   - Let me explain
+
+**Integration Phase Example: "Phase 4: Third-Party Calendar Sync"**
+
+1. "What happens if the calendar service is down when someone tries to sync?"
+   - Show error and stop
+   - Retry automatically
+   - Queue for later
+   - Let me explain
+
+2. "How should the system authenticate with the calendar service?"
+   - User connects their account once
+   - Use our API key
+   - Ask each time
+   - Let me explain
+
+3. "What data flows between the systems?"
+   - Events only
+   - Events and attendees
+   - Full calendar
+   - Let me explain
+
 ### Thread-Following Questions
 
 Round 2+ questions build on previous answers rather than following a fixed script:
