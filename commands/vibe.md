@@ -325,10 +325,97 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
 
 **Steps:**
 1. Load phase goal, requirements, success criteria, dependencies from ROADMAP.md.
-2. Ask 3-5 phase-specific questions across: essential features, technical preferences, boundaries, dependencies, acceptance criteria.
-3. Write `.vbw-planning/phases/{phase-dir}/{phase}-CONTEXT.md` with sections: User Vision, Essential Features, Technical Preferences, Boundaries, Acceptance Criteria, Decisions Made.
-4. Update `.vbw-planning/discovery.json`: append each question+answer to `answered[]` (category, phase, date), extract inferences to `inferred[]`.
-5. Show summary, ask for corrections. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh vibe`.
+
+2. **Phase type detection:** Identify what KIND of thing the phase builds from ROADMAP.md phase goal and requirements text.
+
+   Define 5 phase type keyword patterns (case-insensitive matching):
+   - **UI**: design, interface, layout, frontend, screens, components, responsive, page, view, form, dashboard, widget, navigation, menu, modal, button
+   - **API**: endpoint, service, backend, response, error handling, auth, versioning, route, REST, request, JSON, status code, header, query parameter, middleware
+   - **CLI**: command, flags, arguments, output format, terminal, console, prompt, stdin, stdout, pipe, subcommand, help text, option, switch
+   - **Data**: schema, database, migration, storage, persistence, retention, model, query, index, relation, table, field, constraint, transaction
+   - **Integration**: third-party, external service, sync, webhook, connection, protocol, import, export, adapter, client, API key, OAuth, retry
+
+   Detection process:
+   a. Read ROADMAP.md phase goal + requirements text for target phase
+   b. Match keywords against combined text (goal + requirements), case-insensitive
+   c. Score each type: 1 point per unique keyword match
+   d. Identify detected types: score >= 2 (minimum 2 keyword matches required to prevent false positives)
+   e. Store detected types for next step
+
+3. **Mixed-type handling:** Determine which question template to use.
+   - **If 0 types detected** (all scores < 2): use generic fallback questions
+   - **If 1 type detected** (only one type scored >= 2): use that type's questions, record as auto-detected
+   - **If 2+ types detected** (multiple types scored >= 2): present AskUserQuestion:
+     "This phase involves {type1}, {type2}, and {type3} work. Which should we focus on for these questions?"
+     Options: each detected type name (UI, API, CLI, Data, Integration) as separate choice
+     User's selection determines question template, record as user-chosen
+   - Store selected phase type (and source: auto-detected or user-chosen) for question generation and discovery.json recording
+
+4. **Domain-typed question generation:** Generate 3-5 questions using the selected phase type template (from step 3).
+
+   ## Domain-typed question templates
+
+   **UI type questions:**
+   - Layout structure: "How should the screens be organized?" Options: ["Single-page flow (everything on one screen)", "Multi-page with navigation (users move between pages)", "Dashboard with panels (multiple views at once)", "Let me explain..."]
+   - State management: "What happens when someone interacts with the interface?" Options: ["Changes appear immediately (live updates)", "Need to save/submit first (explicit actions)", "Mix of both (some live, some require save)", "Let me explain..."]
+   - Error states: "What should users see when something goes wrong?" Options: ["Red text next to the problem area", "Pop-up message that blocks the screen", "Banner at the top that can be dismissed", "Let me explain..."]
+   - Responsiveness: "How should this adapt to different devices?" Options: ["Works on phones, tablets, and desktop (fully responsive)", "Desktop only (no mobile support)", "Mobile-first (works best on phones)", "Let me explain..."]
+   - User interactions: "How do people navigate through the interface?" Options: ["Click buttons and links", "Forms with multiple steps", "Drag and drop items", "Let me explain..."]
+
+   **API type questions:**
+   - Response format: "What information should the system send back?" Options: ["Just the data requested (minimal response)", "Data plus metadata (timestamps, counts, etc.)", "Data plus related information (connections to other data)", "Let me explain..."]
+   - Error handling: "What happens when something fails?" Options: ["Return an error message explaining what went wrong", "Try again automatically", "Return partial results if possible", "Let me explain..."]
+   - Authentication: "Who can access this?" Options: ["Anyone (no restrictions)", "Requires login (username/password)", "Requires special key or token", "Let me explain..."]
+   - Versioning: "How should changes be handled over time?" Options: ["Everyone gets updates immediately (no versioning)", "Multiple versions available (users choose)", "Automatic migration (users upgraded automatically)", "Let me explain..."]
+   - Scale considerations: "How much traffic should this handle?" Options: ["Dozens of requests (small scale)", "Hundreds per minute (medium scale)", "Thousands per minute (high scale)", "Let me explain..."]
+
+   **CLI type questions:**
+   - Command structure: "How should the command work?" Options: ["Single command with flags (app --flag value)", "Subcommands (app subcommand --flag)", "Interactive mode (prompts for input)", "Let me explain..."]
+   - Output format: "What should the output look like?" Options: ["Human-readable text (easy to read)", "Structured data (JSON, CSV for scripts)", "Both formats available (flag to choose)", "Let me explain..."]
+   - Error messages: "What should users see when something fails?" Options: ["Brief error message", "Detailed explanation with suggestions", "Error code plus message", "Let me explain..."]
+   - Help system: "How should documentation work?" Options: ["Built-in help command (--help)", "Separate documentation file", "Interactive tutorial mode", "Let me explain..."]
+   - Piping and composition: "Should this work with other commands?" Options: ["Reads from stdin, writes to stdout (pipe-friendly)", "Standalone only (no piping)", "Optional piping (works both ways)", "Let me explain..."]
+
+   **Data type questions:**
+   - Data model: "What information needs to be stored?" Options: ["Simple fields (name, date, count)", "Connected records (relationships between data)", "Flexible structure (different types per item)", "Let me explain..."]
+   - Relationships: "How does data connect?" Options: ["Independent records (no connections)", "Parent-child relationships (hierarchical)", "Many-to-many connections (complex links)", "Let me explain..."]
+   - Migrations: "How should data structure changes be handled?" Options: ["Manual updates (user runs script)", "Automatic migration (happens on startup)", "Versioned migrations (tracked changes)", "Let me explain..."]
+   - Retention: "How long should data persist?" Options: ["Forever (unless manually deleted)", "Time-limited (auto-delete after period)", "Archive old data (keep but mark as old)", "Let me explain..."]
+   - Constraints and validation: "What rules apply to the data?" Options: ["Required fields only (minimal validation)", "Format checking (email, phone, etc.)", "Business rules (dates, ranges, limits)", "Let me explain..."]
+
+   **Integration type questions:**
+   - Protocol and format: "How should systems communicate?" Options: ["HTTP requests (REST-style)", "Real-time connection (websocket, streaming)", "Message queue (async processing)", "Let me explain..."]
+   - Authentication: "How should access be secured?" Options: ["API key in request", "OAuth tokens (delegated access)", "Username and password", "Let me explain..."]
+   - Error recovery: "What happens when the connection fails?" Options: ["Retry automatically", "Queue for later", "Fail and notify user", "Let me explain..."]
+   - Data flow direction: "How does information move?" Options: ["One-way import (pull data in)", "One-way export (push data out)", "Two-way sync (keep in sync)", "Let me explain..."]
+   - Dependency handling: "What if the external system is down?" Options: ["Block and wait", "Cache last known data", "Fail gracefully with fallback", "Let me explain..."]
+
+   **Generic fallback questions:**
+   - Essential features: "What are the must-have capabilities?" Options: ["Core functionality only (minimal)", "Common features expected by users", "Comprehensive feature set", "Let me explain..."]
+   - Technical preferences: "How should this be built?" Options: ["Simple and straightforward", "Optimized for performance", "Flexible and extensible", "Let me explain..."]
+   - Boundaries: "What should this NOT do?" Options: ["Keep it focused on core purpose", "Avoid complexity", "Don't duplicate existing systems", "Let me explain..."]
+
+   Present selected questions via AskUserQuestion following REQ-C2 constraint (2-4 options per question).
+   Follow existing AskUserQuestion patterns: single-select for scenarios, multiSelect for checklists.
+
+5. Write `.vbw-planning/phases/{phase-dir}/{phase}-CONTEXT.md` with sections: User Vision, Essential Features, Technical Preferences, Boundaries, Acceptance Criteria, Decisions Made, Deferred Ideas (append-only section for scope creep captures).
+
+6. Update `.vbw-planning/discovery.json`: append each question+answer to `answered[]` with extended schema including phase type metadata:
+   ```json
+   {
+     "question": "How should the screens be organized?",
+     "answer": "Multi-page with navigation",
+     "category": "technical_preferences",
+     "phase": "03",
+     "date": "2026-02-13",
+     "phase_type": "UI",
+     "phase_type_source": "auto-detected"
+   }
+   ```
+   Fields: question, answer, category, phase (zero-padded phase number), date, phase_type (UI/API/CLI/Data/Integration/generic), phase_type_source (auto-detected or user-chosen).
+   Extract inferences to `inferred[]`, include phase type context if relevant.
+
+7. Show summary, ask for corrections. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh vibe`.
 
 ### Mode: Assumptions
 
