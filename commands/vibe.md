@@ -1,7 +1,7 @@
 ---
 name: vibe
-description: "The one command. Detects state, parses intent, routes to any lifecycle mode -- bootstrap, scope, plan, execute, discuss, archive, and more."
-argument-hint: "[intent or flags] [--plan] [--execute] [--discuss] [--assumptions] [--scope] [--add] [--insert] [--remove] [--archive] [--yolo] [--effort=level] [--skip-qa] [--skip-audit] [--plan=NN] [N]"
+description: "The one command. Detects state, parses intent, routes to any lifecycle mode -- bootstrap, scope, plan, execute, verify, discuss, archive, and more."
+argument-hint: "[intent or flags] [--plan] [--execute] [--verify] [--discuss] [--assumptions] [--scope] [--add] [--insert] [--remove] [--archive] [--yolo] [--effort=level] [--skip-qa] [--skip-audit] [--plan=NN] [N]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch
 disable-model-invocation: true
 ---
@@ -37,6 +37,7 @@ Check $ARGUMENTS for flags. If any mode flag is present, go directly to that mod
 - `--add "desc"` -> Add Phase mode
 - `--insert N "desc"` -> Insert Phase mode
 - `--remove N` -> Remove Phase mode
+- `--verify [N]` -> Verify mode
 - `--archive` -> Archive mode
 
 Behavior modifiers (combinable with mode flags):
@@ -56,6 +57,7 @@ If $ARGUMENTS present but no flags detected, interpret user intent:
 - Assumption keywords (assume, assuming, what if, what are you assuming) -> Assumptions mode
 - Planning keywords (plan, scope, break down, decompose, structure) -> Plan mode
 - Execution keywords (build, execute, run, do it, go, make it, ship it) -> Execute mode
+- Verification keywords (verify, test, uat, check my work, acceptance test, walk through) -> Verify mode
 - Phase mutation keywords (add, insert, remove, skip, drop, new phase) -> relevant Phase Mutation mode
 - Completion keywords (done, ship, archive, wrap up, finish, complete) -> Archive mode
 - Ambiguous -> AskUserQuestion with 2-3 contextual options
@@ -246,6 +248,17 @@ This mode delegates entirely to the protocol file. Before reading:
    Include compiled context paths in Dev and QA task descriptions.
 
 Then Read the protocol file and execute Steps 2-5 as written.
+
+### Mode: Verify
+
+**Guard:** Initialized, phase has `*-SUMMARY.md` files.
+No SUMMARY.md: STOP "Phase {N} has no completed plans. Run /vbw:vibe first."
+**Phase auto-detection:** First phase with `*-SUMMARY.md` but no `*-UAT.md`. All verified: STOP "All phases have UAT results. Specify: `/vbw:verify N`"
+
+**Steps:**
+1. Read `${CLAUDE_PLUGIN_ROOT}/commands/verify.md` protocol.
+2. Execute the verify protocol for the target phase.
+3. Display results per verify.md output format.
 
 ### Mode: Add Phase
 
