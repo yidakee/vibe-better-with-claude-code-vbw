@@ -45,6 +45,7 @@ Key conventions:
 
 1. **Fork the repo** and create a feature branch from `main`.
 2. **Test locally** with `claude --plugin-dir .` before submitting.
+   - Run automated checks: `bash testing/run-all.sh`
 3. **Keep commits atomic** -- one logical change per commit.
 4. **Match the existing tone** in command descriptions and user-facing text. VBW is direct, dry, and self-aware. It doesn't use corporate language or unnecessary enthusiasm.
 

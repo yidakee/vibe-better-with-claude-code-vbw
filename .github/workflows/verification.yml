@@ -1,0 +1,28 @@
+name: Verification
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify shell syntax
+        run: |
+          find scripts testing -type f -name "*.sh" -print0 | xargs -0 -n1 bash -n
+
+      - name: Verify init/todo contracts
+        run: bash scripts/verify-init-todo.sh
+
+      - name: Verify bash script contracts
+        run: bash testing/verify-bash-scripts-contract.sh
+
+      - name: Verify command contracts
+        run: bash testing/verify-commands-contract.sh
