@@ -28,8 +28,24 @@ fi
 # Block GSD's .planning/ directory when VBW is actively running.
 # Only enforce when VBW markers are present (session or agent), so GSD can
 # still write to its own directory when VBW is not the active caller.
+# Stale marker protection: ignore markers older than 24h to avoid false positives
+# from crashed sessions that didn't clean up.
+is_marker_fresh() {
+  local marker="$1"
+  [ ! -f "$marker" ] && return 1
+  local now marker_mtime age
+  now=$(date +%s)
+  if [ "$(uname)" = "Darwin" ]; then
+    marker_mtime=$(stat -f %m "$marker" 2>/dev/null || echo 0)
+  else
+    marker_mtime=$(stat -c %Y "$marker" 2>/dev/null || echo 0)
+  fi
+  age=$((now - marker_mtime))
+  [ "$age" -lt 86400 ]
+}
+
 if echo "$FILE_PATH" | grep -qF '.planning/' && ! echo "$FILE_PATH" | grep -qF '.vbw-planning/'; then
-  if [ -f ".vbw-planning/.active-agent" ] || [ -f ".vbw-planning/.vbw-session" ]; then
+  if is_marker_fresh ".vbw-planning/.active-agent" || is_marker_fresh ".vbw-planning/.vbw-session"; then
     echo "Blocked: .planning/ is managed by GSD, not VBW ($FILE_PATH)" >&2
     exit 2
   fi

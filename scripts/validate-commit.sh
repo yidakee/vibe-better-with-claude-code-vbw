@@ -20,7 +20,7 @@ fi
 # Heredoc-style commits: extract first non-blank line as commit subject
 MSG=""
 if echo "$COMMAND" | grep -q 'cat <<'; then
-  MSG=$(printf '%s\n' "$COMMAND" | sed '1,/cat <</d' | sed '/^[[:space:]]*$/d' | head -1 | sed 's/^[[:space:]]*//')
+  MSG=$(printf '%s\n' "$COMMAND" | sed -n '/cat <</,$ p' | sed '1d' | sed '/^[[:space:]]*$/d' | head -1 | sed 's/^[[:space:]]*//')
   if [ -z "$MSG" ]; then
     exit 0  # Can't parse heredoc, fail-open
   fi
