@@ -118,10 +118,19 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
   If `discovery_questions=false`: force depth=skip. Store DISCOVERY_DEPTH for B2.
 
 - **B2: REQUIREMENTS.md (Discovery)** -- Behavior depends on DISCOVERY_DEPTH:
+  - **B2.1: Domain Research (if not skip):** If DISCOVERY_DEPTH != skip:
+    1. Extract domain from user's project description (the $NAME or $DESCRIPTION from B1)
+    2. Resolve Scout model via `bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh scout .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json`
+    3. Spawn Scout agent via Task tool with prompt: "Research the {domain} domain and write `.vbw-planning/domain-research.md` with four sections: ## Table Stakes (features every {domain} app has), ## Common Pitfalls (what projects get wrong), ## Architecture Patterns (how similar apps are structured), ## Competitor Landscape (existing products). Use WebSearch. Be concise (2-3 bullets per section)."
+    4. Set `model: "${SCOUT_MODEL}"` and `timeout: 120000` in Task tool invocation
+    5. On success: Read domain-research.md. Extract brief summary (3-5 lines max): (1) Pick 1-2 most surprising table stakes from ## Table Stakes, (2) Pick 1 high-impact pitfall from ## Common Pitfalls, (3) Mention 1 competitor pattern from ## Competitor Landscape. Use plain language (no jargon). Format as narrative, not bullet list. Example: "Most recipe apps need offline access, ingredient scaling, and meal planning — users expect these out of the box. A common mistake is over-complicating the recipe format, which confuses users. Apps like Paprika prioritize speed over features." Display to user: "◆ Domain Research: {brief summary}\n\n✓ Research complete. Now let's explore your specific needs..."
+    6. On failure: Log warning "⚠ Domain research timed out, proceeding with general questions". Display to user: "⚠ Domain research took longer than expected — skipping to questions. (You can re-run `/vbw:vibe` later if you want domain-specific insights.)" Set RESEARCH_AVAILABLE=false, continue to Round 1
+    7. Store RESEARCH_AVAILABLE flag for Round 1 context
+    8. Comment: Research is best-effort. Timeout, WebSearch failures, or empty results all fall back to current behavior with no user-facing error.
   - **If skip:** Ask 2 minimal static questions via AskUserQuestion: (1) "What are the must-have features?" (2) "Who will use this?" Create `.vbw-planning/discovery.json` with `{"answered":[],"inferred":[]}`.
   - **If quick/standard/thorough:** Read `${CLAUDE_PLUGIN_ROOT}/references/discovery-protocol.md`. Follow Bootstrap Discovery flow:
     1. Analyze user's description for domain, scale, users, complexity signals
-    2. Round 1 -- Scenarios: Generate scenario questions per protocol. Present as AskUserQuestion with descriptive options. Count: quick=1, standard=2, thorough=3-4
+    2. Round 1 -- Scenarios: Generate scenario questions per protocol. Present as AskUserQuestion with descriptive options. Count: quick=1, standard=2, thorough=3-4. **Scenario generation:** If RESEARCH_AVAILABLE=true, read `.vbw-planning/domain-research.md` and integrate findings: (a) Table Stakes → checklist questions in Round 2, (b) Common Pitfalls → scenario situations (e.g., 'What happens when [pitfall situation]?'), (c) Architecture Patterns → technical preference scenarios (e.g., 'Should the system use [pattern A] or [pattern B]?'), (d) Competitor Landscape → differentiation scenarios (e.g., '{Competitor X} does {feature}. Should yours work the same way or differently?'). If RESEARCH_AVAILABLE=false, use description analysis only per existing protocol.
     3. Round 2 -- Checklists: Based on Round 1 answers, generate targeted pick-many questions with `multiSelect: true`. Count: quick=1, standard=1-2, thorough=2-3
     4. Synthesize answers into `.vbw-planning/discovery.json` with `answered[]` and `inferred[]` (questions=friendly, requirements=precise)
   - **Wording rules (all depths):** No jargon. Plain language. Concrete situations. Cause and effect. Assume user is not a developer.
