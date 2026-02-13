@@ -342,6 +342,32 @@ Display: `◆ Spawning QA agent (${QA_MODEL})...`
 
 **CRITICAL:** Pass `model: "${QA_MODEL}"` parameter to the Task tool invocation when spawning QA agents.
 
+### Step 4.5: Human acceptance testing (UAT)
+
+**Autonomy gate:**
+
+| Autonomy | UAT active |
+|----------|-----------|
+| cautious | YES |
+| standard | YES |
+| confident | OFF |
+| pure-vibe | OFF |
+
+Read autonomy from config: `jq -r '.autonomy // "standard"' .vbw-planning/config.json`
+
+If autonomy is confident or pure-vibe: display "○ UAT verification skipped (autonomy: {level})" and proceed to Step 5.
+
+**UAT execution (cautious + standard):**
+
+1. Check if `{phase-dir}/{phase}-UAT.md` already exists with `status: complete`. If so: "○ UAT already complete" and proceed to Step 5.
+2. Generate test scenarios from completed SUMMARY.md files (same logic as `commands/verify.md`).
+3. Run CHECKPOINT loop inline (same protocol as `commands/verify.md` Steps 4-8).
+4. After all tests complete:
+   - If no issues: proceed to Step 5
+   - If issues found: display issue summary, suggest `/vbw:fix`, STOP (do not proceed to Step 5)
+
+Note: "Run inline" means the execute-protocol agent runs the verify protocol directly, not by invoking /vbw:verify as a command. The protocol is the same; the entry point differs.
+
 ### Step 5: Update state and present summary
 
 **Shutdown:** Send shutdown to each teammate, wait for approval, re-request if rejected, then TeamDelete. Wait for TeamDelete before state updates.
