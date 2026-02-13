@@ -121,4 +121,15 @@ INFERRED_COUNT=$(jq '.inferred | length' "$DISCOVERY_JSON")
   echo "_(To be defined)_"
 } > "$OUTPUT_PATH"
 
+# Update discovery.json with research metadata
+if [ "$RESEARCH_AVAILABLE" = true ]; then
+  DOMAIN=$(jq -r '.answered[] | select(.category=="scope") | .answer' "$DISCOVERY_JSON" | head -1 | awk '{print $1}')
+  DATE=$(date +%Y-%m-%d)
+  jq --arg domain "$DOMAIN" --arg date "$DATE" \
+     '.research_summary = {available: true, domain: $domain, date: $date, key_findings: []}' \
+     "$DISCOVERY_JSON" > "$DISCOVERY_JSON.tmp" && mv "$DISCOVERY_JSON.tmp" "$DISCOVERY_JSON"
+else
+  jq '.research_summary = {available: false}' "$DISCOVERY_JSON" > "$DISCOVERY_JSON.tmp" && mv "$DISCOVERY_JSON.tmp" "$DISCOVERY_JSON"
+fi
+
 exit 0
