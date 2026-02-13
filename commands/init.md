@@ -1,5 +1,5 @@
 ---
-name: init
+name: vbw:init
 disable-model-invocation: true
 description: Set up environment, scaffold .vbw-planning, detect project context, and bootstrap project-defining files.
 argument-hint:

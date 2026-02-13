@@ -1,5 +1,5 @@
 ---
-name: help
+name: vbw:help
 disable-model-invocation: true
 description: Display all available VBW commands with descriptions and usage examples.
 argument-hint: [command-name]

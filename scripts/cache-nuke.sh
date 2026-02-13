@@ -17,11 +17,9 @@ fi
 
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 PLUGIN_CACHE_DIR="$CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw"
-GLOBAL_CMD_DIR="$CLAUDE_DIR/commands/vbw"
 UID_TAG="$(id -u)"
 
 wiped_plugin_cache=false
-wiped_global_commands=false
 wiped_temp_caches=false
 versions_removed=0
 
@@ -43,13 +41,7 @@ if [[ -d "$PLUGIN_CACHE_DIR" ]]; then
   fi
 fi
 
-# --- 2. Global commands ---
-if [[ -d "$GLOBAL_CMD_DIR" ]]; then
-  rm -rf "$GLOBAL_CMD_DIR"
-  wiped_global_commands=true
-fi
-
-# --- 3. Temp caches (statusline + update check) ---
+# --- 2. Temp caches (statusline + update check) ---
 TEMP_FILES=$(ls /tmp/vbw-*-"${UID_TAG}"-* /tmp/vbw-*-"${UID_TAG}" /tmp/vbw-update-check-"${UID_TAG}" 2>/dev/null || true)
 if [[ -n "$TEMP_FILES" ]]; then
   echo "$TEMP_FILES" | while IFS= read -r f; do rm -f "$f" 2>/dev/null; done
@@ -58,5 +50,5 @@ fi
 
 # --- JSON summary ---
 cat <<EOF
-{"wiped":{"plugin_cache":${wiped_plugin_cache},"global_commands":${wiped_global_commands},"temp_caches":${wiped_temp_caches},"versions_removed":${versions_removed}}}
+{"wiped":{"plugin_cache":${wiped_plugin_cache},"temp_caches":${wiped_temp_caches},"versions_removed":${versions_removed}}}
 EOF

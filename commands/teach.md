@@ -1,5 +1,5 @@
 ---
-name: teach
+name: vbw:teach
 disable-model-invocation: true
 description: View, add, or manage project conventions. Shows what VBW already knows and warns about conflicts.
 argument-hint: "[\"convention text\" | remove <id> | refresh]"

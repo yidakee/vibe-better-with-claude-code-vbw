@@ -15,7 +15,6 @@ VIBE="$ROOT/commands/vibe.md"
 PROTOCOL="$ROOT/references/execute-protocol.md"
 COMMANDS_DIR="$ROOT/commands"
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-GLOBAL_MIRROR="$CLAUDE_DIR/commands/vbw"
 README="$ROOT/README.md"
 CLAUDE_MD="$ROOT/CLAUDE.md"
 HELP="$ROOT/commands/help.md"
@@ -162,17 +161,9 @@ for cmd in "${ABSORBED[@]}"; do
   check_absent "REQ-18" "commands/${cmd}.md does not exist" test -f "$COMMANDS_DIR/${cmd}.md"
 done
 
-# REQ-18: 10 absorbed commands do NOT exist in global mirror
-for cmd in "${ABSORBED[@]}"; do
-  check_absent "REQ-18" "global mirror ${cmd}.md does not exist" test -f "$GLOBAL_MIRROR/${cmd}.md"
-done
-
-# REQ-18/19: Exact file counts
+# REQ-18: Exact file count
 CMD_COUNT=$(ls "$COMMANDS_DIR" | grep -c '\.md$')
 check "REQ-18" "commands/ has exactly 20 .md files (found $CMD_COUNT)" test "$CMD_COUNT" -eq 20
-
-MIRROR_COUNT=$(ls "$GLOBAL_MIRROR" | grep -c '\.md$')
-check "REQ-19" "global mirror has exactly 20 .md files (found $MIRROR_COUNT)" test "$MIRROR_COUNT" -eq 20
 
 # REQ-20: No stale "29 commands" in key files
 check_absent "REQ-20" "README.md has no '29 commands'" grep -q "29 commands" "$README"

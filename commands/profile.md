@@ -1,5 +1,5 @@
 ---
-name: profile
+name: vbw:profile
 disable-model-invocation: true
 description: Switch between work profiles or create custom ones. Profiles change effort, autonomy, and verification in one go.
 argument-hint: "[profile-name | save | delete <name>]"

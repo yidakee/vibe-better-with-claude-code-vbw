@@ -1,5 +1,5 @@
 ---
-name: update
+name: vbw:update
 disable-model-invocation: true
 description: Update VBW to the latest version with automatic cache refresh.
 argument-hint: "[--check]"
@@ -39,7 +39,7 @@ If remote == old: display "✓ Already at latest (v{old_version}). Refreshing ca
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/cache-nuke.sh
 ```
-Removes CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw/, CLAUDE_DIR/commands/vbw/, /tmp/vbw-* for pristine update.
+Removes CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw/ and /tmp/vbw-* for pristine update.
 
 ### Step 5: Perform update
 
@@ -56,17 +56,7 @@ Try in order (stop at first success):
 - **B) Reinstall:** `claude plugin uninstall vbw@vbw-marketplace 2>&1 && claude plugin install vbw@vbw-marketplace 2>&1`
 - **C) Manual fallback:** display commands for user to run manually, STOP.
 
-**Re-sync global commands** (after A or B succeeds):
-```bash
-CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-VBW_CACHE_CMD=$(ls -d "$CLAUDE_DIR"/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
-if [ -d "$VBW_CACHE_CMD" ]; then
-  mkdir -p "$CLAUDE_DIR/commands/vbw"
-  cp "$VBW_CACHE_CMD"/*.md "$CLAUDE_DIR/commands/vbw/" 2>/dev/null
-fi
-```
-
-### Step 5.5: Ensure VBW statusline
+### Step 6: Ensure VBW statusline
 
 Read `CLAUDE_DIR/settings.json`, check `statusLine` (string or object .command). If contains `vbw-statusline`: skip. Otherwise update to:
 ```json
@@ -74,14 +64,14 @@ Read `CLAUDE_DIR/settings.json`, check `statusLine` (string or object .command).
 ```
 Use jq to write (backup, update, restore on failure). Display `✓ Statusline restored (restart to activate)` if changed.
 
-### Step 6: Verify update
+### Step 7: Verify update
 
 ```bash
 NEW_CACHED=$(cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/vbw-marketplace/vbw/*/VERSION 2>/dev/null | sort -V | tail -1)
 ```
 Use NEW_CACHED as authoritative version. If empty or equals old_version when it shouldn't: "⚠ Update may not have applied. Try /vbw:update again after restart."
 
-### Step 7: Display result
+### Step 8: Display result
 
 Use NEW_CACHED for all display. Same version = "VBW Cache Refreshed" banner. Different = "VBW Updated" banner with old→new + "Restart Claude Code" + "/vbw:whats-new" suggestion.
 

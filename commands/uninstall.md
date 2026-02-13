@@ -1,5 +1,5 @@
 ---
-name: uninstall
+name: vbw:uninstall
 disable-model-invocation: true
 description: Cleanly remove all VBW traces from the system before plugin uninstall.
 argument-hint:
@@ -23,27 +23,23 @@ CLAUDE.md: `!`ls CLAUDE.md 2>/dev/null && echo "EXISTS" || echo "NONE"``
 
 Display Phase Banner "VBW Uninstall" explaining system-level config removal. Project files handled separately. Ask confirmation.
 
-### Step 2: Remove global commands
-
-If `CLAUDE_DIR/commands/vbw/` exists (where CLAUDE_DIR = `$CLAUDE_CONFIG_DIR` or `~/.claude`): `rm -rf CLAUDE_DIR/commands/vbw/`. If parent now empty, remove it too. Display ✓.
-
-### Step 3: Clean statusLine
+### Step 2: Clean statusLine
 
 Read `CLAUDE_DIR/settings.json`. If statusLine contains `vbw-statusline`: remove entire statusLine key, display ✓. If not VBW's: "○ Statusline is not VBW's — skipped".
 
-### Step 4: Clean Agent Teams env var
+### Step 3: Clean Agent Teams env var
 
 If `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` exists: ask user (it's a Claude Code feature other tools may use). Approved: remove (if env then empty, remove env key). Declined: "○ Agent Teams setting kept".
 
-### Step 5: Project data
+### Step 4: Project data
 
 If `.vbw-planning/` exists: ask keep (recommended) or delete. Delete: `rm -rf .vbw-planning/`.
 
-### Step 6: CLAUDE.md cleanup
+### Step 5: CLAUDE.md cleanup
 
 If CLAUDE.md exists: ask keep or delete.
 
-### Step 7: Summary
+### Step 6: Summary
 
 Display Phase Banner "VBW Cleanup Complete" with ✓/○ per step. Then:
 ```
