@@ -510,6 +510,8 @@ When `false`, implement proceeds directly to requirements gathering (bootstrap) 
 |---------|------|------|
 | vibe bootstrap mode | Bootstrap | After project description, before REQUIREMENTS.md |
 | vibe plan mode | Phase | Before planning, after phase auto-detection |
-| vibe --discuss | N/A | Explicit discuss mode, not gated by discovery_questions |
+| vibe --discuss | N/A | Explicit discuss mode with domain-typed questions based on phase type (UI/API/CLI/Data/Integration) |
 
 `/vbw:vibe --discuss` remains independent — it's a manual deep-dive the user triggers explicitly. Discovery is the automatic layer.
+
+**Note:** Phase Discussion (Discuss mode) includes phase type detection and scope creep guardrails as of Phase 3 implementation (REQ-05, REQ-08).
