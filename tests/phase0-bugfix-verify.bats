@@ -125,3 +125,49 @@ STATE
   grep -q "Architecture Context" ".vbw-planning/phases/01-test/.context-architect.md"
   grep -q "Full Requirements" ".vbw-planning/phases/01-test/.context-architect.md"
 }
+
+# =============================================================================
+# Bug #10: compaction-instructions.sh role-specific priorities
+# =============================================================================
+
+@test "compaction-instructions.sh outputs role-specific priorities" {
+  # Dev agent should get commit/file priorities
+  run bash -c 'echo "{\"agent_name\":\"vbw-dev-01\",\"matcher\":\"auto\"}" | bash "'"$SCRIPTS_DIR"'/compaction-instructions.sh"'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext' >/dev/null
+  echo "$output" | grep -q "commit hashes"
+  echo "$output" | grep -q "file paths modified"
+
+  # Scout agent should get research priorities
+  run bash -c 'echo "{\"agent_name\":\"vbw-scout-01\",\"matcher\":\"auto\"}" | bash "'"$SCRIPTS_DIR"'/compaction-instructions.sh"'
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "research findings"
+}
+
+@test "compaction-instructions.sh writes compaction marker" {
+  cd "$TEST_TEMP_DIR"
+  mkdir -p .vbw-planning
+  run bash -c 'echo "{\"agent_name\":\"vbw-dev-01\",\"matcher\":\"auto\"}" | bash "'"$SCRIPTS_DIR"'/compaction-instructions.sh"'
+  [ "$status" -eq 0 ]
+  [ -f ".vbw-planning/.compaction-marker" ]
+}
+
+# =============================================================================
+# Bug #11: Blocked agent notification in execute-protocol.md
+# =============================================================================
+
+@test "execute-protocol.md contains blocked agent notification" {
+  grep -q "Blocked agent notification" "$PROJECT_ROOT/references/execute-protocol.md"
+}
+
+# =============================================================================
+# Bug #14: task-verify.sh uses keyword matching, not header matching
+# =============================================================================
+
+@test "task-verify.sh uses keyword matching (not header matching)" {
+  # Keyword-based matching present
+  grep -qi "keyword" "$SCRIPTS_DIR/task-verify.sh"
+  # No header-dependent patterns (### Task or ## Task)
+  run grep -E '(### Task|## Task)' "$SCRIPTS_DIR/task-verify.sh"
+  [ "$status" -eq 1 ]  # grep returns 1 = no matches
+}
