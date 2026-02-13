@@ -7,6 +7,12 @@ if ! command -v jq &>/dev/null; then
   exit 0
 fi
 
+# Hook scripts receive JSON on stdin. If run directly in an interactive shell,
+# stdin is a TTY and `cat` would block waiting for input.
+if [ -t 0 ]; then
+  exit 0
+fi
+
 INPUT=$(cat 2>/dev/null) || exit 0
 [ -z "$INPUT" ] && exit 0
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null) || exit 0

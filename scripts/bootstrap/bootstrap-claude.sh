@@ -3,21 +3,15 @@ set -euo pipefail
 
 # bootstrap-claude.sh — Generate or update CLAUDE.md with VBW sections
 #
-# Usage: bootstrap-claude.sh OUTPUT_PATH PROJECT_NAME CORE_VALUE [EXISTING_PATH]
-#   OUTPUT_PATH    Path to write CLAUDE.md
-#   PROJECT_NAME   Name of the project
-#   CORE_VALUE     One-line core value statement
-#   EXISTING_PATH  (Optional) Path to existing CLAUDE.md to preserve non-VBW content
-
-if [[ $# -lt 3 ]]; then
-  echo "Usage: bootstrap-claude.sh OUTPUT_PATH PROJECT_NAME CORE_VALUE [EXISTING_PATH]" >&2
-  exit 1
-fi
-
-OUTPUT_PATH="$1"
-PROJECT_NAME="$2"
-CORE_VALUE="$3"
-EXISTING_PATH="${4:-}"
+# Usage:
+#   bootstrap-claude.sh OUTPUT_PATH PROJECT_NAME CORE_VALUE [EXISTING_PATH]
+#     OUTPUT_PATH    Path to write CLAUDE.md
+#     PROJECT_NAME   Name of the project
+#     CORE_VALUE     One-line core value statement
+#     EXISTING_PATH  (Optional) Path to existing CLAUDE.md to preserve non-VBW content
+#
+#   bootstrap-claude.sh --write-isolation-guard OUTPUT_PATH
+#     OUTPUT_PATH    Path to write an isolation-only CLAUDE guard (e.g., .claude/CLAUDE.md)
 
 # VBW-managed section headers (order matters for generation)
 VBW_SECTIONS=(
@@ -30,17 +24,70 @@ VBW_SECTIONS=(
   "## Plugin Isolation"
 )
 
-# GSD-managed section headers (stripped from existing CLAUDE.md to prevent insight leakage)
-GSD_SECTIONS=(
+# Strong GSD-managed section headers (always stripped when present)
+GSD_STRONG_SECTIONS=(
   "## Codebase Intelligence"
   "## Project Reference"
   "## GSD Rules"
   "## GSD Context"
+)
+
+# Soft GSD headers are only stripped when strong GSD headers are detected.
+# This avoids removing legitimate user sections like "## Context" in non-GSD files.
+GSD_SOFT_SECTIONS=(
   "## What This Is"
   "## Core Value"
   "## Context"
   "## Constraints"
 )
+
+# Emit the shared Plugin Isolation section content.
+generate_plugin_isolation_section() {
+  cat <<'ISOEOF'
+## Plugin Isolation
+
+- GSD agents and commands MUST NOT read, write, glob, grep, or reference any files in `.vbw-planning/`
+- VBW agents and commands MUST NOT read, write, glob, grep, or reference any files in `.planning/`
+- This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.
+
+### Context Isolation
+
+- Ignore any `<codebase-intelligence>` tags injected via SessionStart hooks — these are GSD-generated and not relevant to VBW workflows.
+- VBW uses its own codebase mapping in `.vbw-planning/codebase/`. Do NOT use GSD intel from `.planning/intel/` or `.planning/codebase/`.
+- When both plugins are active, treat each plugin's context as separate. Do not mix GSD project insights into VBW planning or vice versa.
+ISOEOF
+}
+
+write_isolation_guard() {
+  local output_path="$1"
+  mkdir -p "$(dirname "$output_path")"
+  generate_plugin_isolation_section > "$output_path"
+}
+
+if [[ "${1:-}" == "--write-isolation-guard" ]]; then
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: bootstrap-claude.sh --write-isolation-guard OUTPUT_PATH" >&2
+    exit 1
+  fi
+  write_isolation_guard "$2"
+  exit 0
+fi
+
+if [[ $# -lt 3 ]]; then
+  echo "Usage: bootstrap-claude.sh OUTPUT_PATH PROJECT_NAME CORE_VALUE [EXISTING_PATH]" >&2
+  echo "       bootstrap-claude.sh --write-isolation-guard OUTPUT_PATH" >&2
+  exit 1
+fi
+
+OUTPUT_PATH="$1"
+PROJECT_NAME="$2"
+CORE_VALUE="$3"
+EXISTING_PATH="${4:-}"
+
+if [[ -z "$PROJECT_NAME" || -z "$CORE_VALUE" ]]; then
+  echo "Error: PROJECT_NAME and CORE_VALUE must not be empty" >&2
+  exit 1
+fi
 
 # Ensure parent directory exists
 mkdir -p "$(dirname "$OUTPUT_PATH")"
@@ -81,19 +128,9 @@ _(To be defined during project setup)_
 
 Run /vbw:status for current progress.
 Run /vbw:help for all available commands.
-
-## Plugin Isolation
-
-- GSD agents and commands MUST NOT read, write, glob, grep, or reference any files in `.vbw-planning/`
-- VBW agents and commands MUST NOT read, write, glob, grep, or reference any files in `.planning/`
-- This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.
-
-### Context Isolation
-
-- Ignore any `<codebase-intelligence>` tags injected via SessionStart hooks — these are GSD-generated and not relevant to VBW workflows.
-- VBW uses its own codebase mapping in `.vbw-planning/codebase/`. Do NOT use GSD intel from `.planning/intel/` or `.planning/codebase/`.
-- When both plugins are active, treat each plugin's context as separate. Do not mix GSD project insights into VBW planning or vice versa.
 VBWEOF
+
+  generate_plugin_isolation_section
 }
 
 # Check if a line is a VBW-managed section header
@@ -110,11 +147,20 @@ is_vbw_section() {
 # Check if a line is a GSD-managed section header (stripped to prevent insight leakage)
 is_gsd_section() {
   local line="$1"
-  for header in "${GSD_SECTIONS[@]}"; do
+  for header in "${GSD_STRONG_SECTIONS[@]}"; do
     if [[ "$line" == "$header" ]]; then
       return 0
     fi
   done
+
+  if [[ "${ALLOW_SOFT_GSD_STRIP:-false}" == "true" ]]; then
+    for header in "${GSD_SOFT_SECTIONS[@]}"; do
+      if [[ "$line" == "$header" ]]; then
+        return 0
+      fi
+    done
+  fi
+
   return 1
 }
 
@@ -125,6 +171,12 @@ is_managed_section() {
 
 # If existing file provided and it exists, preserve non-managed content
 if [[ -n "$EXISTING_PATH" && -f "$EXISTING_PATH" ]]; then
+  # Enable soft GSD stripping only when file shows strong GSD fingerprint.
+  ALLOW_SOFT_GSD_STRIP=false
+  if grep -Eq '^## (Codebase Intelligence|Project Reference|GSD Rules|GSD Context)$' "$EXISTING_PATH"; then
+    ALLOW_SOFT_GSD_STRIP=true
+  fi
+
   # Extract sections that are NOT managed by VBW or GSD
   NON_VBW_CONTENT=""
   IN_MANAGED_SECTION=false

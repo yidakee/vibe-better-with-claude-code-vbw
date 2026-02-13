@@ -21,6 +21,9 @@ jobs:
       - name: Verify init/todo contracts
         run: bash scripts/verify-init-todo.sh
 
+      - name: Verify CLAUDE bootstrap contracts
+        run: bash scripts/verify-claude-bootstrap.sh
+
       - name: Verify bash script contracts
         run: bash testing/verify-bash-scripts-contract.sh
 

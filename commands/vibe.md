@@ -104,7 +104,7 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
 **Steps:**
 - **B1: PROJECT.md** -- If $ARGUMENTS provided (excluding flags), use as description. Otherwise ask name + core purpose. Then call:
   ```
-  bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-project.sh .vbw-planning/PROJECT.md "$NAME" "$DESCRIPTION"
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-project.sh .vbw-planning/PROJECT.md "$NAME" "$DESCRIPTION" "$CORE_VALUE"
   ```
 - **B1.5: Discovery Depth** -- Read `discovery_questions` and `active_profile` from config. Map profile to depth:
 
@@ -307,7 +307,7 @@ FAIL -> STOP with remediation suggestions. WARN -> proceed with warnings.
 5. Git branch merge: if `milestone/{SLUG}` branch exists, merge --no-ff. Conflict -> abort, warn. No branch -> skip.
 6. Git tag: unless --no-tag, `git tag -a {tag} -m "Shipped milestone: {name}"`. Default: `milestone/{SLUG}`.
 7. Update ACTIVE: remaining milestones -> set ACTIVE to first. None -> remove ACTIVE.
-8. Regenerate CLAUDE.md: update Active Context, remove shipped refs. Preserve non-VBW content — only replace VBW-managed sections, keep user's own sections intact.
+8. Regenerate CLAUDE.md via script (single source): derive `PROJECT_NAME` from `.vbw-planning/PROJECT.md` H1 (`# ...`) and `CORE_VALUE` from `**Core value:**` in `.vbw-planning/PROJECT.md`; if either is empty, WARN and skip regeneration; otherwise run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-claude.sh CLAUDE.md "$PROJECT_NAME" "$CORE_VALUE" "CLAUDE.md"`. This updates Active Context and shipped refs while preserving non-VBW content (only managed VBW/GSD sections are replaced).
 9. Present: Phase Banner with metrics (phases, tasks, commits, requirements, deviations), archive path, tag, branch status, memory status. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh vibe`.
 
 ### Pure-Vibe Phase Loop

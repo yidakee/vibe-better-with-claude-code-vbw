@@ -7,6 +7,15 @@ All notable changes to VBW will be documented in this file.
 ### Added
 
 - **`isolation`** -- context isolation to prevent GSD insight leakage into VBW sessions. New `### Context Isolation` subsection in Plugin Isolation instructs Claude to ignore `<codebase-intelligence>` tags and use VBW's own codebase mapping. bootstrap-claude.sh now strips 8 known GSD section headers when regenerating CLAUDE.md from existing files.
+- **`verification`** -- new `scripts/verify-claude-bootstrap.sh` regression suite for CLAUDE generation. Covers isolation guard generation, greenfield output, brownfield preservation of non-managed sections, managed-section stripping, and idempotent regeneration.
+
+### Changed
+
+- **`init`** -- Step 3.5 CLAUDE bootstrap guidance moved to script-first flow. Removed the large inline `CLAUDE.md` template payload and standardized on `scripts/bootstrap/bootstrap-claude.sh` for generation semantics (greenfield + brownfield).
+
+### Fixed
+
+- **`hooks`** -- `validate-frontmatter.sh` no longer appears hung when run manually in an interactive shell. Added TTY stdin guard so direct terminal invocation exits cleanly while preserving hook stdin behavior.
 
 ---
 

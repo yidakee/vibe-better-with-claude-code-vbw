@@ -9,6 +9,10 @@ echo "Running init/todo contract checks..."
 bash "$ROOT/scripts/verify-init-todo.sh"
 
 echo ""
+echo "Running CLAUDE bootstrap contract checks..."
+bash "$ROOT/scripts/verify-claude-bootstrap.sh"
+
+echo ""
 echo "Running bash script contract checks..."
 bash "$ROOT/testing/verify-bash-scripts-contract.sh"
 
