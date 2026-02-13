@@ -130,8 +130,18 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
   - **If skip:** Ask 2 minimal static questions via AskUserQuestion: (1) "What are the must-have features?" (2) "Who will use this?" Create `.vbw-planning/discovery.json` with `{"answered":[],"inferred":[]}`.
   - **If quick/standard/thorough:** Read `${CLAUDE_PLUGIN_ROOT}/references/discovery-protocol.md`. Follow Bootstrap Discovery flow:
     1. Analyze user's description for domain, scale, users, complexity signals
-    2. Round 1 -- Scenarios: Generate scenario questions per protocol. Present as AskUserQuestion with descriptive options. Count: quick=1, standard=2, thorough=3-4. **Scenario generation:** If RESEARCH_AVAILABLE=true, read `.vbw-planning/domain-research.md` and integrate findings: (a) Table Stakes → checklist questions in Round 2, (b) Common Pitfalls → scenario situations (e.g., 'What happens when [pitfall situation]?'), (c) Architecture Patterns → technical preference scenarios (e.g., 'Should the system use [pattern A] or [pattern B]?'), (d) Competitor Landscape → differentiation scenarios (e.g., '{Competitor X} does {feature}. Should yours work the same way or differently?'). If RESEARCH_AVAILABLE=false, use description analysis only per existing protocol.
-    3. Round 2 -- Checklists: Based on Round 1 answers, generate targeted pick-many questions with `multiSelect: true`. Count: quick=1, standard=1-2, thorough=2-3
+    2. Initialize ROUND=1, QUESTIONS_ASKED=0
+    3. **Round loop:**
+       a. **Question generation:** Generate scenario questions (Round 1) OR checklist questions (Round 2+) based on round number and previous answers. Round 1: Generate scenario questions per protocol. Present as AskUserQuestion with descriptive options. **Scenario generation:** If RESEARCH_AVAILABLE=true, read `.vbw-planning/domain-research.md` and integrate findings: (a) Table Stakes → checklist questions in Round 2, (b) Common Pitfalls → scenario situations (e.g., 'What happens when [pitfall situation]?'), (c) Architecture Patterns → technical preference scenarios (e.g., 'Should the system use [pattern A] or [pattern B]?'), (d) Competitor Landscape → differentiation scenarios (e.g., '{Competitor X} does {feature}. Should yours work the same way or differently?'). If RESEARCH_AVAILABLE=false, use description analysis only per existing protocol. Round 2+: Generate checklist questions building on previous round answers. Read discovery.json.answered[] for prior rounds. Generate targeted pick-many questions with `multiSelect: true` that BUILD ON previous answers.
+       b. Present questions via AskUserQuestion
+       c. Record answers to discovery.json with round number (append to answered[] with fields: question, answer, category, phase='bootstrap', round=ROUND, date)
+       d. Increment ROUND, update QUESTIONS_ASKED count
+       e. **Keep-exploring gate:**
+          - If ROUND <= 3: AskUserQuestion "We've covered [topic]. What would you like to do?" with options ["Keep exploring — I have more to share", "Move on — I'm ready for the next step"]
+          - If ROUND > 3: AskUserQuestion "We've covered quite a bit about your project. What would you like to do?" with options ["Keep exploring — there's more I want to discuss", "Move on — I think we have enough", "Skip to requirements — I'm ready to build"]
+          - If user chooses continue: loop to step 3a
+          - If user chooses stop: proceed to synthesis (step 4)
+       f. **Profile depth as minimum:** quick=1-2 minimum rounds, standard=3-5 minimum, thorough=5-8 minimum. User can continue beyond minimum via keep-exploring gate.
     4. Synthesize answers into `.vbw-planning/discovery.json` with `answered[]` and `inferred[]` (questions=friendly, requirements=precise)
   - **Wording rules (all depths):** No jargon. Plain language. Concrete situations. Cause and effect. Assume user is not a developer.
   - **After discovery (all depths):** Call:
