@@ -41,6 +41,8 @@ active_phase_plans=0
 deviation_count=0
 failing_plan_ids=""
 map_staleness=-1
+cfg_autonomy="standard"
+has_uat=false
 
 if [ -d "$PLANNING_DIR" ]; then
 
@@ -67,6 +69,8 @@ if [ -d "$PLANNING_DIR" ]; then
     fi
     e=$(jq -r '.effort // "balanced"' "$PLANNING_DIR/config.json" 2>/dev/null)
     [ -n "$e" ] && [ "$e" != "null" ] && effort="$e"
+    a=$(jq -r '.autonomy // "standard"' "$PLANNING_DIR/config.json" 2>/dev/null)
+    [ -n "$a" ] && [ "$a" != "null" ] && cfg_autonomy="$a"
   fi
 
   # Scan phases
@@ -142,6 +146,15 @@ if [ -d "$PLANNING_DIR" ]; then
           failing_plan_ids="${failing_plan_ids:+$failing_plan_ids }$plan_id"
         fi
       done
+
+      # Check for completed UAT in active phase
+      for uf in "$active_phase_dir"/*-UAT.md; do
+        [ -f "$uf" ] || continue
+        us=$(grep -m1 '^status:' "$uf" 2>/dev/null | sed 's/status:[[:space:]]*//' | tr '[:upper:]' '[:lower:]' || true)
+        if [ "$us" = "complete" ]; then
+          has_uat=true
+        fi
+      done
     fi
   fi
 
@@ -207,6 +220,10 @@ case "$CMD" in
         fi
         ;;
       *)
+        # Suggest UAT for cautious/standard autonomy when no UAT exists
+        if [ "$has_uat" = false ] && { [ "$cfg_autonomy" = "cautious" ] || [ "$cfg_autonomy" = "standard" ]; }; then
+          suggest "/vbw:verify -- Walk through changes before continuing"
+        fi
         if [ "$all_done" = true ]; then
           if [ "$deviation_count" -eq 0 ]; then
             suggest "/vbw:vibe --archive -- All phases complete, zero deviations"
@@ -217,7 +234,6 @@ case "$CMD" in
         elif [ -n "$next_unbuilt" ] || [ -n "$next_unplanned" ]; then
           target="${next_unbuilt:-$next_unplanned}"
           if [ -n "$active_phase_name" ] && [ "$target" != "$active_phase_num" ]; then
-            # Next phase is different from active — show its name
             for dir in "$PHASES_DIR"/*/; do
               [ -d "$dir" ] || continue
               pn=$(basename "$dir" | sed 's/[^0-9].*//')
@@ -249,6 +265,10 @@ case "$CMD" in
   qa)
     case "$effective_result" in
       pass)
+        # Suggest UAT for cautious/standard autonomy when no UAT exists
+        if [ "$has_uat" = false ] && { [ "$cfg_autonomy" = "cautious" ] || [ "$cfg_autonomy" = "standard" ]; }; then
+          suggest "/vbw:verify -- Walk through changes manually"
+        fi
         if [ "$all_done" = true ]; then
           if [ "$deviation_count" -eq 0 ]; then
             suggest "/vbw:vibe --archive -- All phases complete, zero deviations"
@@ -298,6 +318,25 @@ case "$CMD" in
   fix)
     suggest "/vbw:qa -- Verify the fix"
     suggest "/vbw:vibe -- Continue building"
+    ;;
+
+  verify)
+    case "$effective_result" in
+      pass)
+        if [ "$all_done" = true ]; then
+          suggest "/vbw:vibe --archive -- All verified, ready to ship"
+        else
+          suggest "/vbw:vibe -- Continue to next phase"
+        fi
+        ;;
+      issues_found)
+        suggest "/vbw:fix -- Fix the issues found during UAT"
+        suggest "/vbw:verify --resume -- Continue testing after fix"
+        ;;
+      *)
+        suggest "/vbw:vibe -- Continue building"
+        ;;
+    esac
     ;;
 
   debug)
