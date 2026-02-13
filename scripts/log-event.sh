@@ -13,6 +13,10 @@ set -u
 #                 task_completed_candidate, task_completed_confirmed,
 #                 task_blocked, task_reassigned
 #
+# Escalation fields for task_blocked events:
+#   next_action=<action>  -- e.g., "escalate_lead", "retry", "reassign", "manual_fix"
+#   reason=<description>  -- Human-readable blocker description
+#
 # When v2_typed_protocol=true, unknown event types are rejected
 # (warning to stderr, event not written). When false, all types accepted.
 
