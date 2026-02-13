@@ -3,9 +3,36 @@ set -u
 # PostToolUse: Auto-update STATE.md, ROADMAP.md + .execution-state.json on PLAN/SUMMARY writes
 # Non-blocking, fail-open (always exit 0)
 
+planning_root_from_phase_dir() {
+  local phase_dir="$1"
+  local phases_dir root
+
+  phases_dir=$(dirname "$phase_dir")
+  root=$(dirname "$phases_dir")
+  if [ "$(basename "$phases_dir")" = "phases" ] && [ -d "$root" ]; then
+    echo "$root"
+    return 0
+  fi
+
+  if [ -f ".vbw-planning/ACTIVE" ]; then
+    local slug candidate
+    slug=$(tr -d '[:space:]' < .vbw-planning/ACTIVE 2>/dev/null)
+    candidate=".vbw-planning/milestones/${slug}"
+    if [ -n "$slug" ] && [ -d "$candidate" ]; then
+      echo "$candidate"
+      return 0
+    fi
+  fi
+
+  echo ".vbw-planning"
+}
+
 update_state_md() {
   local phase_dir="$1"
-  local state_md=".vbw-planning/STATE.md"
+  local planning_root state_md
+
+  planning_root=$(planning_root_from_phase_dir "$phase_dir")
+  state_md="${planning_root}/STATE.md"
 
   [ -f "$state_md" ] || return 0
 
@@ -31,7 +58,10 @@ slug_to_name() {
 
 update_roadmap() {
   local phase_dir="$1"
-  local roadmap=".vbw-planning/ROADMAP.md"
+  local planning_root roadmap
+
+  planning_root=$(planning_root_from_phase_dir "$phase_dir")
+  roadmap="${planning_root}/ROADMAP.md"
 
   [ -f "$roadmap" ] || return 0
 
@@ -76,13 +106,20 @@ update_roadmap() {
 }
 
 update_model_profile() {
-  local state_md=".vbw-planning/STATE.md"
+  local phase_dir="$1"
+  local planning_root state_md config_file
+
+  planning_root=$(planning_root_from_phase_dir "$phase_dir")
+  state_md="${planning_root}/STATE.md"
 
   [ -f "$state_md" ] || return 0
 
+  config_file="${planning_root}/config.json"
+  [ -f "$config_file" ] || config_file=".vbw-planning/config.json"
+
   # Read active model profile from config
   local model_profile
-  model_profile=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json 2>/dev/null || echo "quality")
+  model_profile=$(jq -r '.model_profile // "quality"' "$config_file" 2>/dev/null || echo "quality")
 
   # Check if Codebase Profile section exists
   if ! grep -q "^## Codebase Profile" "$state_md" 2>/dev/null; then
@@ -106,7 +143,10 @@ update_model_profile() {
 
 advance_phase() {
   local phase_dir="$1"
-  local state_md=".vbw-planning/STATE.md"
+  local planning_root state_md
+
+  planning_root=$(planning_root_from_phase_dir "$phase_dir")
+  state_md="${planning_root}/STATE.md"
 
   [ -f "$state_md" ] || return 0
 
@@ -158,11 +198,11 @@ INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null)
 
 # PLAN.md trigger: update plan count + activate status
-if echo "$FILE_PATH" | grep -qE 'phases/[^/]+/[0-9]+-[0-9]+-PLAN\.md$'; then
+if echo "$FILE_PATH" | grep -qE 'phases/[^/]+/[0-9]+(-[0-9]+)?-PLAN\.md$'; then
   update_state_md "$(dirname "$FILE_PATH")"
   update_roadmap "$(dirname "$FILE_PATH")"
   # Status: ready → active when a plan is written
-  _sm=".vbw-planning/STATE.md"
+  _sm="$(planning_root_from_phase_dir "$(dirname "$FILE_PATH")")/STATE.md"
   if [ -f "$_sm" ] && grep -q '^Status: ready' "$_sm" 2>/dev/null; then
     _tmp="${_sm}.tmp.$$"
     sed 's/^Status: ready/Status: active/' "$_sm" > "$_tmp" 2>/dev/null && \
@@ -175,9 +215,12 @@ if ! echo "$FILE_PATH" | grep -qE 'phases/.*-SUMMARY\.md$'; then
   exit 0
 fi
 
-STATE_FILE=".vbw-planning/.execution-state.json"
-[ -f "$STATE_FILE" ] || exit 0
 [ -f "$FILE_PATH" ] || exit 0
+
+PHASE_DIR="$(dirname "$FILE_PATH")"
+PLANNING_ROOT="$(planning_root_from_phase_dir "$PHASE_DIR")"
+STATE_FILE="${PLANNING_ROOT}/.execution-state.json"
+SUMMARY_ID="$(basename "$FILE_PATH" | sed 's/-SUMMARY\.md$//')"
 
 # Parse SUMMARY.md YAML frontmatter for phase, plan, status
 PHASE=""
@@ -205,23 +248,43 @@ while IFS= read -r line; do
   fi
 done < "$FILE_PATH"
 
-if [ -z "$PHASE" ] || [ -z "$PLAN" ]; then
-  exit 0
+# Best-effort fallback for non-frontmatter summaries
+if [ -z "$PHASE" ]; then
+  PHASE=$(basename "$PHASE_DIR" | sed 's/^\([0-9]*\).*/\1/' | sed 's/^0*//')
+fi
+
+if [ -z "$PLAN" ]; then
+  PLAN=$(echo "$SUMMARY_ID" | sed 's/^[0-9]*-//')
+  [ "$PLAN" = "$SUMMARY_ID" ] && PLAN="$SUMMARY_ID"
 fi
 
 STATUS="${STATUS:-completed}"
-TEMP_FILE="${STATE_FILE}.tmp"
-jq --arg phase "$PHASE" --arg plan "$PLAN" --arg status "$STATUS" '
-  if .phases[$phase] and .phases[$phase][$plan] then
-    .phases[$phase][$plan].status = $status
-  else
-    .
-  end
-' "$STATE_FILE" > "$TEMP_FILE" 2>/dev/null && mv "$TEMP_FILE" "$STATE_FILE" 2>/dev/null
+
+# Update execution-state as best-effort only (never gates STATE/ROADMAP updates)
+if [ -f "$STATE_FILE" ] && [ -n "$PLAN" ]; then
+  TEMP_FILE="${STATE_FILE}.tmp"
+  jq --arg phase "$PHASE" --arg plan "$PLAN" --arg status "$STATUS" --arg summary_id "$SUMMARY_ID" '
+    def as_num: (try tonumber catch null);
+    if (.plans | type) == "array" then
+      .plans |= map(
+        if (.id == $summary_id)
+           or (.id == $plan)
+           or ((.id | split("-") | last | as_num) != null and ($plan | as_num) != null and ((.id | split("-") | last | as_num) == ($plan | as_num)))
+        then .status = $status
+        else .
+        end
+      )
+    elif (.phases | type) == "object" and .phases[$phase] and (.phases[$phase] | type) == "object" and .phases[$phase][$plan] then
+      .phases[$phase][$plan].status = $status
+    else
+      .
+    end
+  ' "$STATE_FILE" > "$TEMP_FILE" 2>/dev/null && mv "$TEMP_FILE" "$STATE_FILE" 2>/dev/null || rm -f "$TEMP_FILE" 2>/dev/null
+fi
 
 update_state_md "$(dirname "$FILE_PATH")"
 update_roadmap "$(dirname "$FILE_PATH")"
-update_model_profile
+update_model_profile "$(dirname "$FILE_PATH")"
 advance_phase "$(dirname "$FILE_PATH")"
 
 exit 0
