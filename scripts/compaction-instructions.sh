@@ -39,10 +39,13 @@ else
 fi
 
 # Write compaction marker for Dev re-read guard (REQ-14)
-date +%s > .vbw-planning/.compaction-marker 2>/dev/null || true
+if [ -d ".vbw-planning" ]; then
+  date +%s > .vbw-planning/.compaction-marker 2>/dev/null || true
+fi
 
 jq -n --arg ctx "$PRIORITIES" '{
   "hookSpecificOutput": {
+    "hookEventName": "PreCompact",
     "additionalContext": ("Compaction priorities: " + $ctx + " Re-read assigned files from disk after compaction.")
   }
 }'

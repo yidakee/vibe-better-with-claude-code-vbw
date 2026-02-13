@@ -49,6 +49,7 @@ fi
 if [ -n "$WARNING" ]; then
   jq -n --arg msg "$WARNING" '{
     "hookSpecificOutput": {
+      "hookEventName": "UserPromptSubmit",
       "additionalContext": ("VBW pre-flight warning: " + $msg)
     }
   }'

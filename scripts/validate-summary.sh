@@ -30,6 +30,7 @@ fi
 if [ -n "$MISSING" ]; then
   jq -n --arg msg "$MISSING" '{
     "hookSpecificOutput": {
+      "hookEventName": "PostToolUse",
       "additionalContext": ("SUMMARY validation: " + $msg)
     }
   }'

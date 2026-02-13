@@ -43,6 +43,7 @@ esac
 
 jq -n --arg role "${ROLE:-unknown}" --arg files "$FILES" '{
   "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
     "additionalContext": ("Context was compacted. Agent role: " + $role + ". Re-read these key files from disk: " + $files)
   }
 }'

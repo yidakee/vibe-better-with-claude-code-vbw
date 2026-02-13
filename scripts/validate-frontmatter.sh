@@ -50,6 +50,7 @@ case "$DESC_VALUE" in
   "|"*|">"*)
     jq -n --arg file "$FILE_PATH" '{
       "hookSpecificOutput": {
+        "hookEventName": "PostToolUse",
         "additionalContext": ("Frontmatter warning: description field in " + $file + " must be a single line. Multi-line descriptions break plugin command/skill discovery. Fix: collapse to one line.")
       }
     }'
@@ -64,12 +65,14 @@ if [ -z "$DESC_VALUE" ]; then
   if [ -n "$AFTER_DESC" ]; then
     jq -n --arg file "$FILE_PATH" '{
       "hookSpecificOutput": {
+        "hookEventName": "PostToolUse",
         "additionalContext": ("Frontmatter warning: description field in " + $file + " must be a single line. Multi-line descriptions break plugin command/skill discovery. Fix: collapse to one line.")
       }
     }'
   else
     jq -n --arg file "$FILE_PATH" '{
       "hookSpecificOutput": {
+        "hookEventName": "PostToolUse",
         "additionalContext": ("Frontmatter warning: description field in " + $file + " is empty. Empty descriptions break plugin command/skill discovery. Fix: add a single-line description.")
       }
     }'
@@ -82,6 +85,7 @@ AFTER_DESC=$(echo "$FRONTMATTER" | awk '/^description:/{found=1; next} found && 
 if [ -n "$AFTER_DESC" ]; then
   jq -n --arg file "$FILE_PATH" '{
     "hookSpecificOutput": {
+      "hookEventName": "PostToolUse",
       "additionalContext": ("Frontmatter warning: description field in " + $file + " must be a single line. Multi-line descriptions break plugin command/skill discovery. Fix: collapse to one line.")
     }
   }'

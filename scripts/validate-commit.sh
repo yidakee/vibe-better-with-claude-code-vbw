@@ -34,6 +34,7 @@ VALID_TYPES="feat|fix|test|refactor|perf|docs|style|chore"
 if ! echo "$MSG" | grep -qE "^($VALID_TYPES)\(.+\): .+"; then
   jq -n --arg msg "$MSG" '{
     "hookSpecificOutput": {
+      "hookEventName": "PostToolUse",
       "additionalContext": ("Commit message does not match format {type}({scope}): {desc}. Got: " + $msg)
     }
   }'
@@ -47,6 +48,7 @@ if [ -f ".claude-plugin/plugin.json" ] && [ -f "./scripts/bump-version.sh" ]; th
       DETAILS=$(echo "$VERIFY_OUTPUT" | grep -A 10 "MISMATCH")
       jq -n --arg details "$DETAILS" '{
         "hookSpecificOutput": {
+          "hookEventName": "PostToolUse",
           "additionalContext": ("Version files are out of sync. Run: bash scripts/bump-version.sh\n" + $details)
         }
       }'
