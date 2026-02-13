@@ -142,9 +142,18 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
           - Time without metrics: "quick", "slow", "immediate", "later"
           - Scale without numbers: "big", "small", "many", "few"
           If vague pattern detected:
-          1. Generate 3-4 concrete interpretations as AskUserQuestion options
-          2. Add "Let me explain..." option as escape hatch
-          3. Present interpretations to user
+          1. **Generate 3-4 concrete interpretations** based on the vague term and domain context (from project description and previous answers):
+             - "Easy to use" → ["Works on mobile devices?", "No signup required?", "Loads in under 2 seconds?", "Let me explain..."]
+             - "Fast" → ["Page loads in under 1 second?", "Search results appear instantly?", "Can handle 1000+ users at once?", "Let me explain..."]
+             - "Secure" → ["Passwords encrypted?", "Two-factor authentication?", "Data deleted when user requests?", "Let me explain..."]
+             - "Lots of features" → ["10+ features?", "Everything competitors have?", "Covers all use cases?", "Let me explain..."]
+             Pattern for generating interpretations:
+             1. Identify the domain context (from project description and previous answers)
+             2. Generate 3 domain-specific concrete versions of the vague term
+             3. Frame as yes/no or measurable questions
+             4. Add "Let me explain..." as 4th option
+          2. Present interpretations as AskUserQuestion with descriptive options
+          3. If "Let me explain" chosen: record user's free-text explanation, then ask if they want to revisit the original question with their explanation as context
           4. Record disambiguated answer to discovery.json with original vague text in metadata
           If no vague pattern: proceed to record answer as-is.
        d. Record answers to discovery.json with round number (append to answered[] with fields: question, answer, category, phase='bootstrap', round=ROUND, date)
