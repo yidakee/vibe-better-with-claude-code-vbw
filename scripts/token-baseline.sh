@@ -106,6 +106,15 @@ get_phases() {
   echo "$phases"
 }
 
+# --- Helper: delta direction ---
+get_delta_direction() {
+  local d="$1"
+  if [ "$d" -gt 0 ] 2>/dev/null; then echo "worse"
+  elif [ "$d" -lt 0 ] 2>/dev/null; then echo "better"
+  else echo "same"
+  fi
+}
+
 # --- Prerequisites check ---
 if [ ! -f "$EVENTS_FILE" ] && [ ! -f "$METRICS_FILE" ]; then
   echo "No event data found. Enable v3_event_log=true and v3_metrics=true in config."
@@ -225,15 +234,6 @@ build_comparison() {
   c_es=$(echo "$current" | jq -r '.totals.escalations // 0' 2>/dev/null || echo "0")
   c_opt=$(echo "$current" | jq -r '.totals.overages_per_task // 0' 2>/dev/null || echo "0")
 
-  local delta_direction
-  delta_direction() {
-    local d="$1"
-    if [ "$d" -gt 0 ] 2>/dev/null; then echo "worse"
-    elif [ "$d" -lt 0 ] 2>/dev/null; then echo "better"
-    else echo "same"
-    fi
-  }
-
   local d_ov=$((c_ov - b_ov))
   local d_tr=$((c_tr - b_tr))
   local d_es=$((c_es - b_es))
@@ -241,13 +241,13 @@ build_comparison() {
   d_opt=$(awk "BEGIN {printf \"%.3f\", ${c_opt} - ${b_opt}}")
 
   local dir_ov dir_tr dir_es dir_opt
-  dir_ov=$(delta_direction "$d_ov")
-  dir_tr=$(delta_direction "$d_tr")
-  dir_es=$(delta_direction "$d_es")
+  dir_ov=$(get_delta_direction "$d_ov")
+  dir_tr=$(get_delta_direction "$d_tr")
+  dir_es=$(get_delta_direction "$d_es")
   # For float delta direction
   local d_opt_int
   d_opt_int=$(awk "BEGIN {d = ${c_opt} - ${b_opt}; if (d > 0.0005) print 1; else if (d < -0.0005) print -1; else print 0}")
-  dir_opt=$(delta_direction "$d_opt_int")
+  dir_opt=$(get_delta_direction "$d_opt_int")
 
   jq -n \
     --arg b_ts "$b_ts" \
