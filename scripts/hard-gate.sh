@@ -8,7 +8,11 @@ set -u
 #
 # Output: JSON {gate, result, evidence, ts}
 # Exit: 0 on pass, 2 on fail (when v2_hard_gates=true)
-# Always fires regardless of autonomy (YOLO skips prompts, not gates).
+# AUTONOMY INDEPENDENCE (V2 spec line 162):
+# Gates fire regardless of the autonomy config value. YOLO/full autonomy
+# skips interactive prompts and confirmation gates, but hard gates (file
+# integrity, contract compliance, commit hygiene) always execute. The
+# autonomy value is included in gate output for observability only.
 
 if [ $# -lt 5 ]; then
   echo '{"gate":"unknown","result":"error","evidence":"insufficient arguments","ts":"unknown"}'
@@ -27,11 +31,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Check feature flag
 V2_HARD=false
+AUTONOMY="unknown"
 if [ -f "$CONFIG_PATH" ] && command -v jq &>/dev/null; then
   V2_HARD=$(jq -r '.v2_hard_gates // false' "$CONFIG_PATH" 2>/dev/null || echo "false")
+  AUTONOMY=$(jq -r '.autonomy // "unknown"' "$CONFIG_PATH" 2>/dev/null || echo "unknown")
 fi
 
-[ "$V2_HARD" != "true" ] && { echo '{"gate":"'$GATE_TYPE'","result":"skip","evidence":"v2_hard_gates=false","ts":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)'"}'; exit 0; }
+[ "$V2_HARD" != "true" ] && { echo '{"gate":"'$GATE_TYPE'","result":"skip","evidence":"v2_hard_gates=false","autonomy":"'$AUTONOMY'","ts":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)'"}'; exit 0; }
 
 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "unknown")
 
@@ -53,7 +59,7 @@ emit_result() {
       "gate=${GATE_TYPE}" "task=${TASK}" 2>/dev/null || true
   fi
 
-  echo "{\"gate\":\"${GATE_TYPE}\",\"result\":\"${result}\",\"evidence\":\"${evidence}\",\"ts\":\"${TS}\"}"
+  echo "{\"gate\":\"${GATE_TYPE}\",\"result\":\"${result}\",\"evidence\":\"${evidence}\",\"autonomy\":\"${AUTONOMY}\",\"ts\":\"${TS}\"}"
 }
 
 case "$GATE_TYPE" in
