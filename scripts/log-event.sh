@@ -3,6 +3,7 @@ set -u
 
 # log-event.sh <event-type> <phase> [plan] [key=value ...]
 # Appends a structured event to .vbw-planning/.events/event-log.jsonl
+# Each event includes a unique event_id (UUID when uuidgen available, timestamp+random fallback).
 # Exit 0 always — event logging must never block execution.
 #
 # V1 event types: phase_start, phase_end, plan_start, plan_end,
@@ -84,6 +85,18 @@ mkdir -p "$EVENTS_DIR" 2>/dev/null || exit 0
 
 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "unknown")
 
+# Generate unique event_id
+if command -v uuidgen &>/dev/null; then
+  EVENT_ID=$(uuidgen 2>/dev/null) || EVENT_ID=""
+  if [ -n "$EVENT_ID" ]; then
+    EVENT_ID=$(echo "$EVENT_ID" | tr '[:upper:]' '[:lower:]')
+  else
+    EVENT_ID="${TS}-${RANDOM}${RANDOM}"
+  fi
+else
+  EVENT_ID="${TS}-${RANDOM}${RANDOM}"
+fi
+
 PLAN_FIELD=""
 if [ -n "$PLAN" ]; then
   PLAN_FIELD=",\"plan\":${PLAN}"
@@ -94,4 +107,4 @@ if [ -n "$DATA_PAIRS" ]; then
   DATA_FIELD=",\"data\":{${DATA_PAIRS}}"
 fi
 
-echo "{\"ts\":\"${TS}\",\"event\":\"${EVENT_TYPE}\",\"phase\":${PHASE}${PLAN_FIELD}${DATA_FIELD}}" >> "$EVENTS_FILE" 2>/dev/null || true
+echo "{\"ts\":\"${TS}\",\"event_id\":\"${EVENT_ID}\",\"event\":\"${EVENT_TYPE}\",\"phase\":${PHASE}${PLAN_FIELD}${DATA_FIELD}}" >> "$EVENTS_FILE" 2>/dev/null || true
