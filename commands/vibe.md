@@ -472,7 +472,9 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
 
    This section enables tracking of out-of-scope ideas without blocking the current phase's planning.
 
-7. Update `.vbw-planning/discovery.json`: append each question+answer to `answered[]` with extended schema including phase type metadata:
+7. Update `.vbw-planning/discovery.json`: append each question+answer to `answered[]` with extended schema including phase type metadata.
+
+   **Standard question recording:**
    ```json
    {
      "question": "How should the screens be organized?",
@@ -485,6 +487,46 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
    }
    ```
    Fields: question, answer, category, phase (zero-padded phase number), date, phase_type (UI/API/CLI/Data/Integration/generic), phase_type_source (auto-detected or user-chosen).
+
+   **Deferred ideas recording:**
+   When user chooses to defer an idea (Step 5a "Note it for later"), append to `answered[]` with extended schema:
+   ```json
+   {
+     "question": "Scope boundary check: [feature mention]",
+     "answer": "Deferred to Phase [N]: [phase name]",
+     "category": "deferred_idea",
+     "phase": "03",
+     "date": "2026-02-13",
+     "deferred": {
+       "mention": "[original user text that triggered detection]",
+       "suggested_phase": "[N]",
+       "suggested_phase_name": "[phase name]",
+       "matched_keyword": "[keyword that triggered scope detection]",
+       "user_decision": "deferred"
+     }
+   }
+   ```
+
+   When user chooses "Include in this phase" (Step 5a), record with `user_decision: "included"`:
+   ```json
+   {
+     "question": "Scope boundary check: [feature mention]",
+     "answer": "Included in Phase [current phase]: user confirmed in-scope",
+     "category": "scope_boundary",
+     "phase": "03",
+     "date": "2026-02-13",
+     "deferred": {
+       "mention": "[original user text]",
+       "suggested_phase": "[N]",
+       "suggested_phase_name": "[phase name]",
+       "matched_keyword": "[keyword]",
+       "user_decision": "included"
+     }
+   }
+   ```
+
+   Preserve existing discovery.json schema for non-deferred answers (standard questions use format above without `deferred` field).
+
    Extract inferences to `inferred[]`, include phase type context if relevant.
 
 8. Show summary, ask for corrections. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh vibe`.
