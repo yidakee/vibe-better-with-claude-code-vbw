@@ -1,6 +1,18 @@
 # Discovery Protocol (DISC-01)
 
-Intelligent questioning system that helps users define what they want to build. Runs during `/vbw:vibe` at bootstrap and before each phase. Questions are non-developer friendly, scenario-based, and profile-gated.
+Intelligent questioning system that helps users define what they want to build through three distinct contexts: Bootstrap Discovery (requirements generation), Phase Discovery (phase-scoped context), and Phase Discussion (deep-dive exploration). Questions are non-developer friendly, scenario-based, and profile-gated.
+
+## Overview
+
+The Discovery Protocol operates in three distinct contexts:
+
+**Bootstrap Discovery** runs during `/vbw:vibe` bootstrap mode, after the user provides a project description but before REQUIREMENTS.md is generated. It produces domain-informed requirements through research-backed scenario questions, round-based exploration, and three-tier feature classification (table stakes, differentiators, anti-features).
+
+**Phase Discovery** runs automatically during `/vbw:vibe` plan mode, before planning begins for a phase. It asks 1-3 phase-scoped questions to gather context not already covered in REQUIREMENTS.md. This is a lighter, targeted round focused on the specific phase being planned.
+
+**Phase Discussion** runs explicitly when the user invokes `/vbw:vibe --discuss [phase]`, triggering a deep-dive conversation separate from automatic Phase Discovery. It detects what KIND of thing the phase builds (UI, API, CLI, Data, Integration) and generates domain-typed questions tailored to that phase type. Includes scope creep detection and deferred ideas capture.
+
+All three contexts share common patterns: plain-language questions via AskUserQuestion, profile-depth mapping, discovery.json recording, and non-developer friendly wording. They differ in depth, timing, and output artifacts.
 
 ## Profile Depth Mapping
 
@@ -11,273 +23,283 @@ Intelligent questioning system that helps users define what they want to build. 
 | default | standard | 3-5 | Mixed scenarios + checklists. The recommended balance |
 | production | thorough | 5-8 | Deep scenarios, detailed checklists, edge cases, rollback |
 
-Read active profile from `config.json` → `active_profile`. Map to depth above. If `discovery_questions` is `false`, skip entirely regardless of profile.
+Active profile is read from `config.json` → `active_profile`. If `discovery_questions` is `false`, skip discovery entirely regardless of profile.
 
-## Two Modes
+## Bootstrap Discovery
 
-### Bootstrap Discovery (implement State 1, Step B2)
+Replaces static requirements questions with research-informed, round-based exploration. Runs during `/vbw:vibe` bootstrap mode (State 1, Step B2 in vibe.md).
 
-Replaces static requirements questions. Triggered when project has no REQUIREMENTS.md or it contains template placeholders.
+**Input:** User's project description from $ARGUMENTS or "What do you want to build?"
+**Output:** `.vbw-planning/REQUIREMENTS.md`, `.vbw-planning/domain-research.md` (if research succeeded), updated `.vbw-planning/discovery.json`
 
-**Input:** User's project description (from $ARGUMENTS or "What do you want to build?")
-**Output:** Populated REQUIREMENTS.md with REQ-IDs, `.vbw-planning/domain-research.md` (if research conducted), updated discovery.json
+### Flow Overview
 
-Flow:
-1. Analyze user's description for: domain, scale, users, complexity signals
-2. **Domain Research (if not skip depth):** Spawn Scout to research domain, produce domain-research.md. On success: read findings. On failure: set RESEARCH_AVAILABLE=false.
-3. **Round-based questioning loop:**
-   - Initialize ROUND=1, continue until user chooses to stop
-   - Round 1: Generate scenario questions (research-informed if available)
-   - Round 2+: Generate checklist questions building on previous round answers
-   - After each round: present keep-exploring gate
-   - Soft nudge wording appears at round 3+
-4. Synthesize all answers into REQUIREMENTS.md, integrating research where relevant
-5. Store answered questions and research summary in `.vbw-planning/discovery.json`
+Bootstrap Discovery follows an eight-step flow: domain research → round-based questioning → vague answer disambiguation → pitfall warnings → three-tier classification → keep-exploring gates → synthesis → requirements generation.
 
-### Phase Discovery (implement States 3-4, before planning)
+### 1. Domain Research (B2.1)
 
-Lighter round scoped to the specific phase about to be planned. Skipped if phase already has a CONTEXT.md from `/vbw:vibe --discuss`.
+**When:** First step after user provides project description, unless depth=skip.
 
-**Input:** Phase goal, requirements, and success criteria from ROADMAP.md
-**Output:** Phase context injected into Lead agent prompt
+**Process:**
+1. Extract domain from project description (e.g., "recipe app" → "recipe management", "e-commerce site" → "e-commerce")
+2. Resolve Scout agent model via `resolve-agent-model.sh`
+3. Spawn Scout agent via Task tool with prompt: "Research the {domain} domain and write `.vbw-planning/domain-research.md` with four sections: ## Table Stakes (features every {domain} app has), ## Common Pitfalls (what projects get wrong), ## Architecture Patterns (how similar apps are structured), ## Competitor Landscape (existing products). Use WebSearch. Be concise (2-3 bullets per section)."
+4. Set 120-second timeout for research task
 
-Flow:
-1. Read phase scope from ROADMAP.md
-2. Check `.vbw-planning/discovery.json` — skip questions already answered
-3. Generate 1-3 phase-scoped questions (fewer than bootstrap)
-4. Store answers, pass as context to planning step
+**On Success:**
+- Read domain-research.md
+- Extract brief summary (3-5 lines max): 1-2 surprising table stakes from ## Table Stakes, 1 high-impact pitfall from ## Common Pitfalls, 1 competitor pattern from ## Competitor Landscape
+- Display to user: "◆ Domain Research: {brief summary}\n\n✓ Research complete. Now let's explore your specific needs..."
+- Set RESEARCH_AVAILABLE=true for subsequent steps
 
-### Phase Discussion (Discuss Mode)
+**On Failure (timeout, WebSearch failure, or empty results):**
+- Log warning, display to user: "⚠ Domain research took longer than expected — skipping to questions. (You can re-run `/vbw:vibe` later if you want domain-specific insights.)"
+- Set RESEARCH_AVAILABLE=false
+- Continue to Round 1 with general questions
 
-Explicit deep-dive mode triggered by `/vbw:vibe --discuss`, separate from automatic Phase Discovery. Detects phase type from ROADMAP.md phase goal and requirements text, then generates domain-specific questions tailored to what the phase builds.
+Research is best-effort. All failures fall back gracefully to current behavior with no user-facing error.
 
-**Input:** Phase number (from $ARGUMENTS or auto-detected current phase)
-**Output:** `{phase}-CONTEXT.md` with domain-typed discussion content, updated discovery.json with phase type metadata
+### 2. Round-Based Question Loop
 
-#### Phase Type Detection
+**Initialization:**
+- ROUND=1
+- QUESTIONS_ASKED=0
+- Profile depth sets minimum rounds (quick=1-2, standard=3-5, thorough=5-8)
 
-Discuss mode identifies what KIND of thing the phase builds using keyword matching on ROADMAP.md phase goal and requirements text. Five supported types:
+**Round Structure:**
 
-**UI (User Interface):**
-- Keywords: design, interface, layout, frontend, screens, components, responsive, page, view, form, dashboard
-- Detection: minimum 2 keyword matches required
-- Question domains: layout structure, UI states, user interactions, responsiveness
+**Round 1: Scenarios**
+Generate scenario questions presenting real situations the project will face. Each scenario includes a situation description, 2-4 outcome options, and "this means..." explanations for technical implications.
 
-**API (Application Programming Interface):**
-- Keywords: endpoint, service, backend, response, error handling, auth, versioning, route, REST, request
-- Detection: minimum 2 keyword matches required
-- Question domains: response format, error handling, authentication, versioning, rate limits
+When RESEARCH_AVAILABLE=true, integrate domain-research.md findings:
+- **Table Stakes** → inform checklist questions in Round 2
+- **Common Pitfalls** → scenario situations (e.g., "What happens when [pitfall situation]?")
+- **Architecture Patterns** → technical preference scenarios (e.g., "Should the system use [pattern A] or [pattern B]?")
+- **Competitor Landscape** → differentiation scenarios (e.g., "{Competitor X} does {feature}. Should yours work the same way or differently?")
 
-**CLI (Command-Line Interface):**
-- Keywords: command, flags, arguments, output format, terminal, console, prompt, stdin, stdout
-- Detection: minimum 2 keyword matches required
-- Question domains: command structure, output format, error messages, help system, piping
+When RESEARCH_AVAILABLE=false, use description analysis only (analyze domain, scale, users, complexity signals from user's description).
 
-**Data (Data/Schema):**
-- Keywords: schema, database, migration, storage, persistence, retention, model, query, index
-- Detection: minimum 2 keyword matches required
-- Question domains: data model, relationships, migrations, retention policies, constraints
+Format scenarios as AskUserQuestion with descriptive options. Each option's description field carries the "this means..." explanation.
 
-**Integration (Third-Party Integration):**
-- Keywords: third-party, external service, sync, webhook, connection, protocol, import, export
-- Detection: minimum 2 keyword matches required
-- Question domains: protocol/format, authentication, error recovery, data flow, dependency handling
-
-**Mixed-Type Handling:**
-- 0 types detected (no keywords matched): use generic fallback questions
-- 1 type detected (single type scored ≥2 matches): auto-select that type
-- 2+ types detected (multiple types scored ≥2 matches): present AskUserQuestion with detected types as options, user chooses focus
-
-#### Domain-Typed Questions
-
-Each phase type has 3-5 specific question templates focused on domain-relevant concerns. All questions follow Wording Guidelines (plain language, no jargon, concrete situations). Questions use AskUserQuestion tool with 2-4 options per question.
-
-**Question domains per type:**
-- **UI:** Layout structure (pages/flows/components), state management (what changes when user acts), error states (what user sees on failure), responsiveness (mobile/tablet/desktop), user interactions (clicks/forms/navigation)
-- **API:** Response format (what data gets returned), error handling (failure scenarios), authentication (access control), versioning (handling changes), rate limits or pagination (scale)
-- **CLI:** Command structure (subcommands/flags), output format (human vs machine-readable), error messages (what users see), help system (documentation), piping/composition (stdin/stdout)
-- **Data:** Data model (entities/fields), relationships (how data connects), migrations (schema changes), retention (data lifecycle), constraints and validation (data rules)
-- **Integration:** Protocol and format (communication method), authentication (API keys/OAuth/tokens), error recovery (retry/fallback), data flow (import/export/sync), dependency handling (external service failures)
-
-**Generic fallback (when no type detected):**
-- Essential features question
-- Technical preferences question
-- Boundaries question
-
-All questions build CONTEXT.md sections: User Vision, Essential Features, Technical Preferences, Boundaries, Acceptance Criteria, Decisions Made.
-
-#### Scope Creep Guardrails
-
-After each user answer in Discuss mode, the system analyzes feature mentions and compares them against other phases' goals and requirements from ROADMAP.md. When a mentioned feature appears to fit better in a different phase, the system offers to defer it rather than expanding current phase scope.
-
-**Detection Method:**
-- Parse user's answer for feature keywords and capability mentions
-- Compare against ROADMAP.md phase goals and requirements for ALL phases
-- Trigger when feature mention maps to a different phase's domain
-
-**Redirect Pattern:**
-When out-of-scope mention detected, present AskUserQuestion:
+Example for an e-commerce site:
 ```
-[Feature X] sounds like a new capability — that could be its own phase. Want me to note it for later?
+Scenario: Two customers try to buy the last item at the exact same time.
+
+  A) First one wins, second sees "sold out"
+     → This means the system locks inventory during checkout (simpler, occasional disappointed customers)
+
+  B) Both can buy, you sort it out later
+     → This means overselling is allowed and you handle it manually (flexible, but needs a process)
+
+  C) Hold it for 10 minutes while they decide
+     → This means a reservation system with timers (more complex, better experience)
 ```
 
-**Options:**
-- "Note it for later — add to Deferred Ideas" (captures feature to CONTEXT.md, conversation continues)
-- "Include in this phase — it's part of the scope" (no capture, feature stays in current discussion)
+**Round 2: Table Stakes Checklist**
+When RESEARCH_AVAILABLE=true:
+1. Read `## Table Stakes` section from domain-research.md
+2. Extract 3-6 common features (bullet points)
+3. Present as AskUserQuestion multiSelect: "Which of these are must-haves for your project?"
+4. Options: Each table stake as checkbox with "(domain standard)" label. Example: "Offline access (domain standard — recipe apps need this)"
+5. Add "None of these" option
+6. Record selected items to discovery.json with category "table_stakes", tier "table_stakes"
 
-**Deferred Ideas Capture:**
-Appended to CONTEXT.md in a new "Deferred Ideas" section (added after Decisions Made section):
+When RESEARCH_AVAILABLE=false:
+Skip to Round 3 thread-following checklists.
 
-```markdown
-## Deferred Ideas
+**Round 3: Thread-Following Checklist**
+Generate checklist questions that BUILD ON previous round answers. Read discovery.json.answered[] for prior rounds. Identify gaps or follow-ups:
+- If Round N-1 answer was vague: ask concrete follow-up
+- If Round N-1 revealed complexity: ask edge case questions
+- If Round N-1 mentioned integration: ask about auth, error handling, data flow
+- If Round N-1 suggested scale: ask about performance, caching, limits
 
-Features mentioned during discussion that may fit better in other phases:
+Check discovery.json.answered[] to avoid duplicate questions (skip categories already covered).
 
-- **Dashboard analytics** — suggested for Phase 4: Reporting and Analytics. Status: noted for later planning.
-- **Email notifications** — suggested for Phase 5: Notifications. Status: noted for later planning.
-```
+Format: Generate targeted pick-many questions with `multiSelect: true`.
 
-**discovery.json Recording:**
-Deferred ideas recorded with:
+Mark user-identified features as tier "differentiators".
+
+**Round 4: Differentiator Identification**
+After 2-3 rounds of checklists, explicitly ask about competitive advantage:
+
+"What makes your project different from existing solutions?"
+
+Present as AskUserQuestion with context-aware options:
+- "It does [X] better than competitors" (where X comes from prior answers)
+- "It targets a different audience: [Y]" (where Y is inferred from users/scale answers)
+- "It combines features that don't exist together: [Z]"
+- "Let me explain..."
+
+Record answer to discovery.json with category "differentiators", tier "differentiators". Mark these features as competitive advantages during requirement synthesis.
+
+**Round 5: Anti-Features (Deliberate Exclusions)**
+After differentiator identification, confirm deliberate exclusions to establish scope boundaries.
+
+When RESEARCH_AVAILABLE=true:
+1. Read domain-research.md ## Common Pitfalls and ## Competitor Landscape
+2. Identify features that appear in competitors but add complexity (from Pitfalls)
+3. Present as AskUserQuestion: "These are common in [domain] apps, but add complexity. Should we deliberately NOT build them?"
+4. Options: 2-3 scope-creep features as checkboxes (multiSelect). Example for recipe app: "Social sharing (adds privacy concerns)", "AI meal planning (complex, often unused)", "Grocery delivery integration (third-party dependency)"
+5. Add "Build these anyway" option
+6. Record selected exclusions to discovery.json with category "anti_features", tier "anti_features"
+
+When RESEARCH_AVAILABLE=false:
+Ask direct question: "What should this definitely NOT do?" Free-text, then convert to anti-features list.
+
+Anti-features ensure explicit scope boundaries and prevent feature creep during planning.
+
+**Round 6+: Additional Thread-Following**
+Continue thread-following pattern from Round 3. Mark user-identified features as tier "differentiators".
+
+### 3. Vague Answer Disambiguation
+
+After each user response, check for vague language patterns. When detected, present 3-4 concrete interpretations rather than accepting the answer as-is.
+
+**Vague Answer Triggers:**
+- Quality adjectives without specifics: "easy", "fast", "simple", "secure", "reliable", "powerful", "flexible"
+- Scope without boundaries: "everything", "lots of features", "comprehensive", "full-featured"
+- Time without metrics: "quick", "slow", "immediate", "later"
+- Scale without numbers: "big", "small", "many", "few"
+
+**Disambiguation Flow:**
+1. User gives vague answer (e.g., "I want it to be easy to use")
+2. Generate 3-4 concrete domain-specific interpretations based on vague term and domain context:
+   - "Easy to use" → ["Works on mobile devices?", "No signup required?", "Loads in under 2 seconds?", "Let me explain..."]
+   - "Fast" → ["Page loads in under 1 second?", "Search results appear instantly?", "Can handle 1000+ users at once?", "Let me explain..."]
+   - "Secure" → ["Passwords encrypted?", "Two-factor authentication?", "Data deleted when user requests?", "Let me explain..."]
+   - "Lots of features" → ["10+ features?", "Everything competitors have?", "Covers all use cases?", "Let me explain..."]
+3. Present interpretations as AskUserQuestion with descriptive options
+4. If "Let me explain" chosen: capture free-text, offer to revisit question with context
+5. Record disambiguated answer to discovery.json with disambiguation metadata
+
+**discovery.json Schema for Disambiguated Answers:**
 ```json
 {
-  "question": "[Generated question that revealed the mention]",
-  "answer": "[User's original answer containing the mention]",
-  "category": "deferred_idea",
-  "phase": "03",
+  "question": "...",
+  "answer": "Works on mobile devices",
+  "category": "...",
+  "phase": "bootstrap",
+  "round": 1,
   "date": "2026-02-13",
-  "deferred": {
-    "mention": "Dashboard analytics",
-    "suggested_phase": "Phase 4: Reporting and Analytics",
-    "matched_keyword": "analytics",
-    "user_decision": "deferred"
+  "disambiguation": {
+    "original_vague": "easy to use",
+    "interpretations_offered": [
+      "Works on mobile devices?",
+      "No signup required?",
+      "Loads in under 2 seconds?",
+      "Let me explain..."
+    ],
+    "chosen": "Works on mobile devices?"
   }
 }
 ```
 
-**Style:**
-- Gentle and non-blocking: single mention per feature, conversation continues immediately
-- No judgment: framed as "could be its own phase" not "out of scope"
-- User has final say: "Include in this phase" option always available
+If answer was NOT disambiguated (no vague pattern), omit the `disambiguation` field entirely.
 
-#### Example Flows by Phase Type
+### 4. Pitfall Warnings
 
-Sample question flows for each phase type, demonstrating domain-typed questions in plain language following Wording Guidelines.
+After Round 2 completes, if RESEARCH_AVAILABLE=true and domain-research.md contains ## Common Pitfalls section, surface 2-3 most relevant pitfalls as proactive warnings during Round 3.
 
-**UI Phase Example: "Phase 2: User Dashboard"**
+**Relevance Scoring:**
+Each pitfall from domain-research.md ## Common Pitfalls is scored based on project context from prior answers in discovery.json:
 
-1. "How should the layout adapt when someone switches from desktop to phone?"
-   - Same layout scaled down
-   - Simplified mobile version
-   - Mobile app instead
-   - Let me explain
+| Pitfall Mentions | User Context | Relevance Boost |
+|------------------|--------------|-----------------|
+| "scale", "performance" | Thousands of users mentioned | +2 |
+| "offline", "sync" | Offline access selected in table stakes | +2 |
+| "auth", "security" | User accounts or login mentioned | +2 |
+| "data", "privacy" | Data-heavy features identified | +2 |
+| "integration", "API" | Third-party tools mentioned | +2 |
 
-2. "What happens when data is loading?"
-   - Show spinner
-   - Show skeleton placeholders
-   - Show cached data with refresh indicator
-   - Let me explain
+Select top 2-3 pitfalls by relevance score (minimum score: 1). If no pitfalls score >0, skip pitfall warnings entirely.
 
-3. "How should users navigate between sections?"
-   - Sidebar menu
-   - Top tabs
-   - Hamburger menu
-   - Let me explain
+**Presentation Format (Round 3 only):**
+Frame as proactive risk mitigation: "Most [domain] projects run into a few common issues. Here are the ones most relevant to yours..."
 
-**API Phase Example: "Phase 3: Data Sync Service"**
+For each selected pitfall (2-3 max):
+```
+⚠ [Pitfall title from research]
+[Brief explanation: 1-2 sentences from research Common Pitfalls section]
 
-1. "What should the system return when a sync request succeeds?"
-   - Just success/fail status
-   - Full updated data
-   - Change summary
-   - Let me explain
+How should we handle this?
+  A) Address it now — add requirement
+  B) Note for later — add to phase planning
+  C) Skip — not relevant to my project
+```
 
-2. "What happens if someone's API key is invalid?"
-   - Return error code
-   - Lock account
-   - Send email alert
-   - Let me explain
+**Decision Recording:**
+- "Address now" → add to inferred[] with priority "Must-have", category "risk_mitigation"
+- "Note for later" → add to inferred[] with priority "Should-have", category "risk_mitigation"
+- "Skip" → no action
 
-3. "How should the system handle too many requests from one source?"
-   - Slow them down automatically
-   - Block after limit
-   - Require upgrade
-   - Let me explain
+**discovery.json Schema for Pitfall Warnings:**
+```json
+{
+  "question": "⚠ Over-complicated recipe format - Most recipe apps fail...",
+  "answer": "Address it now — keep recipe format simple",
+  "category": "risk_mitigation",
+  "phase": "bootstrap",
+  "round": 3,
+  "date": "2026-02-13",
+  "pitfall": {
+    "title": "Over-complicated recipe format",
+    "source": "domain-research.md",
+    "relevance_score": 4,
+    "decision": "address_now"
+  }
+}
+```
 
-**CLI Phase Example: "Phase 2: Build Command"**
+When adding to inferred[] (for "address now" or "note for later"):
+```json
+{
+  "id": "REQ-XX",
+  "text": "Keep recipe format simple to prevent user overwhelm",
+  "tier": "risk_mitigation",
+  "priority": "Must-have",
+  "source": "pitfall warning: Over-complicated recipe format"
+}
+```
 
-1. "What should the command print when a build finishes?"
-   - Summary line only
-   - Detailed file list
-   - Machine-readable JSON
-   - Let me explain
+**Example Pitfall Warning for Recipe App:**
+```
+⚠ Over-complicated recipe format
+Most recipe apps fail when they try to capture every possible cooking detail. Users get overwhelmed and abandon the app.
 
-2. "How should errors appear in the terminal?"
-   - Red text with explanation
-   - Error code with docs link
-   - Stack trace
-   - Let me explain
+How should we handle this?
+  A) Address it now — keep recipe format simple
+  B) Note for later — we'll figure this out during planning
+  C) Skip — my format is already simple
+```
 
-3. "What happens when someone runs the command with no arguments?"
-   - Show help automatically
-   - Start interactive wizard
-   - Use default settings
-   - Let me explain
+### 5. Three-Tier Feature Classification
 
-**Data Phase Example: "Phase 3: User Profiles Schema"**
+Features are classified into three tiers during the discovery process:
 
-1. "What should happen to someone's data when they delete their account?"
-   - Delete immediately
-   - Keep for 30 days
-   - Anonymize and keep
-   - Let me explain
+**Table Stakes (tier: "table_stakes")**
+- Source: domain-research.md ## Table Stakes section (Round 2 checklist)
+- Definition: Features every app in this domain has — users expect these out of the box
+- Recording: Selected in Round 2 table stakes checklist, recorded with category "table_stakes"
+- Requirement annotation: "(domain standard)" label in REQUIREMENTS.md
 
-2. "How should the system handle two people trying to update the same profile at once?"
-   - Last edit wins
-   - Lock while editing
-   - Merge changes
-   - Let me explain
+**Differentiators (tier: "differentiators")**
+- Source: Round 4 differentiator identification, Round 3/6+ thread-following checklists
+- Definition: Features that make this project unique or better than competitors
+- Recording: Explicitly identified in Round 4, or user-selected features from thread-following checklists
+- Requirement annotation: Marked as competitive advantages during synthesis
 
-3. "What fields must always have a value?"
-   - Name and email
-   - Just email
-   - No required fields
-   - Let me explain
+**Anti-Features (tier: "anti_features")**
+- Source: Round 5 anti-features question
+- Definition: Common features deliberately excluded to establish scope boundaries
+- Recording: Selected exclusions from Round 5, recorded with category "anti_features"
+- Requirement annotation: "(explicitly excluded)" label in REQUIREMENTS.md
 
-**Integration Phase Example: "Phase 4: Third-Party Calendar Sync"**
+This classification enables scope control during planning and helps differentiate must-haves from nice-to-haves.
 
-1. "What happens if the calendar service is down when someone tries to sync?"
-   - Show error and stop
-   - Retry automatically
-   - Queue for later
-   - Let me explain
+### 6. Keep-Exploring Gate
 
-2. "How should the system authenticate with the calendar service?"
-   - User connects their account once
-   - Use our API key
-   - Ask each time
-   - Let me explain
-
-3. "What data flows between the systems?"
-   - Events only
-   - Events and attendees
-   - Full calendar
-   - Let me explain
-
-### Thread-Following Questions
-
-Round 2+ questions build on previous answers rather than following a fixed script:
-
-- **If prior answer was vague:** Generate concrete follow-up (see Vague Answer Handling)
-- **If prior answer revealed complexity:** Ask edge case questions
-- **If prior answer mentioned integration:** Ask about auth, error handling, data flow
-- **If prior answer suggested scale:** Ask about performance, caching, limits
-
-Check `discovery.json.answered[]` before generating questions to avoid duplicates. Each answer records its round number for thread analysis.
-
-### Keep-Exploring Gate
-
-After each question round, offer the user control over depth:
+After each question round, offer the user control over depth.
 
 **Rounds 1-3 (equal encouragement):**
 ```
@@ -294,62 +316,239 @@ We've covered quite a bit about your project. What would you like to do?
   C) Skip to requirements — I'm ready to build
 ```
 
-The profile depth (quick/standard/thorough) sets the MINIMUM rounds, not a hard cap. Users can continue as long as they choose "Keep exploring."
+Profile depth (quick/standard/thorough) sets the MINIMUM rounds, not a hard cap. Users can continue as long as they choose "Keep exploring."
 
-## Mixed Question Format
+### 7. Answer Recording
 
-### Research-Informed Question Generation
+After each question, record to discovery.json with round number. Append to `answered[]` with fields:
+- `question`: Friendly wording
+- `answer`: User's choice
+- `category`: scope/users/scale/data/edge_cases/integrations/priorities/boundaries/table_stakes/differentiators/anti_features/risk_mitigation
+- `phase`: "bootstrap"
+- `round`: Current ROUND value
+- `date`: Today (YYYY-MM-DD)
+- `disambiguation`: (optional) Disambiguation metadata if answer was disambiguated
+- `pitfall`: (optional) Pitfall metadata if question was a pitfall warning
 
-When domain research is available (RESEARCH_AVAILABLE=true):
-- **Scenarios (Round 1):** Reference specific pitfalls, patterns, or competitor behaviors from research. Example: "App X handles offline sync by caching recipes locally. Should yours work the same way or always require internet?"
-- **Checklists (Round 2):** Include table-stakes features as default-checked items with "(domain standard)" labels. Example: "☑ Offline access (domain standard — recipe apps need this)"
-- **Requirement synthesis:** Annotate requirements with research sources: "(domain standard)", "(addresses common pitfall: X)", "(typical approach: Y)"
+### 8. Synthesis to REQUIREMENTS.md
 
-When research is unavailable (RESEARCH_AVAILABLE=false):
-- Use description analysis only, per existing protocol
-- Generate scenarios from inferred complexity signals
-- No domain-specific annotations
+After user chooses to stop exploring, synthesize all answers into `.vbw-planning/REQUIREMENTS.md`:
+1. Extract all answered[] entries from discovery.json
+2. Integrate research findings from domain-research.md where relevant
+3. Annotate requirements with sources:
+   - "(domain standard)" for table stakes
+   - "(addresses common pitfall: X)" for risk mitigation requirements
+   - "(typical approach: Y)" for architecture pattern adoptions
+4. Mark differentiators as competitive advantages
+5. List anti-features as explicit exclusions
+6. Call `bootstrap-requirements.sh .vbw-planning/REQUIREMENTS.md .vbw-planning/discovery.json .vbw-planning/domain-research.md`
 
-### Round 1: Scenarios
+### Fallback Behavior (depth=skip)
 
-Present real situations the user's project will face. Each scenario has:
-- A **situation** described in plain language
-- **Two or more outcomes** the user picks from
-- A brief **"this means..."** explaining the technical implication of each choice
+When active_profile=yolo or discovery_questions=false:
+1. Ask 2 minimal static questions via AskUserQuestion:
+   - "What are the must-have features?"
+   - "Who will use this?"
+2. Create `.vbw-planning/discovery.json` with `{"answered":[],"inferred":[]}`
+3. Proceed directly to requirements generation
 
-Example for an e-commerce site:
+## Phase Discovery
+
+Lighter round scoped to the specific phase about to be planned. Runs automatically during `/vbw:vibe` plan mode before planning begins (States 3-4 in vibe.md).
+
+**Input:** Phase goal, requirements, and success criteria from ROADMAP.md
+**Output:** Phase context injected into Lead agent prompt
+
+**Skip Conditions:**
+- Phase already has CONTEXT.md from `/vbw:vibe --discuss` (explicit discussion session already completed)
+- discovery_questions=false in config
+- depth=skip (yolo profile)
+
+**Flow:**
+1. Read phase scope from ROADMAP.md
+2. Check `.vbw-planning/discovery.json` — skip questions already answered for this phase
+3. Generate 1-3 phase-scoped questions (fewer than bootstrap) based on phase goal and requirements
+4. Store answers to discovery.json
+5. Pass answers as context to planning step (injected into Lead agent prompt)
+
+Phase Discovery is minimal and targeted — it fills gaps, not comprehensive exploration. For deep-dive discussion, use `/vbw:vibe --discuss` instead.
+
+## Phase Discussion
+
+Explicit deep-dive mode triggered by `/vbw:vibe --discuss [phase]`, separate from automatic Phase Discovery. Detects phase type from ROADMAP.md phase goal and requirements text, then generates domain-specific questions tailored to what the phase builds.
+
+**Input:** Phase number (from $ARGUMENTS or auto-detected current phase)
+**Output:** `.vbw-planning/phases/{phase-dir}/{phase}-CONTEXT.md`, updated `.vbw-planning/discovery.json` with phase type metadata
+
+### Phase Type Detection
+
+Discuss mode identifies what KIND of thing the phase builds using keyword matching on ROADMAP.md phase goal and requirements text. Five supported types:
+
+**UI (User Interface):**
+- Keywords: design, interface, layout, frontend, screens, components, responsive, page, view, form, dashboard, widget, navigation, menu, modal, button
+- Detection: minimum 2 keyword matches required
+- Question domains: layout structure, UI states, user interactions, responsiveness
+
+**API (Application Programming Interface):**
+- Keywords: endpoint, service, backend, response, error handling, auth, versioning, route, REST, request, JSON, status code, header, query parameter, middleware
+- Detection: minimum 2 keyword matches required
+- Question domains: response format, error handling, authentication, versioning, rate limits
+
+**CLI (Command-Line Interface):**
+- Keywords: command, flags, arguments, output format, terminal, console, prompt, stdin, stdout, pipe, subcommand, help text, option, switch
+- Detection: minimum 2 keyword matches required
+- Question domains: command structure, output format, error messages, help system, piping
+
+**Data (Data/Schema):**
+- Keywords: schema, database, migration, storage, persistence, retention, model, query, index, relation, table, field, constraint, transaction
+- Detection: minimum 2 keyword matches required
+- Question domains: data model, relationships, migrations, retention policies, constraints
+
+**Integration (Third-Party Integration):**
+- Keywords: third-party, external service, sync, webhook, connection, protocol, import, export, adapter, client, API key, OAuth, retry
+- Detection: minimum 2 keyword matches required
+- Question domains: protocol/format, authentication, error recovery, data flow, dependency handling
+
+**Detection Process:**
+1. Read ROADMAP.md phase goal + requirements text for target phase
+2. Match keywords against combined text (goal + requirements), case-insensitive
+3. Score each type: 1 point per unique keyword match
+4. Identify detected types: score >= 2 (minimum 2 keyword matches required to prevent false positives)
+
+**Mixed-Type Handling:**
+- **0 types detected** (all scores < 2): use generic fallback questions
+- **1 type detected** (only one type scored >= 2): use that type's questions, record as auto-detected
+- **2+ types detected** (multiple types scored >= 2): present AskUserQuestion: "This phase involves {type1}, {type2}, and {type3} work. Which should we focus on for these questions?" User's selection determines question template, record as user-chosen
+
+### Domain-Typed Questions
+
+Each phase type has 3-5 specific question templates focused on domain-relevant concerns. All questions follow Wording Guidelines (plain language, no jargon, concrete situations). Questions use AskUserQuestion tool with 2-4 options per question.
+
+**UI type questions:**
+- Layout structure: "How should the screens be organized?" Options: ["Single-page flow (everything on one screen)", "Multi-page with navigation (users move between pages)", "Dashboard with panels (multiple views at once)", "Let me explain..."]
+- State management: "What happens when someone interacts with the interface?" Options: ["Changes appear immediately (live updates)", "Need to save/submit first (explicit actions)", "Mix of both (some live, some require save)", "Let me explain..."]
+- Error states: "What should users see when something goes wrong?" Options: ["Red text next to the problem area", "Pop-up message that blocks the screen", "Banner at the top that can be dismissed", "Let me explain..."]
+- Responsiveness: "How should this adapt to different devices?" Options: ["Works on phones, tablets, and desktop (fully responsive)", "Desktop only (no mobile support)", "Mobile-first (works best on phones)", "Let me explain..."]
+- User interactions: "How do people navigate through the interface?" Options: ["Click buttons and links", "Forms with multiple steps", "Drag and drop items", "Let me explain..."]
+
+**API type questions:**
+- Response format: "What information should the system send back?" Options: ["Just the data requested (minimal response)", "Data plus metadata (timestamps, counts, etc.)", "Data plus related information (connections to other data)", "Let me explain..."]
+- Error handling: "What happens when something fails?" Options: ["Return an error message explaining what went wrong", "Try again automatically", "Return partial results if possible", "Let me explain..."]
+- Authentication: "Who can access this?" Options: ["Anyone (no restrictions)", "Requires login (username/password)", "Requires special key or token", "Let me explain..."]
+- Versioning: "How should changes be handled over time?" Options: ["Everyone gets updates immediately (no versioning)", "Multiple versions available (users choose)", "Automatic migration (users upgraded automatically)", "Let me explain..."]
+- Scale considerations: "How much traffic should this handle?" Options: ["Dozens of requests (small scale)", "Hundreds per minute (medium scale)", "Thousands per minute (high scale)", "Let me explain..."]
+
+**CLI type questions:**
+- Command structure: "How should the command work?" Options: ["Single command with flags (app --flag value)", "Subcommands (app subcommand --flag)", "Interactive mode (prompts for input)", "Let me explain..."]
+- Output format: "What should the output look like?" Options: ["Human-readable text (easy to read)", "Structured data (JSON, CSV for scripts)", "Both formats available (flag to choose)", "Let me explain..."]
+- Error messages: "What should users see when something fails?" Options: ["Brief error message", "Detailed explanation with suggestions", "Error code plus message", "Let me explain..."]
+- Help system: "How should documentation work?" Options: ["Built-in help command (--help)", "Separate documentation file", "Interactive tutorial mode", "Let me explain..."]
+- Piping and composition: "Should this work with other commands?" Options: ["Reads from stdin, writes to stdout (pipe-friendly)", "Standalone only (no piping)", "Optional piping (works both ways)", "Let me explain..."]
+
+**Data type questions:**
+- Data model: "What information needs to be stored?" Options: ["Simple fields (name, date, count)", "Connected records (relationships between data)", "Flexible structure (different types per item)", "Let me explain..."]
+- Relationships: "How does data connect?" Options: ["Independent records (no connections)", "Parent-child relationships (hierarchical)", "Many-to-many connections (complex links)", "Let me explain..."]
+- Migrations: "How should data structure changes be handled?" Options: ["Manual updates (user runs script)", "Automatic migration (happens on startup)", "Versioned migrations (tracked changes)", "Let me explain..."]
+- Retention: "How long should data persist?" Options: ["Forever (unless manually deleted)", "Time-limited (auto-delete after period)", "Archive old data (keep but mark as old)", "Let me explain..."]
+- Constraints and validation: "What rules apply to the data?" Options: ["Required fields only (minimal validation)", "Format checking (email, phone, etc.)", "Business rules (dates, ranges, limits)", "Let me explain..."]
+
+**Integration type questions:**
+- Protocol and format: "How should systems communicate?" Options: ["HTTP requests (REST-style)", "Real-time connection (websocket, streaming)", "Message queue (async processing)", "Let me explain..."]
+- Authentication: "How should access be secured?" Options: ["API key in request", "OAuth tokens (delegated access)", "Username and password", "Let me explain..."]
+- Error recovery: "What happens when the connection fails?" Options: ["Retry automatically", "Queue for later", "Fail and notify user", "Let me explain..."]
+- Data flow direction: "How does information move?" Options: ["One-way import (pull data in)", "One-way export (push data out)", "Two-way sync (keep in sync)", "Let me explain..."]
+- Dependency handling: "What if the external system is down?" Options: ["Block and wait", "Cache last known data", "Fail gracefully with fallback", "Let me explain..."]
+
+**Generic fallback questions (when no type detected):**
+- Essential features: "What are the must-have capabilities?" Options: ["Core functionality only (minimal)", "Common features expected by users", "Comprehensive feature set", "Let me explain..."]
+- Technical preferences: "How should this be built?" Options: ["Simple and straightforward", "Optimized for performance", "Flexible and extensible", "Let me explain..."]
+- Boundaries: "What should this NOT do?" Options: ["Keep it focused on core purpose", "Avoid complexity", "Don't duplicate existing systems", "Let me explain..."]
+
+All questions build CONTEXT.md sections: User Vision, Essential Features, Technical Preferences, Boundaries, Acceptance Criteria, Decisions Made.
+
+### Scope Creep Guardrails
+
+After each user answer in Discuss mode, the system analyzes feature mentions and compares them against other phases' goals and requirements from ROADMAP.md. When a mentioned feature appears to fit better in a different phase, the system offers to defer it rather than expanding current phase scope.
+
+**Detection Method:**
+1. **Feature extraction:** Parse user's answer text for capability/feature keywords (nouns and noun phrases that suggest features). Look for patterns: "dashboard", "API", "notifications", "reports", "analytics", "authentication", "admin panel", "search", "export", "import", "integration", "sync", "automation", "scheduling", etc. Extract 2-4 word phrases that describe capabilities (e.g., "user authentication", "real-time sync", "data export").
+2. **Boundary matching:** For each extracted feature mention:
+   - Check if it appears in current phase's goal/requirements (case-insensitive keyword matching)
+   - If YES (in current phase): skip, it's in scope
+   - If NO (not in current phase): check if it appears in OTHER phases' goals/requirements
+   - Match logic: case-insensitive substring match or keyword overlap
+   - If feature text appears in another phase's boundary: flag as potential scope creep
+3. **Suggested phase identification:** When scope creep flagged:
+   - Identify which other phase(s) contain the matched keyword
+   - Store: original mention text, matched keyword, target phase number, target phase name
+   - If feature matches multiple other phases: pick the earliest phase number
+
+**Redirect Pattern:**
+When out-of-scope mention detected, present AskUserQuestion:
 ```
-Scenario: Two customers try to buy the last item at the exact same time.
-
-  A) First one wins, second sees "sold out"
-     → This means the system locks inventory during checkout (simpler, occasional disappointed customers)
-
-  B) Both can buy, you sort it out later
-     → This means overselling is allowed and you handle it manually (flexible, but needs a process)
-
-  C) Hold it for 10 minutes while they decide
-     → This means a reservation system with timers (more complex, better experience)
+[Feature X] sounds like a new capability — that could be its own phase. Want me to note it for later?
 ```
 
-Format scenarios as AskUserQuestion with descriptive options. Each option's description field carries the "this means..." explanation.
+**Options:**
+- "Note it for later — add to Deferred Ideas" (captures feature to CONTEXT.md, conversation continues)
+- "Include in this phase — it's part of the scope" (no capture, feature stays in current discussion)
 
-### Round 2: Checklists
+**Style:**
+- Gentle and non-blocking: single mention per feature, conversation continues immediately
+- No judgment: framed as "could be its own phase" not "out of scope"
+- User has final say: "Include in this phase" option always available
 
-After scenarios reveal the project shape, ask targeted yes/no or pick-many questions. Group related items.
+**Deferred Ideas Capture:**
+When user chooses "Note it for later", append to CONTEXT.md in a new "Deferred Ideas" section (added after Decisions Made section):
 
-Example after learning the project is customer-facing:
+```markdown
+## Deferred Ideas
+
+Features mentioned during discussion that may fit better in other phases:
+
+- **Dashboard analytics** — suggested for Phase 4: Reporting and Analytics. Status: noted for later planning.
+- **Email notifications** — suggested for Phase 5: Notifications. Status: noted for later planning.
 ```
-Which of these does your project need?
 
-  □ User accounts (people log in and have profiles)
-  □ Payments (customers pay you money through the site)
-  □ Email notifications (the system sends emails automatically)
-  □ Admin dashboard (you manage things through a control panel)
+If NO deferred ideas were captured during discussion, omit this section entirely (backward compatible — existing CONTEXT.md files without Deferred Ideas section remain valid).
+
+**discovery.json Recording (Deferred Ideas):**
+```json
+{
+  "question": "Scope boundary check: dashboard analytics",
+  "answer": "Deferred to Phase 4: Reporting and Analytics",
+  "category": "deferred_idea",
+  "phase": "03",
+  "date": "2026-02-13",
+  "deferred": {
+    "mention": "dashboard analytics",
+    "suggested_phase": "4",
+    "suggested_phase_name": "Reporting and Analytics",
+    "matched_keyword": "analytics",
+    "user_decision": "deferred"
+  }
+}
 ```
 
-Format as AskUserQuestion with `multiSelect: true`.
+When user chooses "Include in this phase":
+```json
+{
+  "question": "Scope boundary check: dashboard analytics",
+  "answer": "Included in Phase 3: user confirmed in-scope",
+  "category": "scope_boundary",
+  "phase": "03",
+  "date": "2026-02-13",
+  "deferred": {
+    "mention": "dashboard analytics",
+    "suggested_phase": "4",
+    "suggested_phase_name": "Reporting and Analytics",
+    "matched_keyword": "analytics",
+    "user_decision": "included"
+  }
+}
+```
 
-## Wording Guidelines
+## Question Format Guidelines
 
 **Always assume the user is not a developer.** They may not know what an API, database, or deployment means. Follow these rules:
 
@@ -360,158 +559,241 @@ Format as AskUserQuestion with `multiSelect: true`.
 5. **No jargon in questions:** Terms like REST, GraphQL, microservices, CI/CD, Docker, etc. should never appear in questions. Use their effects instead.
 6. **Jargon in requirements:** The answers GET translated to technical requirements in REQUIREMENTS.md. Questions are friendly, outputs are precise.
 
-## Disambiguation Pattern
+## discovery.json Reference
 
-When a user gives a vague answer, present 3-4 concrete interpretations rather than accepting it as-is.
+Storage location: `.vbw-planning/discovery.json`
 
-### Vague Answer Triggers
-
-Detect these patterns:
-- **Quality adjectives:** easy, fast, simple, secure, reliable, powerful, flexible (without specifics)
-- **Scope terms:** everything, lots, comprehensive, full-featured (without boundaries)
-- **Time terms:** quick, slow, immediate, later (without metrics)
-- **Scale terms:** big, small, many, few (without numbers)
-
-### Disambiguation Flow
-
-1. User gives vague answer (e.g., "I want it to be easy to use")
-2. Generate 3-4 concrete domain-specific interpretations:
-   - "Works on mobile devices?"
-   - "No signup required?"
-   - "Loads in under 2 seconds?"
-   - "Let me explain..." (escape hatch)
-3. Present as AskUserQuestion with descriptive options
-4. If "Let me explain" chosen: capture free-text, offer to revisit question with context
-5. Record disambiguated answer to discovery.json with metadata
-
-### Example Patterns
-
-| Vague Term | Concrete Interpretations |
-|------------|-------------------------|
-| "Easy to use" | Mobile support? / No signup? / Fast load? |
-| "Fast" | <1s page load? / Instant search? / 1000+ concurrent users? |
-| "Secure" | Encrypted passwords? / Two-factor auth? / Data deletion? |
-| "Lots of features" | 10+ features? / Match competitors? / Cover all use cases? |
-
-The goal: convert vague intent into testable, actionable requirements.
-
-## Pitfall Warnings
-
-After domain research, surface 2-3 most relevant pitfalls as proactive warnings during the question flow.
-
-### When Pitfalls Appear
-
-Pitfall warnings are injected during Round 3 (after table stakes checklist, before differentiator question). Only appear if:
-- Domain research completed successfully (RESEARCH_AVAILABLE=true)
-- At least one pitfall scores relevance > 0 based on prior answers
-
-### Relevance Scoring
-
-Each pitfall from domain-research.md ## Common Pitfalls is scored based on project context:
-
-| Pitfall Mentions | User Context | Relevance Boost |
-|------------------|--------------|-----------------|
-| "scale", "performance" | Thousands of users mentioned | +2 |
-| "offline", "sync" | Offline access selected in table stakes | +2 |
-| "auth", "security" | User accounts or login mentioned | +2 |
-| "data", "privacy" | Data-heavy features identified | +2 |
-| "integration", "API" | Third-party tools mentioned | +2 |
-
-Top 2-3 pitfalls by score are presented. If all score 0, pitfall warnings are skipped.
-
-### Presentation Format
-
-```
-⚠ [Pitfall Title]
-[Brief explanation from research, 1-2 sentences]
-
-How should we handle this?
-  A) Address it now — add requirement
-  B) Note for later — add to phase planning
-  C) Skip — not relevant to my project
-```
-
-Decisions recorded to discovery.json:
-- "Address now" → Must-have requirement with tier "risk_mitigation"
-- "Note for later" → Should-have requirement with tier "risk_mitigation"
-- "Skip" → no action
-
-### Example
-
-For a recipe app where user selected offline access:
-
-```
-⚠ Offline sync conflicts
-When users edit recipes offline on multiple devices, conflicts happen on sync. Most apps handle this poorly, leading to data loss.
-
-How should we handle this?
-  A) Address it now — define conflict resolution strategy
-  B) Note for later — we'll tackle this during sync feature planning
-  C) Skip — single device only, no conflicts
-```
-
-## Question Categories
-
-Use these to ensure coverage. Not every category applies to every project — select based on the user's description.
-
-| Category | Bootstrap | Phase | Example Question |
-|----------|-----------|-------|-----------------|
-| Scope | Always | If ambiguous | "You mentioned X — does that include Y, or just Z?" |
-| Users | Always | Rarely | "Who uses this? Just you, your team, or the public?" |
-| Scale | If unclear | Rarely | "Are we talking dozens of users or thousands?" |
-| Data | If relevant | If data phase | "What happens to someone's data if they delete their account?" |
-| Edge cases | Standard+ | Always | "What should happen when [unexpected situation]?" |
-| Integrations | If mentioned | If integration phase | "Does this need to talk to any other tools you already use?" |
-| Priorities | Always | Always | "If you had to pick one: speed, features, or polish?" |
-| Boundaries | Standard+ | If scope creep risk | "What should this definitely NOT do?" |
-
-## Per-Project Memory
-
-Store in `.vbw-planning/discovery.json`:
+### File Structure
 
 ```json
 {
-  "answered": [
-    {
-      "question": "Who uses this?",
-      "answer": "Public customers",
-      "category": "users",
-      "phase": "bootstrap",
-      "date": "2026-02-10"
-    }
-  ],
-  "inferred": [
-    {
-      "fact": "Customer-facing application",
-      "source": "users question",
-      "date": "2026-02-10"
-    }
-  ]
+  "answered": [],
+  "inferred": []
 }
 ```
 
-Before generating questions:
-1. Read `discovery.json` (create empty `{"answered":[],"inferred":[]}` if missing)
-2. Skip questions whose category + topic overlap with existing answers
-3. Skip questions whose answer can be inferred from existing facts
-4. After user answers, append to `answered[]` and extract inferences to `inferred[]`
+### answered[] Schema
 
-## Config Toggle
+Full schema including all Phase 1-3 extensions:
 
-| Setting | Type | Default | Effect |
-|---------|------|---------|--------|
-| discovery_questions | boolean | true | false = skip discovery entirely, all profiles |
+| Field | Type | Required | Source | Description |
+|-------|------|----------|--------|-------------|
+| question | string | Yes | All modes | Friendly question wording |
+| answer | string | Yes | All modes | User's response |
+| category | string | Yes | All modes | Question type: scope/users/scale/data/edge_cases/integrations/priorities/boundaries/table_stakes/differentiators/anti_features/risk_mitigation/technical_preferences/deferred_idea/scope_boundary |
+| phase | string | Yes | All modes | "bootstrap" or zero-padded phase number (e.g., "03") |
+| date | string | Yes | All modes | ISO date (YYYY-MM-DD) |
+| round | number | No | Bootstrap only | Round number in round-based loop (1-N) |
+| disambiguation | object | No | Bootstrap only | Vague answer disambiguation metadata |
+| pitfall | object | No | Bootstrap only | Pitfall warning metadata |
+| phase_type | string | No | Discuss only | Detected phase type: UI/API/CLI/Data/Integration/generic |
+| phase_type_source | string | No | Discuss only | How type was determined: "auto-detected" or "user-chosen" |
+| deferred | object | No | Discuss only | Scope creep detection metadata |
 
-When `false`, implement proceeds directly to requirements gathering (bootstrap) or planning (phases) without discovery questions.
+### disambiguation Object Schema (Bootstrap Only)
+
+```json
+{
+  "original_vague": "easy to use",
+  "interpretations_offered": [
+    "Works on mobile devices?",
+    "No signup required?",
+    "Loads in under 2 seconds?",
+    "Let me explain..."
+  ],
+  "chosen": "Works on mobile devices?"
+}
+```
+
+### pitfall Object Schema (Bootstrap Only)
+
+```json
+{
+  "title": "Over-complicated recipe format",
+  "source": "domain-research.md",
+  "relevance_score": 4,
+  "decision": "address_now"
+}
+```
+
+### deferred Object Schema (Discuss Only)
+
+```json
+{
+  "mention": "dashboard analytics",
+  "suggested_phase": "4",
+  "suggested_phase_name": "Reporting and Analytics",
+  "matched_keyword": "analytics",
+  "user_decision": "deferred"
+}
+```
+
+### inferred[] Schema
+
+Full schema including Phase 2 extensions:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string | No | Requirement ID (REQ-XX) |
+| text | string | Yes | Inferred requirement or fact |
+| tier | string | No | Feature classification: table_stakes/differentiators/anti_features/risk_mitigation |
+| priority | string | No | Must-have/Should-have/Nice-to-have |
+| source | string | Yes | Source question or reasoning |
+| date | string | No | ISO date (YYYY-MM-DD) |
+
+### Example Entries
+
+**Standard question (Bootstrap):**
+```json
+{
+  "question": "Who uses this?",
+  "answer": "Public customers",
+  "category": "users",
+  "phase": "bootstrap",
+  "round": 1,
+  "date": "2026-02-13"
+}
+```
+
+**Disambiguated answer (Bootstrap):**
+```json
+{
+  "question": "What does 'easy to use' mean for your project?",
+  "answer": "Works on mobile devices",
+  "category": "technical_preferences",
+  "phase": "bootstrap",
+  "round": 2,
+  "date": "2026-02-13",
+  "disambiguation": {
+    "original_vague": "easy to use",
+    "interpretations_offered": [
+      "Works on mobile devices?",
+      "No signup required?",
+      "Loads in under 2 seconds?",
+      "Let me explain..."
+    ],
+    "chosen": "Works on mobile devices?"
+  }
+}
+```
+
+**Pitfall warning (Bootstrap):**
+```json
+{
+  "question": "⚠ Over-complicated recipe format - Most recipe apps fail...",
+  "answer": "Address it now — keep recipe format simple",
+  "category": "risk_mitigation",
+  "phase": "bootstrap",
+  "round": 3,
+  "date": "2026-02-13",
+  "pitfall": {
+    "title": "Over-complicated recipe format",
+    "source": "domain-research.md",
+    "relevance_score": 4,
+    "decision": "address_now"
+  }
+}
+```
+
+**Deferred idea (Discuss):**
+```json
+{
+  "question": "Scope boundary check: dashboard analytics",
+  "answer": "Deferred to Phase 4: Reporting and Analytics",
+  "category": "deferred_idea",
+  "phase": "03",
+  "date": "2026-02-13",
+  "deferred": {
+    "mention": "dashboard analytics",
+    "suggested_phase": "4",
+    "suggested_phase_name": "Reporting and Analytics",
+    "matched_keyword": "analytics",
+    "user_decision": "deferred"
+  }
+}
+```
+
+**Inferred requirement with tier:**
+```json
+{
+  "id": "REQ-05",
+  "text": "Keep recipe format simple to prevent user overwhelm",
+  "tier": "risk_mitigation",
+  "priority": "Must-have",
+  "source": "pitfall warning: Over-complicated recipe format",
+  "date": "2026-02-13"
+}
+```
+
+### Schema Evolution Notes
+
+- Schema is backward compatible: new fields are optional
+- Existing discovery.json files without Phase 2-3 extensions remain valid
+- Fields are added, never removed or renamed
+- Round field introduced in Phase 2 for thread-following
+- Disambiguation and pitfall fields introduced in Phase 2 for vague answer handling and risk mitigation
+- Phase_type, phase_type_source, and deferred fields introduced in Phase 3 for Discuss mode
+- Tier field in inferred[] introduced in Phase 2 for three-tier classification
 
 ## Integration Points
 
-| Command | Mode | When |
-|---------|------|------|
-| vibe bootstrap mode | Bootstrap | After project description, before REQUIREMENTS.md |
-| vibe plan mode | Phase | Before planning, after phase auto-detection |
-| vibe --discuss | N/A | Explicit discuss mode with domain-typed questions based on phase type (UI/API/CLI/Data/Integration) |
+### vibe.md Integration
 
-`/vbw:vibe --discuss` remains independent — it's a manual deep-dive the user triggers explicitly. Discovery is the automatic layer.
+**Bootstrap Discovery:** Implemented in vibe.md State 1, Step B2 (lines 105-290). Runs after PROJECT.md creation (B1) and before ROADMAP.md generation (B3). Profile depth mapping in B1.5 determines DISCOVERY_DEPTH. Domain research in B2.1 spawns Scout agent. Round-based loop in B2 steps a-i implements all features: scenarios, table stakes, thread-following, differentiators, anti-features, vague answer disambiguation, pitfall warnings, keep-exploring gate.
 
-**Note:** Phase Discussion (Discuss mode) includes phase type detection and scope creep guardrails as of Phase 3 implementation (REQ-05, REQ-08).
+**Phase Discovery:** Implemented in vibe.md Plan mode (States 3-4), before planning begins. Reads phase scope from ROADMAP.md, checks discovery.json for prior answers, generates 1-3 phase-scoped questions, passes context to Lead agent prompt.
+
+**Phase Discussion (Discuss Mode):** Implemented in vibe.md Discuss mode (lines 322-533). Phase type detection in steps 3-4 uses five keyword patterns (UI/API/CLI/Data/Integration) with 2+ match threshold. Domain-typed question generation in step 5 uses type-specific templates. Scope creep detection in step 5 after each answer extracts features, matches against phase boundaries, triggers gentle redirect. Deferred ideas captured to CONTEXT.md in step 6 and discovery.json in step 7.
+
+### Bootstrap Scripts
+
+**bootstrap-requirements.sh:** Called after Bootstrap Discovery completes to synthesize discovery.json and domain-research.md into REQUIREMENTS.md. Usage:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-requirements.sh \
+  .vbw-planning/REQUIREMENTS.md \
+  .vbw-planning/discovery.json \
+  .vbw-planning/domain-research.md
+```
+
+### Feature Flags
+
+**discovery_questions (boolean, default: true)**
+- When `false`: Skip discovery entirely for all profiles
+- Affects: All three contexts (Bootstrap, Phase Discovery, Phase Discussion)
+- Fallback: Bootstrap uses 2 minimal static questions, Phase Discovery skipped, Phase Discussion not available
+
+**v3_plan_research_persist (boolean, default: false)**
+- When `true`: Enable phase research in Plan mode (Phase Discovery research, separate from Bootstrap research)
+- When `false`: Phase research skipped, domain-research.md only generated during Bootstrap
+- Affects: Phase Discovery context depth
+- Note: Feature flag name is historical, v3 prefix refers to planning system version
+
+### Fallback Behaviors
+
+**Skip depth (yolo profile or discovery_questions=false):**
+- Bootstrap: Ask 2 minimal static questions ("What are the must-have features?", "Who will use this?"), create empty discovery.json, proceed to requirements
+- Phase Discovery: Skipped entirely
+- Phase Discussion: Not available
+
+**Research timeout (RESEARCH_AVAILABLE=false):**
+- Bootstrap Round 1: Use description analysis only, no domain-informed scenarios
+- Bootstrap Round 2: Skip table stakes checklist, go directly to Round 3 thread-following
+- Bootstrap Round 3: Skip pitfall warnings
+- Bootstrap Round 5: Use direct question for anti-features ("What should this definitely NOT do?") instead of research-informed checklist
+- Requirements synthesis: No research annotations ("(domain standard)", "(addresses common pitfall: X)")
+
+**No phase type detected (Discuss mode, all scores < 2):**
+- Use generic fallback questions (essential features, technical preferences, boundaries)
+- Record phase_type as "generic"
+- No domain-typed questions
+- Scope creep detection still active (uses phase boundaries, not type-specific logic)
+
+### Config Toggle Effects
+
+Profile depth mapping to question counts:
+- yolo → skip (0 questions, all discovery skipped)
+- prototype → quick (1-2 questions minimum, user can extend)
+- default → standard (3-5 questions minimum, user can extend)
+- production → thorough (5-8 questions minimum, user can extend)
+
+Keep-exploring gate allows users to exceed minimums in all profiles except yolo.
