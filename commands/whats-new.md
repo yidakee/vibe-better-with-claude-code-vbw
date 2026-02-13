@@ -1,5 +1,5 @@
 ---
-name: whats-new
+name: vbw:whats-new
 disable-model-invocation: true
 description: View changelog and recent updates since your installed version.
 argument-hint: "[version]"

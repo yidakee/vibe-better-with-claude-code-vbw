@@ -1,5 +1,5 @@
 ---
-name: uninstall
+name: vbw:uninstall
 disable-model-invocation: true
 description: Cleanly remove all VBW traces from the system before plugin uninstall.
 argument-hint:

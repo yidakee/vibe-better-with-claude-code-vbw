@@ -1,5 +1,5 @@
 ---
-name: release
+name: vbw:release
 disable-model-invocation: true
 description: Bump version, finalize changelog, tag, commit, push, and create a GitHub release.
 argument-hint: "[--dry-run] [--no-push] [--major] [--minor] [--skip-audit]"

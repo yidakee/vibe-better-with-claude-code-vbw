@@ -1,5 +1,5 @@
 ---
-name: vibe
+name: vbw:vibe
 description: "The one command. Detects state, parses intent, routes to any lifecycle mode -- bootstrap, scope, plan, execute, discuss, archive, and more."
 argument-hint: "[intent or flags] [--plan] [--execute] [--discuss] [--assumptions] [--scope] [--add] [--insert] [--remove] [--archive] [--yolo] [--effort=level] [--skip-qa] [--skip-audit] [--plan=NN] [N]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch
