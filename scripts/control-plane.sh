@@ -174,8 +174,17 @@ step_lease_acquire() {
     }
   fi
   if [ "$result" = "conflict_blocked" ]; then
-    record_step "lease_acquire" "fail" "conflict blocked"
-    return 1
+    # Retry once after 2s delay (per plan: auto-repair on lease conflict)
+    sleep 2
+    if [ "$V3_LEASE_LOCKS" = "true" ]; then
+      result=$(bash "$SCRIPT_DIR/lease-lock.sh" acquire "$tid" --ttl=300 $files_args 2>/dev/null) || result="error"
+    else
+      result=$(bash "$SCRIPT_DIR/lock-lite.sh" acquire "$tid" $files_args 2>/dev/null) || result="error"
+    fi
+    if [ "$result" = "conflict_blocked" ] || [ "$result" = "error" ]; then
+      record_step "lease_acquire" "fail" "conflict blocked after retry"
+      return 1
+    fi
   fi
   record_step "lease_acquire" "pass" "$result"
   return 0
