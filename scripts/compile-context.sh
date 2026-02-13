@@ -117,6 +117,7 @@ if [ "$V3_CACHE_ENABLED" = "true" ] && [ -f "${SCRIPT_DIR}/cache-context.sh" ]; 
     CACHED_PATH=$(echo "$CACHE_RESULT" | cut -d' ' -f3)
     OUTPUT_PATH="${PHASE_DIR}/.context-${ROLE}.md"
     if cp "$CACHED_PATH" "$OUTPUT_PATH" 2>/dev/null; then
+      update_context_index "$CACHE_HASH" "$CACHED_PATH" "$ROLE" "$PHASE"
       if [ "$V3_METRICS_ENABLED" = "true" ] && [ -f "${SCRIPT_DIR}/collect-metrics.sh" ]; then
         bash "${SCRIPT_DIR}/collect-metrics.sh" cache_hit "$PHASE" "role=${ROLE}" 2>/dev/null || true
       fi
