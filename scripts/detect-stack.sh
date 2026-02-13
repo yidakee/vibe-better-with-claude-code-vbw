@@ -6,7 +6,7 @@
 # Usage: bash detect-stack.sh [project-dir]
 # Output: JSON object with detected stack, installed skills, and suggestions.
 
-set -eo pipefail
+set -euo pipefail
 
 # --- jq dependency check ---
 if ! command -v jq &>/dev/null; then
@@ -39,36 +39,140 @@ if [ -d "$HOME/.agents/skills" ]; then
 fi
 ALL_INSTALLED="$INSTALLED_GLOBAL,$INSTALLED_PROJECT,$INSTALLED_AGENTS"
 
-# --- Read manifest files once ---
-PKG_JSON=""
-if [ -f "$PROJECT_DIR/package.json" ]; then
-  PKG_JSON=$(cat "$PROJECT_DIR/package.json" 2>/dev/null)
-fi
+# --- Shared find helper (exclude generated/vendor trees) ---
+project_find() {
+  find "$PROJECT_DIR" \
+    -not -path "*/.git/*" \
+    -not -path "*/node_modules/*" \
+    -not -path "*/.vbw-planning/*" \
+    -not -path "*/.planning/*" \
+    -not -path "*/vendor/*" \
+    -not -path "*/dist/*" \
+    -not -path "*/build/*" \
+    -not -path "*/target/*" \
+    -not -path "*/.next/*" \
+    -not -path "*/__pycache__/*" \
+    -not -path "*/.venv/*" \
+    "$@" 2>/dev/null
+}
 
-REQUIREMENTS_TXT=""
-if [ -f "$PROJECT_DIR/requirements.txt" ]; then
-  REQUIREMENTS_TXT=$(cat "$PROJECT_DIR/requirements.txt" 2>/dev/null)
-fi
+has_glob_chars() {
+  case "$1" in
+    *"*"*|*"?"*|*"["*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
-PYPROJECT_TOML=""
-if [ -f "$PROJECT_DIR/pyproject.toml" ]; then
-  PYPROJECT_TOML=$(cat "$PROJECT_DIR/pyproject.toml" 2>/dev/null)
-fi
+file_has_dependency() {
+  local file="$1"
+  local dep="$2"
+  local basename
+  basename=$(basename "$file")
 
-GEMFILE=""
-if [ -f "$PROJECT_DIR/Gemfile" ]; then
-  GEMFILE=$(cat "$PROJECT_DIR/Gemfile" 2>/dev/null)
-fi
+  if [ "$basename" = "package.json" ]; then
+    if jq -e --arg dep "$dep" '
+      ((.dependencies // {}) | has($dep)) or
+      ((.devDependencies // {}) | has($dep)) or
+      ((.peerDependencies // {}) | has($dep)) or
+      ((.optionalDependencies // {}) | has($dep))
+    ' "$file" >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
 
-CARGO_TOML=""
-if [ -f "$PROJECT_DIR/Cargo.toml" ]; then
-  CARGO_TOML=$(cat "$PROJECT_DIR/Cargo.toml" 2>/dev/null)
-fi
+  if grep -qF "$dep" "$file" 2>/dev/null; then
+    return 0
+  fi
 
-GO_MOD=""
-if [ -f "$PROJECT_DIR/go.mod" ]; then
-  GO_MOD=$(cat "$PROJECT_DIR/go.mod" 2>/dev/null)
-fi
+  return 1
+}
+
+check_dependency_pattern() {
+  local file_pattern="$1"
+  local dep="$2"
+  local candidate
+  local root_file
+
+  # Exact relative path (e.g. backend/functions/package.json:express)
+  if [[ "$file_pattern" == */* ]] && [[ "$file_pattern" != \*\*/* ]] && ! has_glob_chars "$file_pattern"; then
+    candidate="$PROJECT_DIR/$file_pattern"
+    if [ -f "$candidate" ] && file_has_dependency "$candidate" "$dep"; then
+      return 0
+    fi
+    return 1
+  fi
+
+  # Explicit recursive path pattern (e.g. **/package.json:firebase)
+  if [[ "$file_pattern" == \*\*/* ]]; then
+    local suffix="${file_pattern#**/}"
+    while IFS= read -r candidate; do
+      if file_has_dependency "$candidate" "$dep"; then
+        return 0
+      fi
+    done < <(project_find -type f -path "*/$suffix")
+    return 1
+  fi
+
+  # Glob filename pattern (e.g. *.json:foo)
+  if has_glob_chars "$file_pattern"; then
+    while IFS= read -r candidate; do
+      if file_has_dependency "$candidate" "$dep"; then
+        return 0
+      fi
+    done < <(project_find -type f -name "$file_pattern")
+    return 1
+  fi
+
+  # Plain filename: check root + nested manifests (excluding vendor/generated dirs)
+  root_file="$PROJECT_DIR/$file_pattern"
+  if [ -f "$root_file" ] && file_has_dependency "$root_file" "$dep"; then
+    return 0
+  fi
+
+  while IFS= read -r candidate; do
+    if [ "$candidate" = "$root_file" ]; then
+      continue
+    fi
+    if file_has_dependency "$candidate" "$dep"; then
+      return 0
+    fi
+  done < <(project_find -type f -name "$file_pattern")
+
+  return 1
+}
+
+check_path_pattern() {
+  local pattern="$1"
+
+  # Exact relative path first
+  if [ -e "$PROJECT_DIR/$pattern" ]; then
+    return 0
+  fi
+
+  # Explicit recursive path pattern (e.g. **/firebase.json)
+  if [[ "$pattern" == \*\*/* ]]; then
+    local suffix="${pattern#**/}"
+    if project_find -path "*/$suffix" -print -quit | grep -q .; then
+      return 0
+    fi
+    return 1
+  fi
+
+  # Glob patterns should match both files and dirs recursively (e.g. *.xcodeproj)
+  if has_glob_chars "$pattern"; then
+    if project_find -name "$pattern" -print -quit | grep -q .; then
+      return 0
+    fi
+    return 1
+  fi
+
+  # Plain filename/dirname fallback: search nested paths too
+  if [[ "$pattern" != */* ]] && project_find -name "$pattern" -print -quit | grep -q .; then
+    return 0
+  fi
+
+  return 1
+}
 
 # --- Check a single detect pattern ---
 # Returns 0 (true) if pattern matches, 1 (false) if not.
@@ -77,34 +181,14 @@ check_pattern() {
 
   if echo "$pattern" | grep -qF ':'; then
     # Dependency pattern: "file:dependency"
-    local file dep content
+    local file dep
     file=$(echo "$pattern" | cut -d: -f1)
     dep=$(echo "$pattern" | cut -d: -f2-)
-
-    case "$file" in
-      package.json)   content="$PKG_JSON" ;;
-      requirements.txt) content="$REQUIREMENTS_TXT" ;;
-      pyproject.toml) content="$PYPROJECT_TOML" ;;
-      Gemfile)        content="$GEMFILE" ;;
-      Cargo.toml)     content="$CARGO_TOML" ;;
-      go.mod)         content="$GO_MOD" ;;
-      *)              content="" ;;
-    esac
-
-    if [ -n "$content" ] && echo "$content" | grep -qF "\"$dep\""; then
-      return 0
-    fi
-    # Also check without quotes (requirements.txt, go.mod, etc.)
-    if [ -n "$content" ] && echo "$content" | grep -qiw "$dep"; then
-      return 0
-    fi
-    return 1
+    check_dependency_pattern "$file" "$dep"
+    return $?
   else
-    # File/directory pattern
-    if [ -e "$PROJECT_DIR/$pattern" ]; then
-      return 0
-    fi
-    return 1
+    check_path_pattern "$pattern"
+    return $?
   fi
 }
 

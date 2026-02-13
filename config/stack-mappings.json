@@ -48,7 +48,7 @@
       "description": "Tailwind CSS"
     },
     "typescript": {
-      "detect": ["tsconfig.json"],
+      "detect": ["tsconfig.json", "**/tsconfig.json"],
       "skills": ["typescript-skill"],
       "description": "TypeScript"
     },
@@ -92,7 +92,16 @@
       "skills": ["supabase-skill"]
     },
     "firebase": {
-      "detect": ["firebase.json", "package.json:firebase"],
+      "detect": [
+        "firebase.json",
+        "**/firebase.json",
+        "package.json:firebase",
+        "package.json:firebase-functions",
+        "package.json:firebase-admin",
+        "**/package.json:firebase",
+        "**/package.json:firebase-functions",
+        "**/package.json:firebase-admin"
+      ],
       "skills": ["firebase-skill"]
     },
     "clerk": {
@@ -138,6 +147,25 @@
       "detect": [".github/workflows"],
       "skills": ["github-actions-skill"],
       "description": "GitHub Actions CI/CD"
+    }
+  },
+  "mobile": {
+    "ios-swift": {
+      "detect": [
+        "*.xcodeproj",
+        "*.xcworkspace",
+        "**/*.xcodeproj",
+        "**/*.xcworkspace",
+        "Package.swift",
+        "**/Package.swift"
+      ],
+      "skills": ["swift-skill"],
+      "description": "iOS/macOS Swift project"
+    },
+    "swiftui": {
+      "detect": ["**/ContentView.swift", "**/*App.swift"],
+      "skills": ["swiftui-expert-skill"],
+      "description": "SwiftUI interface"
     }
   }
 }
