@@ -33,6 +33,9 @@ RC=$?
 [ "$VBW_DEBUG" = "1" ] && [ "$RC" -ne 0 ] && echo "[VBW DEBUG] hook-wrapper: $SCRIPT exit=$RC" >&2
 [ "$RC" -eq 0 ] && exit 0
 
+# Exit 2 = intentional block (PreToolUse/UserPromptSubmit) — pass through, not a failure
+[ "$RC" -eq 2 ] && exit 2
+
 # --- Failure: log and exit 0 ---
 if [ -d ".vbw-planning" ]; then
   LOG=".vbw-planning/.hook-errors.log"

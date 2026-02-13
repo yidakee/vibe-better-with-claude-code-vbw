@@ -3,17 +3,34 @@
 # Output: key-value pairs on stdout. Exit 0 always.
 set -euo pipefail
 
+# Skip during compaction — post-compact.sh handles the compact SessionStart.
+if [[ -f ".vbw-planning/.compaction-marker" ]]; then
+  _cm_ts=$(cat ".vbw-planning/.compaction-marker" 2>/dev/null || echo 0)
+  _cm_now=$(date +%s 2>/dev/null || echo 0)
+  if (( _cm_now - _cm_ts < 60 )); then
+    exit 0
+  fi
+fi
+
 META=".vbw-planning/codebase/META.md"
+
+# Detect hook context: when stdout is not a terminal, we're called as a hook.
+# In hook mode, only JSON goes to stdout; diagnostics go to stderr.
+IS_HOOK=false
+[ -t 1 ] || IS_HOOK=true
+
+# Helper: emit diagnostic lines to the right destination
+_diag() { if [[ "$IS_HOOK" == true ]]; then echo "$@" >&2; else echo "$@"; fi; }
 
 # No map
 if [[ ! -f "$META" ]]; then
-  echo "status: no_map"
+  _diag "status: no_map"
   exit 0
 fi
 
 # No git
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
-  echo "status: no_git"
+  _diag "status: no_git"
   exit 0
 fi
 
@@ -24,18 +41,18 @@ mapped_at=$(grep '^mapped_at:' "$META" | awk '{print $2}')
 
 # Validate parsed values
 if [[ -z "$git_hash" || -z "$file_count" || "$file_count" -eq 0 ]]; then
-  echo "status: no_map"
+  _diag "status: no_map"
   exit 0
 fi
 
 # Verify the stored hash exists in this repo
 if ! git cat-file -e "$git_hash" 2>/dev/null; then
-  echo "status: stale"
-  echo "staleness: 100%"
-  echo "changed: unknown"
-  echo "total: $file_count"
-  echo "since: $mapped_at"
-  if ! [ -t 1 ]; then
+  _diag "status: stale"
+  _diag "staleness: 100%"
+  _diag "changed: unknown"
+  _diag "total: $file_count"
+  _diag "since: $mapped_at"
+  if [[ "$IS_HOOK" == true ]]; then
     echo "{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"Codebase map is stale (100% files changed). Run /vbw:map --incremental to refresh.\"}}"
   fi
   exit 0
@@ -53,13 +70,13 @@ else
   status="fresh"
 fi
 
-echo "status: $status"
-echo "staleness: ${staleness}%"
-echo "changed: $changed"
-echo "total: $file_count"
-echo "since: $mapped_at"
+_diag "status: $status"
+_diag "staleness: ${staleness}%"
+_diag "changed: $changed"
+_diag "total: $file_count"
+_diag "since: $mapped_at"
 
-# When called as a SessionStart hook (stdout is not a terminal), output hookSpecificOutput
-if [[ "$status" == "stale" ]] && ! [ -t 1 ]; then
+# When called as a SessionStart hook, output hookSpecificOutput JSON only
+if [[ "$status" == "stale" ]] && [[ "$IS_HOOK" == true ]]; then
   echo "{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"Codebase map is stale (${staleness}% files changed). Run /vbw:map --incremental to refresh.\"}}"
 fi

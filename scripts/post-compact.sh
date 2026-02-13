@@ -5,8 +5,8 @@ set -u
 
 INPUT=$(cat)
 
-# Clean up cost tracking files (stale after compaction)
-rm -f .vbw-planning/.cost-ledger.json .vbw-planning/.active-agent 2>/dev/null
+# Clean up cost tracking files and compaction marker (stale after compaction)
+rm -f .vbw-planning/.cost-ledger.json .vbw-planning/.active-agent .vbw-planning/.compaction-marker 2>/dev/null
 
 # Try to identify agent role from input context
 ROLE=""

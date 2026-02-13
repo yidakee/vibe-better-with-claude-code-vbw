@@ -13,6 +13,20 @@ PLANNING_DIR=".vbw-planning"
 . "$(dirname "$0")/resolve-claude-dir.sh"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# If this is a compact-triggered SessionStart, skip — post-compact.sh handles it.
+# The compaction marker is set by compaction-instructions.sh (PreCompact) and cleared
+# by post-compact.sh. Only skip if the marker is fresh (< 60s) to avoid stale markers
+# from crashed compactions blocking normal session starts.
+if [ -f "$PLANNING_DIR/.compaction-marker" ]; then
+  _cm_ts=$(cat "$PLANNING_DIR/.compaction-marker" 2>/dev/null || echo 0)
+  _cm_now=$(date +%s 2>/dev/null || echo 0)
+  if [ $((_cm_now - _cm_ts)) -lt 60 ]; then
+    exit 0
+  fi
+  # Stale marker from crashed compaction — clean up and continue
+  rm -f "$PLANNING_DIR/.compaction-marker" 2>/dev/null
+fi
+
 # Auto-migrate config if .vbw-planning exists
 # Version marker: skip flag migration when config already has all flags from this version.
 # The marker is the count of expected flags — if it matches, no jq pass needed.
@@ -145,8 +159,7 @@ if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
   fi
 fi
 
-# Clean compaction marker at session start (fresh-session guarantee, REQ-15)
-rm -f "$PLANNING_DIR/.compaction-marker" 2>/dev/null
+# Compaction marker cleanup moved to the early-exit check above and to post-compact.sh
 
 UPDATE_MSG=""
 
