@@ -34,6 +34,7 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 | NL parsing via prompt instructions, not code | 2026-02-11 | Zero maintenance; model improvements are free |
 | Confirmation gates mandatory (except --yolo) | 2026-02-11 | NL misinterpretation risk → always confirm before acting |
 | Per-project memory only | 2026-02-10 | Get basics right first, cross-project learning deferred |
+| Domain research before discovery questions | 2026-02-13 | Informed scenarios catch unknown unknowns; graceful fallback preserves speed |
 
 ## Installed Skills
 
