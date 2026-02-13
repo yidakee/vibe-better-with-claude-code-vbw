@@ -136,14 +136,25 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
           - **Round 1 (Scenarios):** Generate scenario questions per protocol. Present as AskUserQuestion with descriptive options. **Scenario generation:** If RESEARCH_AVAILABLE=true, read `.vbw-planning/domain-research.md` and integrate findings: (a) Table Stakes → checklist questions in Round 2, (b) Common Pitfalls → scenario situations (e.g., 'What happens when [pitfall situation]?'), (c) Architecture Patterns → technical preference scenarios (e.g., 'Should the system use [pattern A] or [pattern B]?'), (d) Competitor Landscape → differentiation scenarios (e.g., '{Competitor X} does {feature}. Should yours work the same way or differently?'). If RESEARCH_AVAILABLE=false, use description analysis only per existing protocol.
           - **Round 2+ (Checklists - Thread-Following):** Generate checklist questions that BUILD ON previous round answers. Read discovery.json.answered[] for prior rounds. Identify gaps or follow-ups using these patterns: (1) If Round N-1 answer was vague: ask concrete follow-up, (2) If Round N-1 revealed complexity: ask edge case questions, (3) If Round N-1 mentioned integration: ask about auth, error handling, data flow, (4) If Round N-1 suggested scale: ask about performance, caching, limits. Check discovery.json.answered[] to avoid duplicate questions (skip categories already covered). Format: Generate targeted pick-many questions with `multiSelect: true`.
        b. Present questions via AskUserQuestion
-       c. Record answers to discovery.json with round number (append to answered[] with fields: question, answer, category, phase='bootstrap', round=ROUND, date)
-       d. Increment ROUND, update QUESTIONS_ASKED count
-       e. **Keep-exploring gate:**
+       c. **Vague answer handling:** After user responds, check for vague language patterns:
+          - Quality adjectives without specifics: "easy", "fast", "simple", "secure", "reliable", "powerful", "flexible"
+          - Scope without boundaries: "everything", "lots of features", "comprehensive", "full-featured"
+          - Time without metrics: "quick", "slow", "immediate", "later"
+          - Scale without numbers: "big", "small", "many", "few"
+          If vague pattern detected:
+          1. Generate 3-4 concrete interpretations as AskUserQuestion options
+          2. Add "Let me explain..." option as escape hatch
+          3. Present interpretations to user
+          4. Record disambiguated answer to discovery.json with original vague text in metadata
+          If no vague pattern: proceed to record answer as-is.
+       d. Record answers to discovery.json with round number (append to answered[] with fields: question, answer, category, phase='bootstrap', round=ROUND, date)
+       e. Increment ROUND, update QUESTIONS_ASKED count
+       f. **Keep-exploring gate:**
           - If ROUND <= 3: AskUserQuestion "We've covered [topic]. What would you like to do?" with options ["Keep exploring — I have more to share", "Move on — I'm ready for the next step"]
           - If ROUND > 3: AskUserQuestion "We've covered quite a bit about your project. What would you like to do?" with options ["Keep exploring — there's more I want to discuss", "Move on — I think we have enough", "Skip to requirements — I'm ready to build"]
           - If user chooses continue: loop to step 3a
           - If user chooses stop: proceed to synthesis (step 4)
-       f. **Profile depth as minimum:** quick=1-2 minimum rounds, standard=3-5 minimum, thorough=5-8 minimum. User can continue beyond minimum via keep-exploring gate.
+       g. **Profile depth as minimum:** quick=1-2 minimum rounds, standard=3-5 minimum, thorough=5-8 minimum. User can continue beyond minimum via keep-exploring gate.
     4. Synthesize answers into `.vbw-planning/discovery.json` with `answered[]` and `inferred[]` (questions=friendly, requirements=precise)
   - **Wording rules (all depths):** No jargon. Plain language. Concrete situations. Cause and effect. Assume user is not a developer.
   - **After discovery (all depths):** Call:
