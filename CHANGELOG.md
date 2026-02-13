@@ -2,6 +2,38 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **`control-plane`** -- lightweight Control Plane dispatcher (`scripts/control-plane.sh`, 328 lines) that sequences all enforcement scripts into a unified flow. Four actions: pre-task (contract → lease → gate), post-task (gate → release), compile (context compilation), full (all-in-one). Fail-open on script errors, JSON result output, lease conflict retry with 2s wait. 15 unit tests + 3 integration tests.
+- **`rollout-stage`** -- 3-stage progressive flag rollout automation (`scripts/rollout-stage.sh`). Stages: observability (threshold 0), optimization (threshold 2), full (threshold 5). Actions: check prerequisites, advance flags atomically, status report with all 14 v3_ flags. Stage definitions in `config/rollout-stages.json`. Supports `--dry-run`. 10 tests.
+- **`token-baseline`** -- per-phase token usage measurement and comparison (`scripts/token-baseline.sh`). Actions: measure (aggregate from event log), compare (delta with direction indicators), report (markdown with budget utilization by role). Baselines saved to `.baselines/token-baseline.json`. 10 tests.
+- **`token-intelligence`** -- per-task token budgets computed from contract metadata. Complexity scoring (must_haves weight 1, files weight 2, dependencies weight 3) maps to 4 tier multipliers. Fallback chain: per-task → per-role → config defaults. Token cap escalation emits `token_cap_escalated` event and reduces remaining budget for subsequent tasks. 12 tests.
+- **`context-index`** -- `context-index.json` manifest generated in `.cache/` with key-to-path mapping per role/phase. Atomic writes via mktemp+mv. Updated on every cache miss, timestamps refreshed on cache hits. 6 tests.
+- **`execute-protocol`** -- Control Plane orchestration block in Step 3, context compilation and token budget guards in Steps 3-4, cleanup in Step 5. Individual scripts (generate-contract.sh, hard-gate.sh, compile-context.sh, lock-lite.sh) preserved as independent fallbacks.
+
+### Changed
+
+- **`compile-context`** -- ROADMAP metadata parser fixed (`### Phase` → `## Phase` to match actual format). Scout, Debugger, and Architect roles extended with conventions, research, and delta files. Code slices added to Debugger and Dev contexts.
+- **`token-budget`** -- extended argument parsing for contract path and task number. Per-task budget computation with complexity scoring. Escalation config added to `config/token-budgets.json`.
+- **`detect-stack`** -- expanded coverage for Python, Rust, Go, Elixir, Java, .NET, Rails, Laravel, Spring. 4 new manifest file detections.
+- **`control-plane`** -- `context_compiler` default harmonized from `false` to `true` to match phase-detect.sh and defaults.json.
+- **`config`** -- all 20 V2/V3 feature flags enabled by default in project config. 15 flags added (lock_lite, validation_gates, smart_routing, event_log, schema_validation, snapshot_resume, lease_locks, event_recovery, monorepo_routing, hard_contracts, hard_gates, typed_protocol, role_isolation, two_phase_completion, token_budgets).
+
+### Fixed
+
+- **`validate-commit`** -- heredoc commit messages no longer overwritten by `-m` flag extraction. macOS sed compatibility fix.
+- **`session-start`** -- zsh glob compatibility across session-start, snapshot-resume, lock-lite, and file-guard scripts.
+- **`security-filter`** -- stale marker detection (24h threshold) prevents false positive blocks on old markers.
+- **`CLAUDE.md`** -- Active Context updated to reflect shipped Full Spec Compliance milestone.
+
+### Tests
+
+- **86 new tests** across 5 new test files: phase0-bugfix-scripts.bats (10), phase0-bugfix-verify.bats (16), token-budgets.bats (12), context-index.bats (6), control-plane.bats (18), rollout-stage.bats (10), token-baseline.bats (10). Plus 4 context metadata tests. Test suite: 237 → 323 (zero regressions).
+
+---
+
 ## [1.10.18] - 2026-02-12
 
 ### Added
