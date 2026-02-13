@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # Checks each commands/*.md file for:
 # - YAML frontmatter
-# - name matches file basename
+# - name matches `vbw:<file-basename>`
 # - single-line non-empty description
 # - allowed-tools field present
 # - `${CLAUDE_PLUGIN_ROOT}/...` references resolve to real files/dirs
@@ -56,12 +56,14 @@ for file in "$COMMANDS_DIR"/*.md; do
   fi
 
   NAME_VALUE="$(printf '%s\n' "$FRONTMATTER" | sed -n 's/^name:[[:space:]]*//p' | head -1)"
+  EXPECTED_NAME="vbw:${base}"
+
   if [ -z "$NAME_VALUE" ]; then
     fail "$base: missing name field"
-  elif [ "$NAME_VALUE" != "$base" ]; then
-    fail "$base: name mismatch (expected '$base', got '$NAME_VALUE')"
+  elif [ "$NAME_VALUE" != "$EXPECTED_NAME" ]; then
+    fail "$base: name mismatch (expected '$EXPECTED_NAME', got '$NAME_VALUE')"
   else
-    pass "$base: name matches file"
+    pass "$base: name matches expected vbw prefix"
   fi
 
   if ! printf '%s\n' "$FRONTMATTER" | grep -q '^allowed-tools:'; then
