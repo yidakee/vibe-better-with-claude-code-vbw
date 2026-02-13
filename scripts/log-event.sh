@@ -49,7 +49,7 @@ if [ -f "$CONFIG_PATH" ] && command -v jq &>/dev/null; then
       phase_planned|task_created|task_claimed|task_started|artifact_written|gate_passed|gate_failed|task_completed_candidate|task_completed_confirmed|task_blocked|task_reassigned)
         ;;
       # Additional metric/internal types
-      token_overage|file_conflict|smart_route|contract_revision|cache_hit|task_completion_rejected|snapshot_restored|state_recovered)
+      token_overage|token_cap_escalated|file_conflict|smart_route|contract_revision|cache_hit|task_completion_rejected|snapshot_restored|state_recovered)
         ;;
       *)
         echo "[log-event] WARNING: unknown event type '${EVENT_TYPE}' rejected by v2_typed_protocol" >&2
