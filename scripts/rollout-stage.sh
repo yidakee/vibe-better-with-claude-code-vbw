@@ -121,3 +121,72 @@ if [ "$ACTION" = "check" ]; then
     || echo "{\"current_stage\":${CURRENT_STAGE},\"completed_phases\":${COMPLETED_PHASES}}"
   exit 0
 fi
+
+# --- Action: advance ---
+if [ "$ACTION" = "advance" ]; then
+  TARGET_STAGE=$CURRENT_STAGE
+  if [ -n "$FORCE_STAGE" ]; then
+    TARGET_STAGE=$FORCE_STAGE
+  fi
+
+  if [ "$TARGET_STAGE" -eq 0 ]; then
+    TARGET_STAGE=1
+  fi
+
+  # Collect flags for target stage and all prior stages
+  ALL_FLAGS="[]"
+  for i in $(seq 0 $((STAGE_COUNT - 1))); do
+    STAGE_NUM=$(jq -r ".stages[$i].stage" "$STAGES_PATH" 2>/dev/null || echo "0")
+    if [ "$STAGE_NUM" -le "$TARGET_STAGE" ]; then
+      STAGE_FLAGS=$(jq ".stages[$i].flags" "$STAGES_PATH" 2>/dev/null || echo "[]")
+      ALL_FLAGS=$(echo "$ALL_FLAGS" | jq --argjson sf "$STAGE_FLAGS" '. + $sf' 2>/dev/null || echo "$ALL_FLAGS")
+    fi
+  done
+
+  # Check current config and build change list
+  FLAGS_TO_ENABLE="[]"
+  FLAGS_ALREADY="[]"
+  FLAG_COUNT=$(echo "$ALL_FLAGS" | jq 'length' 2>/dev/null || echo "0")
+
+  for i in $(seq 0 $((FLAG_COUNT - 1))); do
+    FLAG=$(echo "$ALL_FLAGS" | jq -r ".[$i]" 2>/dev/null || echo "")
+    [ -z "$FLAG" ] && continue
+    CURRENT_VAL=$(jq -r ".${FLAG} // false" "$CONFIG_PATH" 2>/dev/null || echo "false")
+    if [ "$CURRENT_VAL" = "true" ]; then
+      FLAGS_ALREADY=$(echo "$FLAGS_ALREADY" | jq --arg f "$FLAG" '. + [$f]' 2>/dev/null || echo "$FLAGS_ALREADY")
+    else
+      FLAGS_TO_ENABLE=$(echo "$FLAGS_TO_ENABLE" | jq --arg f "$FLAG" '. + [$f]' 2>/dev/null || echo "$FLAGS_TO_ENABLE")
+    fi
+  done
+
+  # Dry-run mode
+  if [ "$DRY_RUN" = "true" ]; then
+    jq -n \
+      --arg action "advance" \
+      --argjson stage "$TARGET_STAGE" \
+      --argjson flags_enabled "$FLAGS_TO_ENABLE" \
+      --argjson flags_already "$FLAGS_ALREADY" \
+      --argjson dry_run true \
+      '{action: $action, stage: $stage, flags_enabled: $flags_enabled, flags_already_enabled: $flags_already, dry_run: $dry_run}' 2>/dev/null \
+      || echo '{"action":"advance","dry_run":true}'
+    exit 0
+  fi
+
+  # Apply changes
+  ENABLE_COUNT=$(echo "$FLAGS_TO_ENABLE" | jq 'length' 2>/dev/null || echo "0")
+  if [ "$ENABLE_COUNT" -gt 0 ]; then
+    jq --argjson flags "$FLAGS_TO_ENABLE" '
+      reduce $flags[] as $f (.; .[$f] = true)
+    ' "$CONFIG_PATH" > "${CONFIG_PATH}.tmp" && mv "${CONFIG_PATH}.tmp" "$CONFIG_PATH"
+  fi
+
+  jq -n \
+    --arg action "advance" \
+    --argjson stage "$TARGET_STAGE" \
+    --argjson flags_enabled "$FLAGS_TO_ENABLE" \
+    --argjson flags_already "$FLAGS_ALREADY" \
+    --argjson dry_run false \
+    '{action: $action, stage: $stage, flags_enabled: $flags_enabled, flags_already_enabled: $flags_already, dry_run: $dry_run}' 2>/dev/null \
+    || echo '{"action":"advance","dry_run":false}'
+  exit 0
+fi
