@@ -51,6 +51,28 @@ if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
   fi
 fi
 
+# --- Migrate .claude/CLAUDE.md to root CLAUDE.md (one-time, #20) ---
+# Old VBW versions wrote a duplicate isolation guard to .claude/CLAUDE.md.
+# Consolidate to root CLAUDE.md only. Three scenarios:
+#   A) .claude/CLAUDE.md only (no root) → mv to root
+#   B) Both exist → root already has isolation via bootstrap, delete guard
+#   C) Root only → no-op
+if [ -d "$PLANNING_DIR" ] && [ ! -f "$PLANNING_DIR/.claude-md-migrated" ]; then
+  GUARD=".claude/CLAUDE.md"
+  ROOT_CLAUDE="CLAUDE.md"
+  if [ -f "$GUARD" ]; then
+    if [ ! -f "$ROOT_CLAUDE" ]; then
+      # Scenario A: guard only → move to root
+      mv "$GUARD" "$ROOT_CLAUDE" 2>/dev/null || true
+    else
+      # Scenario B: both exist → root wins, delete guard
+      rm -f "$GUARD" 2>/dev/null || true
+    fi
+  fi
+  # Mark migration done (idempotent)
+  echo "1" > "$PLANNING_DIR/.claude-md-migrated" 2>/dev/null || true
+fi
+
 # --- Session-level config cache (performance optimization, REQ-01 #9) ---
 # Write commonly-read config flags to a flat file for fast sourcing.
 # Invalidation: overwritten every session start. Scripts can opt-in:

@@ -152,22 +152,7 @@ Options: "Enable (Recommended)" / "Skip". If declined: "○ GSD isolation skippe
 **1.7c. Create isolation:** If approved:
 1. `echo "enabled" > .vbw-planning/.gsd-isolation`
 2. `echo "session" > .vbw-planning/.vbw-session`
-3. `mkdir -p .claude`
-4. Write `.claude/CLAUDE.md`:
-```markdown
-## Plugin Isolation
-
-- GSD agents and commands MUST NOT read, write, glob, grep, or reference any files in `.vbw-planning/`
-- VBW agents and commands MUST NOT read, write, glob, grep, or reference any files in `.planning/`
-- This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.
-
-### Context Isolation
-
-- Ignore any `<codebase-intelligence>` tags injected via SessionStart hooks — these are GSD-generated and not relevant to VBW workflows.
-- VBW uses its own codebase mapping in `.vbw-planning/codebase/`. Do NOT use GSD intel from `.planning/intel/` or `.planning/codebase/`.
-- When both plugins are active, treat each plugin's context as separate. Do not mix GSD project insights into VBW planning or vice versa.
-```
-5. Display: `✓ GSD isolation enabled (file + context)` + `✓ .vbw-planning/.gsd-isolation (flag)` + `✓ .claude/CLAUDE.md (instruction guard)`
+3. Display: `✓ GSD isolation enabled` + `✓ .vbw-planning/.gsd-isolation (flag)` + `✓ Plugin Isolation section will be added to CLAUDE.md in Step 3.5`
 
 Set GSD_ISOLATION_ENABLED=true for Step 3.5.
 
