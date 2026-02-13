@@ -93,6 +93,16 @@ if [ -n "$AUTHOR_ROLE" ] && [ -n "$MSG_TYPE" ] && [ "$TYPE_EXISTS" = "true" ]; t
   fi
 fi
 
+# 4b. Receive-direction check (REQ-06)
+TARGET_ROLE=$(echo "$MSG" | jq -r '.target_role // ""' 2>/dev/null) || TARGET_ROLE=""
+if [ -n "$TARGET_ROLE" ] && [ -n "$MSG_TYPE" ]; then
+  CAN_RECEIVE=$(jq -r --arg r "$TARGET_ROLE" --arg t "$MSG_TYPE" \
+    '.role_hierarchy[$r].can_receive // [] | index($t) != null' "$SCHEMAS_PATH" 2>/dev/null || echo "false")
+  if [ "$CAN_RECEIVE" != "true" ]; then
+    add_error "target role ${TARGET_ROLE} cannot receive ${MSG_TYPE}"
+  fi
+fi
+
 # 5. File reference check against active contract
 if [ -n "$MSG_TYPE" ]; then
   # Extract file references from payload (separate extractions to avoid jq precedence issues)
