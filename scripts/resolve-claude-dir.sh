@@ -10,4 +10,4 @@
 # This is the single source of truth for config directory resolution.
 # New scripts MUST source this file instead of inlining the fallback pattern.
 
-CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+export CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"

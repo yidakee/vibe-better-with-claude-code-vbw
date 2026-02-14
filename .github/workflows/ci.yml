@@ -7,20 +7,24 @@ on:
     branches: [main]
 
 jobs:
-  shellcheck:
-    name: ShellCheck
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run ShellCheck
+
+      - name: ShellCheck
         uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: scripts
           additional_files: hooks
           severity: warning
 
+      - name: Shell syntax check
+        run: find scripts testing -type f -name "*.sh" -print0 | xargs -0 -n1 bash -n
+
   test:
-    name: Bats Tests
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,5 +37,17 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y -qq jq
 
-      - name: Run tests
+      - name: Run bats tests
         run: bats tests/
+
+      - name: Verify init/todo contracts
+        run: bash scripts/verify-init-todo.sh
+
+      - name: Verify CLAUDE bootstrap contracts
+        run: bash scripts/verify-claude-bootstrap.sh
+
+      - name: Verify bash script contracts
+        run: bash testing/verify-bash-scripts-contract.sh
+
+      - name: Verify command contracts
+        run: bash testing/verify-commands-contract.sh

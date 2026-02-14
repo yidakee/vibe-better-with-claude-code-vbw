@@ -19,8 +19,6 @@ NAME="$2"
 DESCRIPTION="$3"
 CORE_VALUE="${4:-$DESCRIPTION}"
 
-CREATED=$(date +%Y-%m-%d)
-
 # Ensure parent directory exists
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 

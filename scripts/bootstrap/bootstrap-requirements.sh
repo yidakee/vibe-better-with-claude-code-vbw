@@ -33,7 +33,6 @@ RESEARCH_AVAILABLE=false
 TABLE_STAKES=""
 PITFALLS=""
 PATTERNS=""
-COMPETITORS=""
 
 if [ -n "$RESEARCH_FILE" ] && [ -f "$RESEARCH_FILE" ]; then
   RESEARCH_AVAILABLE=true
@@ -42,7 +41,6 @@ if [ -n "$RESEARCH_FILE" ] && [ -f "$RESEARCH_FILE" ]; then
   TABLE_STAKES=$(awk '/## Table Stakes/,/^## / {if (!/^## / || /## Table Stakes/) print}' "$RESEARCH_FILE" | tail -n +2 | sed '$d')
   PITFALLS=$(awk '/## Common Pitfalls/,/^## / {if (!/^## / || /## Common Pitfalls/) print}' "$RESEARCH_FILE" | tail -n +2 | sed '$d')
   PATTERNS=$(awk '/## Architecture Patterns/,/^## / {if (!/^## / || /## Architecture Patterns/) print}' "$RESEARCH_FILE" | tail -n +2 | sed '$d')
-  COMPETITORS=$(awk '/## Competitor Landscape/,/^$/ {if (!/^## /) print}' "$RESEARCH_FILE" | tail -n +2)
 fi
 
 CREATED=$(date +%Y-%m-%d)
@@ -51,7 +49,6 @@ CREATED=$(date +%Y-%m-%d)
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 
 # Extract data from discovery.json
-ANSWERED_COUNT=$(jq '.answered | length' "$DISCOVERY_JSON")
 INFERRED_COUNT=$(jq '.inferred | length' "$DISCOVERY_JSON")
 
 # Start building the file

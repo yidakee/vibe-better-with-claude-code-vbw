@@ -19,7 +19,7 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 - **Never commit secrets.** Do not stage .env, .pem, .key, credentials, or token files.
 - **Plan before building.** Use /vbw:vibe for all lifecycle actions. Plans are the source of truth.
 - **Do not fabricate content.** Only use what the user explicitly states in project-defining flows.
-- **Do not bump version or push until asked.** Never run `scripts/bump-version.sh` or `git push` unless the user explicitly requests it. Commit locally and wait.
+- **Do not push until asked.** Never run `git push` unless the user explicitly requests it. Commit locally and wait.
 
 ## Key Decisions
 
