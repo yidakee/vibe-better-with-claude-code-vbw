@@ -11,26 +11,19 @@ teardown() {
   teardown_temp_dir
 }
 
-@test "research-persistence: validates Phase 1 RESEARCH.md sections" {
-  # Source repo tests should use tracked fixtures/templates, not local runtime
-  # planning state from a project checkout.
+@test "research-persistence: RESEARCH.md template has required sections" {
+  # Validates the tracked template has the 4 sections that compile-context
+  # and research-warn depend on at runtime.
   RESEARCH_FILE="$TEST_TEMP_DIR/01-RESEARCH.md"
   cp "$PROJECT_ROOT/templates/RESEARCH.md" "$RESEARCH_FILE"
 
-  # Verify file exists
   [ -f "$RESEARCH_FILE" ]
 
-  # Count the 4 required section headers
-  FINDINGS_COUNT=$(grep -c "^## Findings$" "$RESEARCH_FILE" || echo 0)
-  PATTERNS_COUNT=$(grep -c "^## Relevant Patterns$" "$RESEARCH_FILE" || echo 0)
-  RISKS_COUNT=$(grep -c "^## Risks$" "$RESEARCH_FILE" || echo 0)
-  RECOMMENDATIONS_COUNT=$(grep -c "^## Recommendations$" "$RESEARCH_FILE" || echo 0)
-
-  # All 4 sections must be present exactly once
-  [ "$FINDINGS_COUNT" -eq 1 ]
-  [ "$PATTERNS_COUNT" -eq 1 ]
-  [ "$RISKS_COUNT" -eq 1 ]
-  [ "$RECOMMENDATIONS_COUNT" -eq 1 ]
+  # All 4 required section headers must be present exactly once
+  [ "$(grep -c "^## Findings$" "$RESEARCH_FILE")" -eq 1 ]
+  [ "$(grep -c "^## Relevant Patterns$" "$RESEARCH_FILE")" -eq 1 ]
+  [ "$(grep -c "^## Risks$" "$RESEARCH_FILE")" -eq 1 ]
+  [ "$(grep -c "^## Recommendations$" "$RESEARCH_FILE")" -eq 1 ]
 }
 
 @test "research-warn: JSON schema validation - flag disabled" {
