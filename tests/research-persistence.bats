@@ -83,3 +83,53 @@ teardown() {
   echo "$output" | jq -e 'has("result")'
   echo "$output" | jq -e 'has("reason")'
 }
+
+@test "research-persistence: compile-context includes RESEARCH.md" {
+  # Setup: copy Phase 1 structure to temp with isolated planning dir
+  TEMP_PLANNING="$TEST_TEMP_DIR/isolated-planning"
+  TEMP_PHASES="$TEMP_PLANNING/phases"
+  mkdir -p "$TEMP_PHASES/01-test-phase"
+
+  # Create minimal config with caching disabled to avoid cache hits
+  mkdir -p "$TEMP_PLANNING"
+  echo '{"v3_context_cache": false}' > "$TEMP_PLANNING/config.json"
+
+  # Create minimal ROADMAP.md with Phase 01 definition
+  cat > "$TEMP_PLANNING/ROADMAP.md" <<'ROADMAP'
+# Roadmap
+
+## Phase 01: Test Phase
+**Goal**: Test phase goal
+**Success Criteria**: Test criteria
+**Requirements**: Not available
+ROADMAP
+
+  # Copy Phase 1 RESEARCH.md to temp phase dir
+  cp "$PROJECT_ROOT/.vbw-planning/phases/01-config-migration/01-RESEARCH.md" \
+     "$TEMP_PHASES/01-test-phase/01-RESEARCH.md"
+
+  # Temporarily override CLAUDE_DIR to use isolated planning dir
+  ORIG_CLAUDE_DIR="$CLAUDE_DIR"
+  export CLAUDE_DIR="$TEST_TEMP_DIR"
+
+  # Create isolated .vbw-planning symlink in temp dir
+  ln -s "$TEMP_PLANNING" "$TEST_TEMP_DIR/.vbw-planning"
+
+  # Run compile-context.sh for phase 01, role lead
+  cd "$TEST_TEMP_DIR"
+  bash "$PROJECT_ROOT/scripts/compile-context.sh" 01 lead "$TEMP_PHASES"
+
+  # Restore CLAUDE_DIR
+  export CLAUDE_DIR="$ORIG_CLAUDE_DIR"
+
+  # Verify output contains Research Findings section
+  CONTEXT_FILE="$TEMP_PHASES/01-test-phase/.context-lead.md"
+  [ -f "$CONTEXT_FILE" ]
+
+  # Check for section header
+  grep -q "^### Research Findings$" "$CONTEXT_FILE"
+
+  # Check that actual research content is included (>10 lines from RESEARCH.md)
+  RESEARCH_LINES=$(grep -c "^##" "$CONTEXT_FILE" || echo 0)
+  [ "$RESEARCH_LINES" -ge 4 ]
+}
