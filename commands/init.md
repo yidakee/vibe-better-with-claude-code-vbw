@@ -131,7 +131,7 @@ Read each template from `${CLAUDE_PLUGIN_ROOT}/templates/` and write to .vbw-pla
 | .vbw-planning/STATE.md | ${CLAUDE_PLUGIN_ROOT}/templates/STATE.md |
 | .vbw-planning/config.json | ${CLAUDE_PLUGIN_ROOT}/config/defaults.json |
 
-Create `.vbw-planning/phases/`. Ensure config.json includes `"agent_teams": true` and `"model_profile": "quality"`.
+Create `.vbw-planning/phases/`. Ensure config.json includes `"prefer_teams": "always"` and `"model_profile": "quality"`.
 
 ### Step 1.5: Install git hooks
 
