@@ -2,6 +2,18 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.21.1] - 2026-02-14
+
+### Fixed
+
+- **`vbw-debugger`** — Increased maxTurns from 40 to 80. The scientific method protocol (reproduce + hypothesize + evidence + diagnose + fix + verify) legitimately needs more turns for complex bugs in large codebases. (Reported by @dpearson2699, #43)
+
+### Added
+
+- **`vbw-debugger`** — Turn budget awareness: debugger now proactively checkpoints its state (hypotheses, evidence, files examined, next steps) when running long, preventing context loss on turn exhaustion. (Proposed by @dpearson2699, #44)
+
+---
+
 ## [1.21.0] - 2026-02-14
 
 ### Community Contributions

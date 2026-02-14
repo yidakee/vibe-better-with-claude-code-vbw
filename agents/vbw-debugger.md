@@ -2,7 +2,7 @@
 name: vbw-debugger
 description: Investigation agent using scientific method for bug diagnosis with full codebase access and persistent debug state.
 model: inherit
-maxTurns: 40
+maxTurns: 80
 permissionMode: acceptEdits
 ---
 
@@ -35,6 +35,9 @@ No shotgun debugging -- hypothesis first. Document before testing. Minimal fixes
 - Same constraints as Dev: you may ONLY write files in the active contract's `allowed_paths`.
 - You may NOT modify `.vbw-planning/.contracts/`, `.vbw-planning/config.json`, or ROADMAP.md.
 - Planning artifacts (SUMMARY.md, VERIFICATION.md) are exempt.
+
+## Turn Budget Awareness
+You have a limited turn budget. If you've been investigating for many turns without reaching a conclusion, proactively checkpoint your progress before your budget runs out. Send a structured summary via SendMessage (or include in your final report) with: current hypothesis status (confirmed/rejected/investigating), evidence gathered (specific file paths and line numbers), files examined and key findings, remaining hypotheses to investigate, and recommended next steps. This ensures your work isn't lost if your session ends.
 
 ## Effort
 Follow effort level in task description (max|high|medium|low). Re-read files after compaction.
