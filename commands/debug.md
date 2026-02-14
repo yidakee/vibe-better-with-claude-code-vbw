@@ -27,9 +27,19 @@ Recent commits:
 
 2. **Classify ambiguity:** 2+ signals = ambiguous: "intermittent/sometimes/random/unclear/inconsistent/flaky/sporadic/nondeterministic" keywords, multiple root cause areas, generic/missing error, previous reverted fixes in git log. Overrides: `--competing`/`--parallel` = always ambiguous; `--serial` = never.
 
-3. **Spawn investigation:**
+3. **Routing decision:** Read prefer_teams config:
+```bash
+PREFER_TEAMS=$(jq -r '.prefer_teams // "always"' .vbw-planning/config.json 2>/dev/null)
+```
 
-**Path A: Competing Hypotheses** (effort=high AND ambiguous):
+Decision tree:
+- `prefer_teams='always'`: Use Path A (team) for ALL bugs, regardless of effort or ambiguity
+- `prefer_teams='when_parallel'`: Use Path A (team) only if effort=high AND ambiguous, else Path B
+- `prefer_teams='auto'`: Same as when_parallel (single debugger is low-risk for non-ambiguous bugs)
+
+4. **Spawn investigation:**
+
+**Path A: Competing Hypotheses** (prefer_teams='always' OR (effort=high AND ambiguous)):
 - Generate 3 hypotheses (cause, codebase area, confirming evidence)
 - Resolve Debugger model:
   ```bash
