@@ -7,8 +7,8 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 ## Active Context
 
 **Work:** No active milestone
-**Last shipped:** Full Spec Compliance — 5 phases, 51 tasks, 46 commits, 188/188 QA
-**Previous:** Spec Completion — 3 phases, 12 tasks, 12 commits, 92/92 QA
+**Last shipped:** Team Preference Control — 1 phase, 9 tasks, 8 commits, 37/37 QA
+**Previous:** Discovery Intelligence — 4 phases, 59 tasks, 39 commits, 132/132 QA
 **Next action:** Run /vbw:vibe to start a new milestone
 
 ## VBW Rules
@@ -35,6 +35,7 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 | Confirmation gates mandatory (except --yolo) | 2026-02-11 | NL misinterpretation risk → always confirm before acting |
 | Per-project memory only | 2026-02-10 | Get basics right first, cross-project learning deferred |
 | Domain research before discovery questions | 2026-02-13 | Informed scenarios catch unknown unknowns; graceful fallback preserves speed |
+| prefer_teams replaces agent_teams, default 'always' | 2026-02-14 | Maximize color-coded agent visibility; token overhead acceptable |
 
 ## Installed Skills
 

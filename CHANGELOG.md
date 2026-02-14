@@ -2,6 +2,27 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.20.8] - 2026-02-14
+
+### Added
+
+- **`config`** -- New `prefer_teams` config option (`always`|`when_parallel`|`auto`) replaces boolean `agent_teams`. Default `always` creates Agent Teams for all operations, maximizing color-coded UI visibility
+- **`vibe.md`** -- Plan mode respects `prefer_teams` — creates team even for Lead-only when set to `always`
+- **`debug.md`** -- Debug mode respects `prefer_teams` — uses team path for all bugs when set to `always`
+
+### Fixed
+
+- **`init.md`** -- Config scaffold creates `prefer_teams` instead of deprecated `agent_teams`
+- **`session-start.sh`** -- Reads `prefer_teams` config instead of `agent_teams`
+- **`phase-detect.sh`** -- Reads `prefer_teams` config instead of `agent_teams`
+
+### Changed
+
+- **`config.md`** -- Settings reference table updated for `prefer_teams` enum
+- **`test_helper.bash`** -- Test fixtures updated for `prefer_teams` config
+
+---
+
 ## [1.20.7] - 2026-02-14
 
 ### Fixed
