@@ -30,11 +30,15 @@ fi
 # Auto-migrate config if .vbw-planning exists
 # Version marker: skip flag migration when config already has all flags from this version.
 # The marker is the count of expected flags — if it matches, no jq pass needed.
-EXPECTED_FLAG_COUNT=22
+EXPECTED_FLAG_COUNT=23
 if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
   if ! jq -e 'has("model_profile")' "$PLANNING_DIR/config.json" >/dev/null 2>&1; then
     TMP=$(mktemp)
     jq '. + {model_profile: "quality", model_overrides: {}}' "$PLANNING_DIR/config.json" > "$TMP" && mv "$TMP" "$PLANNING_DIR/config.json"
+  fi
+  if ! jq -e 'has("prefer_teams")' "$PLANNING_DIR/config.json" >/dev/null 2>&1; then
+    TMP=$(mktemp)
+    jq '. + {prefer_teams: "always"}' "$PLANNING_DIR/config.json" > "$TMP" && mv "$TMP" "$PLANNING_DIR/config.json"
   fi
   # Check if migration is needed: count how many of the expected flags already exist.
   # If all present, skip the jq pass entirely (H8: avoid re-evaluation every session).
@@ -46,7 +50,7 @@ if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
     has("v3_lease_locks"), has("v3_event_recovery"), has("v3_monorepo_routing"),
     has("v2_hard_contracts"), has("v2_hard_gates"), has("v2_typed_protocol"),
     has("v2_role_isolation"), has("v2_two_phase_completion"), has("v2_token_budgets"),
-    has("model_overrides")
+    has("model_overrides"), has("prefer_teams")
   ] | map(select(.)) | length' "$PLANNING_DIR/config.json" 2>/dev/null)
 
   if [ "${CURRENT_FLAG_COUNT:-0}" -lt "$EXPECTED_FLAG_COUNT" ]; then
@@ -79,6 +83,7 @@ if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
     ' "$PLANNING_DIR/config.json" > "$TMP" 2>/dev/null; then
       mv "$TMP" "$PLANNING_DIR/config.json"
     else
+      echo "WARNING: Config migration failed (jq error). Config may be missing flags." >&2
       rm -f "$TMP"
     fi
   fi

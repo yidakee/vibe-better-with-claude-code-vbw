@@ -7,8 +7,8 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 ## Active Context
 
 **Work:** No active milestone
-**Last shipped:** Team Preference Control — 1 phase, 9 tasks, 8 commits, 37/37 QA
-**Previous:** Discovery Intelligence — 4 phases, 59 tasks, 39 commits, 132/132 QA
+**Last shipped:** Config Migration & Research Verification — 2 phases, 10 tasks, 10 commits, 0 deviations
+**Previous:** Team Preference Control — 1 phase, 9 tasks, 8 commits, 37/37 QA
 **Next action:** Run /vbw:vibe to start a new milestone
 
 ## VBW Rules

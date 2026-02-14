@@ -2,6 +2,26 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.21.3] - 2026-02-14
+
+### Fixed
+
+- **`session-start.sh`** — Config migration now backfills `prefer_teams` for users who initialized before v1.20.8, defaulting to `"always"`. Previously these users had the old boolean `agent_teams` but no `prefer_teams` enum, causing silent config drift.
+- **`session-start.sh`** — jq migration failures now log a warning to stderr instead of failing silently. Users see a clear message when config migration encounters malformed JSON.
+
+### Testing
+
+- **16 new tests** across 2 new test files:
+  - `tests/config-migration.bats` (9 tests) — empty config, partial config, full config no-op, idempotent migration, malformed JSON handling, EXPECTED_FLAG_COUNT sync validation, prefer_teams migration, prefer_teams preservation, count=23 validation
+  - `tests/research-persistence.bats` (7 tests) — Phase 1 RESEARCH.md section format, research-warn.sh JSON schema (4 cases), compile-context RESEARCH.md inclusion, flag-disabled path verification
+- Test suite: 383 → 397 total tests (zero regressions)
+
+### Documentation
+
+- **`research-persistence`** — Documented Scout write path, test coverage, and known hook isolation limitation for RESEARCH.md creation
+
+---
+
 ## [1.21.2] - 2026-02-14
 
 ### Fixed
