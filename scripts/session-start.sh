@@ -354,14 +354,14 @@ config_effort="balanced"
 config_autonomy="standard"
 config_auto_commit="true"
 config_verification="standard"
-config_agent_teams="true"
+config_prefer_teams="always"
 config_max_tasks="5"
 if [ -f "$CONFIG_FILE" ]; then
   config_effort=$(jq -r '.effort // "balanced"' "$CONFIG_FILE" 2>/dev/null)
   config_autonomy=$(jq -r '.autonomy // "standard"' "$CONFIG_FILE" 2>/dev/null)
   config_auto_commit=$(jq -r 'if .auto_commit == null then true else .auto_commit end' "$CONFIG_FILE" 2>/dev/null)
   config_verification=$(jq -r '.verification_tier // "standard"' "$CONFIG_FILE" 2>/dev/null)
-  config_agent_teams=$(jq -r 'if .agent_teams == null then true else .agent_teams end' "$CONFIG_FILE" 2>/dev/null)
+  config_prefer_teams=$(jq -r '.prefer_teams // "always"' "$CONFIG_FILE" 2>/dev/null)
   config_max_tasks=$(jq -r '.max_tasks_per_plan // 5' "$CONFIG_FILE" 2>/dev/null)
 fi
 
@@ -455,7 +455,7 @@ CTX="VBW project detected."
 CTX="$CTX Milestone: ${MILESTONE_SLUG}."
 CTX="$CTX Phase: ${phase_pos}/${phase_total} (${phase_name}) -- ${phase_status}."
 CTX="$CTX Progress: ${progress_pct}%."
-CTX="$CTX Config: effort=${config_effort}, autonomy=${config_autonomy}, auto_commit=${config_auto_commit}, verification=${config_verification}, agent_teams=${config_agent_teams}, max_tasks=${config_max_tasks}."
+CTX="$CTX Config: effort=${config_effort}, autonomy=${config_autonomy}, auto_commit=${config_auto_commit}, verification=${config_verification}, prefer_teams=${config_prefer_teams}, max_tasks=${config_max_tasks}."
 CTX="$CTX Next: ${NEXT_ACTION}."
 
 jq -n --arg ctx "$CTX" --arg update "$UPDATE_MSG" --arg welcome "$WELCOME_MSG" --arg flags "${FLAG_WARNINGS:-}" '{
