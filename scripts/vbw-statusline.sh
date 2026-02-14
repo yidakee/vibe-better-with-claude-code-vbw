@@ -442,12 +442,14 @@ elif [ -d ".vbw-planning" ]; then
 else
   L1="${C}${B}[VBW]${X} ${D}no project${X}"
 fi
-if [ -n "$BR" ]; then
+if [ -n "$BR" ] || [ -n "$GH_LINK" ] || [ -n "$REPO_LABEL" ]; then
   if [ -n "$GH_LINK" ]; then
     L1="$L1 ${D}│${X} ${GH_LINK}"
-  elif [ -n "$REPO_LABEL" ]; then
+  elif [ -n "$REPO_LABEL" ] && [ -n "$BR" ]; then
     L1="$L1 ${D}│${X} ${REPO_LABEL}:${BR}"
-  else
+  elif [ -n "$REPO_LABEL" ]; then
+    L1="$L1 ${D}│${X} ${REPO_LABEL}"
+  elif [ -n "$BR" ]; then
     L1="$L1 ${D}│${X} $BR"
   fi
   GIT_IND=""
