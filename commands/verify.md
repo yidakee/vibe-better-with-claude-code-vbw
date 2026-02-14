@@ -1,5 +1,5 @@
 ---
-name: verify
+name: vbw:verify
 description: Run human acceptance testing on completed phase work. Presents CHECKPOINT prompts one at a time.
 argument-hint: "[phase-number] [--resume]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
