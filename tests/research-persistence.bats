@@ -12,7 +12,28 @@ teardown() {
 }
 
 @test "research-persistence: validates Phase 1 RESEARCH.md sections" {
-  RESEARCH_FILE="$PROJECT_ROOT/.vbw-planning/phases/01-config-migration/01-RESEARCH.md"
+  # Create a RESEARCH.md from the template (the real file lives in .vbw-planning/
+  # which is gitignored, so we generate the fixture inline)
+  RESEARCH_FILE="$TEST_TEMP_DIR/01-RESEARCH.md"
+  cat > "$RESEARCH_FILE" <<'EOF'
+# Phase 01: Config Migration — Research
+
+## Findings
+
+Key discoveries from Scout research relevant to this phase
+
+## Relevant Patterns
+
+Existing codebase patterns that apply to this phase's work
+
+## Risks
+
+Technical risks, unknowns, or potential blockers identified
+
+## Recommendations
+
+Suggested approaches based on research findings
+EOF
 
   # Verify file exists
   [ -f "$RESEARCH_FILE" ]
@@ -104,9 +125,27 @@ teardown() {
 **Requirements**: Not available
 ROADMAP
 
-  # Copy Phase 1 RESEARCH.md to temp phase dir
-  cp "$PROJECT_ROOT/.vbw-planning/phases/01-config-migration/01-RESEARCH.md" \
-     "$TEMP_PHASES/01-test-phase/01-RESEARCH.md"
+  # Create RESEARCH.md fixture inline (the real file lives in .vbw-planning/
+  # which is gitignored, so we generate it from the template structure)
+  cat > "$TEMP_PHASES/01-test-phase/01-RESEARCH.md" <<'RESEARCH'
+# Phase 01: Test Phase — Research
+
+## Findings
+
+Key discoveries from Scout research relevant to this phase
+
+## Relevant Patterns
+
+Existing codebase patterns that apply to this phase's work
+
+## Risks
+
+Technical risks, unknowns, or potential blockers identified
+
+## Recommendations
+
+Suggested approaches based on research findings
+RESEARCH
 
   # Temporarily override CLAUDE_DIR to use isolated planning dir
   ORIG_CLAUDE_DIR="$CLAUDE_DIR"
