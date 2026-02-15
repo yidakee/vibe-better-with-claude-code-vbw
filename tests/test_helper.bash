@@ -25,6 +25,8 @@ create_test_config() {
   "effort": "balanced",
   "autonomy": "standard",
   "auto_commit": true,
+  "planning_tracking": "manual",
+  "auto_push": "never",
   "verification_tier": "standard",
   "skill_suggestions": true,
   "auto_install_skills": false,

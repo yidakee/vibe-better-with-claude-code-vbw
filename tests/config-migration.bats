@@ -189,6 +189,44 @@ EOF
   [ "$output" = "always" ]
 }
 
+@test "migration adds planning_tracking and auto_push defaults" {
+  cat > "$TEST_TEMP_DIR/.vbw-planning/config.json" <<'EOF'
+{
+  "effort": "balanced"
+}
+EOF
+
+  run_migration
+
+  run jq -r '.planning_tracking' "$TEST_TEMP_DIR/.vbw-planning/config.json"
+  [ "$status" -eq 0 ]
+  [ "$output" = "manual" ]
+
+  run jq -r '.auto_push' "$TEST_TEMP_DIR/.vbw-planning/config.json"
+  [ "$status" -eq 0 ]
+  [ "$output" = "never" ]
+}
+
+@test "migration preserves existing planning_tracking and auto_push values" {
+  cat > "$TEST_TEMP_DIR/.vbw-planning/config.json" <<'EOF'
+{
+  "effort": "balanced",
+  "planning_tracking": "commit",
+  "auto_push": "after_phase"
+}
+EOF
+
+  run_migration
+
+  run jq -r '.planning_tracking' "$TEST_TEMP_DIR/.vbw-planning/config.json"
+  [ "$status" -eq 0 ]
+  [ "$output" = "commit" ]
+
+  run jq -r '.auto_push' "$TEST_TEMP_DIR/.vbw-planning/config.json"
+  [ "$status" -eq 0 ]
+  [ "$output" = "after_phase" ]
+}
+
 @test "migration preserves existing prefer_teams value" {
   # Create config with prefer_teams set to "never"
   cat > "$TEST_TEMP_DIR/.vbw-planning/config.json" <<'EOF'

@@ -407,8 +407,23 @@ Note: "Run inline" means the execute-protocol agent runs the verify protocol dir
 **Update STATE.md:** phase position, plan completion counts, effort used.
 **Update ROADMAP.md:** mark completed plans.
 
-Display per @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
+**Planning artifact boundary commit (conditional):**
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/planning-git.sh commit-boundary "complete phase {N}" .vbw-planning/config.json
 ```
+- `planning_tracking=commit`: commits `.vbw-planning/` + `CLAUDE.md` when changed
+- `planning_tracking=manual|ignore`: no-op
+- `auto_push=always`: push happens inside the boundary commit command when upstream exists
+
+**After-phase push (conditional):**
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/planning-git.sh push-after-phase .vbw-planning/config.json
+```
+- `auto_push=after_phase`: pushes once after phase completion (if upstream exists)
+- other modes: no-op
+
+Display per @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
+```text
 ╔═══════════════════════════════════════════════╗
 ║  Phase {N}: {name} -- Built                   ║
 ╚═══════════════════════════════════════════════╝

@@ -134,6 +134,30 @@ Read each template from `${CLAUDE_PLUGIN_ROOT}/templates/` and write to .vbw-pla
 
 Create `.vbw-planning/phases/`. Ensure config.json includes `"prefer_teams": "always"` and `"model_profile": "quality"`.
 
+AskUserQuestion (single select):
+- "How should VBW planning artifacts be tracked in git?"
+  - `manual` (default): don't auto-ignore or auto-commit planning files
+  - `ignore`: keep `.vbw-planning/` ignored in root `.gitignore`
+  - `commit`: track `.vbw-planning/` + `CLAUDE.md` at lifecycle boundaries
+
+AskUserQuestion (single select):
+- "When should VBW push commits?"
+  - `never` (default)
+  - `after_phase` (push once after a phase completes)
+  - `always` (push after each commit when upstream exists)
+
+Write selected values to `.vbw-planning/config.json`:
+
+```bash
+jq '.planning_tracking = "'"$PLANNING_TRACKING"'" | .auto_push = "'"$AUTO_PUSH"'"' .vbw-planning/config.json > .vbw-planning/config.json.tmp && mv .vbw-planning/config.json.tmp .vbw-planning/config.json
+```
+
+Then align git ignore behavior with config:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/planning-git.sh sync-ignore .vbw-planning/config.json
+```
+
 ### Step 1.5: Install git hooks
 
 1. `git rev-parse --git-dir` — if not a git repo, display "○ Git hooks skipped (not a git repository)" and skip
@@ -434,6 +458,16 @@ If SKIP_INFERENCE=false (confirmed/corrected inference data):
 - Remove `.vbw-planning/discovery.json`, `.vbw-planning/phases.json`, `.vbw-planning/inference.json`, `.vbw-planning/gsd-inference.json` (if they exist)
 - These are intermediate build artifacts, not project state
 
+**7h. Planning commit boundary (conditional):**
+- Run:
+  ```bash
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/planning-git.sh commit-boundary "bootstrap project files" .vbw-planning/config.json
+  ```
+- Behavior:
+  - `planning_tracking=commit`: stages `.vbw-planning/` + `CLAUDE.md` and commits if there are changes
+  - `planning_tracking=manual|ignore`: no-op
+  - If `auto_push=always`, pushes when branch has an upstream
+
 ### Step 8: Completion summary
 
 <!-- Final summary replaces old Step 4 auto-launch of /vbw:vibe -->
@@ -454,6 +488,7 @@ Display a Phase Banner (double-line box per @${CLAUDE_PLUGIN_ROOT}/references/vb
 - `✓ .vbw-planning/STATE.md`
 - `✓ CLAUDE.md`
 - `✓ .vbw-planning/config.json`
+- If planning_tracking=commit and changes existed: `✓ Bootstrap planning artifacts committed`
 - If GSD_IMPORTED=true: `✓ GSD project archived`
 - If BROWNFIELD=true: `✓ Codebase mapped`
 

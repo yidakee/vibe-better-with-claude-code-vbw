@@ -67,6 +67,8 @@ if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ] && command -v jq
   jq -r '
     "VBW_EFFORT=\(.effort // "balanced")",
     "VBW_AUTONOMY=\(.autonomy // "standard")",
+    "VBW_PLANNING_TRACKING=\(.planning_tracking // "manual")",
+    "VBW_AUTO_PUSH=\(.auto_push // "never")",
     "VBW_CONTEXT_COMPILER=\(if .context_compiler == null then true else .context_compiler end)",
     "VBW_V3_DELTA_CONTEXT=\(.v3_delta_context // false)",
     "VBW_V3_CONTEXT_CACHE=\(.v3_context_cache // false)",
@@ -318,6 +320,8 @@ CONFIG_FILE="$PLANNING_DIR/config.json"
 config_effort="balanced"
 config_autonomy="standard"
 config_auto_commit="true"
+config_planning_tracking="manual"
+config_auto_push="never"
 config_verification="standard"
 config_prefer_teams="always"
 config_max_tasks="5"
@@ -325,6 +329,8 @@ if [ -f "$CONFIG_FILE" ]; then
   config_effort=$(jq -r '.effort // "balanced"' "$CONFIG_FILE" 2>/dev/null)
   config_autonomy=$(jq -r '.autonomy // "standard"' "$CONFIG_FILE" 2>/dev/null)
   config_auto_commit=$(jq -r 'if .auto_commit == null then true else .auto_commit end' "$CONFIG_FILE" 2>/dev/null)
+  config_planning_tracking=$(jq -r '.planning_tracking // "manual"' "$CONFIG_FILE" 2>/dev/null)
+  config_auto_push=$(jq -r '.auto_push // "never"' "$CONFIG_FILE" 2>/dev/null)
   config_verification=$(jq -r '.verification_tier // "standard"' "$CONFIG_FILE" 2>/dev/null)
   config_prefer_teams=$(jq -r '.prefer_teams // "always"' "$CONFIG_FILE" 2>/dev/null)
   config_max_tasks=$(jq -r '.max_tasks_per_plan // 5' "$CONFIG_FILE" 2>/dev/null)
@@ -420,7 +426,7 @@ CTX="VBW project detected."
 CTX="$CTX Milestone: ${MILESTONE_SLUG}."
 CTX="$CTX Phase: ${phase_pos}/${phase_total} (${phase_name}) -- ${phase_status}."
 CTX="$CTX Progress: ${progress_pct}%."
-CTX="$CTX Config: effort=${config_effort}, autonomy=${config_autonomy}, auto_commit=${config_auto_commit}, verification=${config_verification}, prefer_teams=${config_prefer_teams}, max_tasks=${config_max_tasks}."
+CTX="$CTX Config: effort=${config_effort}, autonomy=${config_autonomy}, auto_commit=${config_auto_commit}, planning_tracking=${config_planning_tracking}, auto_push=${config_auto_push}, verification=${config_verification}, prefer_teams=${config_prefer_teams}, max_tasks=${config_max_tasks}."
 CTX="$CTX Next: ${NEXT_ACTION}."
 
 jq -n --arg ctx "$CTX" --arg update "$UPDATE_MSG" --arg welcome "$WELCOME_MSG" --arg flags "${FLAG_WARNINGS:-}" '{
