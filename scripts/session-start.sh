@@ -32,7 +32,7 @@ fi
 EXPECTED_FLAG_COUNT=23
 if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
   if ! bash "$SCRIPT_DIR/migrate-config.sh" "$PLANNING_DIR/config.json" >/dev/null 2>&1; then
-    echo "WARNING: Config migration failed (jq error). Config may be missing flags." >&2
+    echo "WARNING: Config migration failed (jq error). Config may be missing flags (expected=$EXPECTED_FLAG_COUNT)." >&2
   fi
 fi
 
