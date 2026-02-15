@@ -110,8 +110,8 @@ Display hint after flags: `Toggle with: /vbw:config <flag> true|false`
 **Step 2:** AskUserQuestion with up to 5 commonly changed settings (mark current values):
 - Effort: thorough | balanced | fast | turbo
 - Autonomy: cautious | standard | confident | pure-vibe
-- Verification: quick | standard | deep
-- Max tasks per plan: 3 | 5 | 7
+- Planning tracking: manual | ignore | commit
+- Auto push: never | after_phase | always
 - Model Profile
 
 **Step 2.5:** If "Model Profile" was selected, AskUserQuestion with 2 options:
@@ -251,6 +251,14 @@ Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh config` and display.
 
 Validate setting + value. Update config.json. Display ✓ with ➜.
 
+If `setting=planning_tracking`, after writing config run:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/planning-git.sh sync-ignore .vbw-planning/config.json
+```
+
+This keeps root `.gitignore` and `.vbw-planning/.gitignore` aligned with the selected tracking mode.
+
 ### Skill-hook wiring: `skill_hook <skill> <event> <matcher>`
 
 - `config skill_hook lint-fix PostToolUse Write|Edit`
@@ -353,11 +361,15 @@ echo "✓ Model override: $AGENT ➜ $MODEL"
 
 ## Settings Reference
 
+Note: `auto_commit` controls source-task commits during Execute mode. Planning artifact commit behavior is controlled by `planning_tracking`.
+
 | Setting | Type | Values | Default |
 |---------|------|--------|---------|
 | effort | string | thorough/balanced/fast/turbo | balanced |
 | autonomy | string | cautious/standard/confident/pure-vibe | standard |
 | auto_commit | boolean | true/false | true |
+| planning_tracking | string | manual/ignore/commit | manual |
+| auto_push | string | never/after_phase/always | never |
 | verification_tier | string | quick/standard/deep | standard |
 | skill_suggestions | boolean | true/false | true |
 | auto_install_skills | boolean | true/false | false |

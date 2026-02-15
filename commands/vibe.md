@@ -323,7 +323,12 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
   bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-claude.sh CLAUDE.md "$PROJECT_NAME" "$CORE_VALUE" [CLAUDE.md]
   ```
   Script handles: new file generation (heading + core value + VBW sections), existing file preservation (replaces only VBW-managed sections: Active Context, VBW Rules, Key Decisions, Installed Skills, Project Conventions, Commands, Plugin Isolation; preserves all other content). Omit the fourth argument if no existing CLAUDE.md. Max 200 lines.
-- **B7: Transition** -- Display "Bootstrap complete. Transitioning to scoping..." Re-evaluate state, route to next match.
+- **B7: Planning commit boundary (conditional)** -- Run:
+   ```bash
+   bash ${CLAUDE_PLUGIN_ROOT}/scripts/planning-git.sh commit-boundary "bootstrap project files" .vbw-planning/config.json
+   ```
+   Behavior: `planning_tracking=commit` commits `.vbw-planning/` + `CLAUDE.md` if changed. Other modes no-op.
+- **B8: Transition** -- Display "Bootstrap complete. Transitioning to scoping..." Re-evaluate state, route to next match.
 
 ### Mode: Scope
 
@@ -642,7 +647,12 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
    Effort: {effort}
    Model Profile: {profile}
    ```
-9. **Cautious gate (autonomy=cautious only):** STOP after planning. Ask "Plans ready. Execute Phase {N}?" Other levels: auto-chain.
+9. **Planning commit boundary (conditional):**
+   ```bash
+   bash ${CLAUDE_PLUGIN_ROOT}/scripts/planning-git.sh commit-boundary "plan phase {N}" .vbw-planning/config.json
+   ```
+   Behavior: `planning_tracking=commit` commits planning artifacts if changed. `auto_push=always` pushes when upstream exists.
+10. **Cautious gate (autonomy=cautious only):** STOP after planning. Ask "Plans ready. Execute Phase {N}?" Other levels: auto-chain.
 
 ### Mode: Execute
 
@@ -739,11 +749,16 @@ FAIL -> STOP with remediation suggestions. WARN -> proceed with warnings.
 2. Parse args: --tag=vN.N.N (custom tag), --no-tag (skip), --force (skip audit).
 3. Compute summary: from ROADMAP (phases), SUMMARY.md files (tasks/commits/deviations), REQUIREMENTS.md (satisfied count).
 4. Archive: `mkdir -p .vbw-planning/milestones/`. Move roadmap, state, phases to milestones/{SLUG}/. Write SHIPPED.md. Delete stale RESUME.md.
-5. Git branch merge: if `milestone/{SLUG}` branch exists, merge --no-ff. Conflict -> abort, warn. No branch -> skip.
-6. Git tag: unless --no-tag, `git tag -a {tag} -m "Shipped milestone: {name}"`. Default: `milestone/{SLUG}`.
-7. Update ACTIVE: remaining milestones -> set ACTIVE to first. None -> remove ACTIVE.
-8. Regenerate CLAUDE.md: update Active Context, remove shipped refs. Preserve non-VBW content — only replace VBW-managed sections, keep user's own sections intact.
-9. Present: Phase Banner with metrics (phases, tasks, commits, requirements, deviations), archive path, tag, branch status, memory status. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh vibe`.
+5. Planning commit boundary (conditional):
+   ```bash
+   bash ${CLAUDE_PLUGIN_ROOT}/scripts/planning-git.sh commit-boundary "archive milestone {SLUG}" .vbw-planning/config.json
+   ```
+   Run this BEFORE branch merge/tag so shipped planning state is committed.
+6. Git branch merge: if `milestone/{SLUG}` branch exists, merge --no-ff. Conflict -> abort, warn. No branch -> skip.
+7. Git tag: unless --no-tag, `git tag -a {tag} -m "Shipped milestone: {name}"`. Default: `milestone/{SLUG}`.
+8. Update ACTIVE: remaining milestones -> set ACTIVE to first. None -> remove ACTIVE.
+9. Regenerate CLAUDE.md: update Active Context, remove shipped refs. Preserve non-VBW content — only replace VBW-managed sections, keep user's own sections intact.
+10. Present: Phase Banner with metrics (phases, tasks, commits, requirements, deviations), archive path, tag, branch status, memory status. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh vibe`.
 
 ### Pure-Vibe Phase Loop
 

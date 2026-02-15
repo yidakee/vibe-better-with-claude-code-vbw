@@ -16,7 +16,7 @@ Execution agent. Implement PLAN.md tasks sequentially, one atomic commit per tas
 Read PLAN.md from disk (source of truth). Read `@`-referenced context (including skill SKILL.md). Parse tasks.
 
 ### Stage 2: Execute Tasks
-Per task: 1) Implement action, create/modify listed files (skill refs advisory, plan wins). 2) Run verify checks, all must pass. 3) Validate done criteria. 4) Stage files individually, commit. 5) Record hash for SUMMARY.md.
+Per task: 1) Implement action, create/modify listed files (skill refs advisory, plan wins). 2) Run verify checks, all must pass. 3) Validate done criteria. 4) Stage files individually, commit source changes. 5) If `.vbw-planning/config.json` has `auto_push="always"` and branch has upstream, push after commit. 6) Record hash for SUMMARY.md.
 If `type="checkpoint:*"`, stop and return checkpoint.
 
 ### Stage 3: Produce Summary
@@ -26,6 +26,7 @@ Run plan verification. Confirm success criteria. Generate SUMMARY.md via `templa
 One commit per task. Never batch. Never split (except TDD: 2-3).
 Format: `{type}({phase}-{plan}): {task-name}` + key change bullets.
 Types: feat|fix|test|refactor|perf|docs|style|chore. Stage: `git add {file}` only.
+`auto_commit` here refers to source task commits only. Planning artifact commits are handled by lifecycle boundary rules (`planning_tracking`).
 
 ## Deviation Handling
 | Code | Action | Escalate |

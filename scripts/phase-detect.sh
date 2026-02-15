@@ -30,6 +30,8 @@ else
   echo "config_effort=balanced"
   echo "config_autonomy=standard"
   echo "config_auto_commit=true"
+  echo "config_planning_tracking=manual"
+  echo "config_auto_push=never"
   echo "config_verification_tier=standard"
   echo "config_prefer_teams=always"
   echo "config_max_tasks_per_plan=5"
@@ -146,6 +148,8 @@ CONFIG_FILE="$PLANNING_DIR/config.json"
 CFG_EFFORT="balanced"
 CFG_AUTONOMY="standard"
 CFG_AUTO_COMMIT="true"
+CFG_PLANNING_TRACKING="manual"
+CFG_AUTO_PUSH="never"
 CFG_VERIFICATION_TIER="standard"
 CFG_PREFER_TEAMS="always"
 CFG_MAX_TASKS="5"
@@ -158,6 +162,8 @@ if [ "$JQ_AVAILABLE" = true ] && [ -f "$CONFIG_FILE" ]; then
     "CFG_EFFORT=\(.effort // "balanced")",
     "CFG_AUTONOMY=\(.autonomy // "standard")",
     "CFG_AUTO_COMMIT=\(if .auto_commit == null then true else .auto_commit end)",
+    "CFG_PLANNING_TRACKING=\(.planning_tracking // "manual")",
+    "CFG_AUTO_PUSH=\(.auto_push // "never")",
     "CFG_VERIFICATION_TIER=\(.verification_tier // "standard")",
     "CFG_PREFER_TEAMS=\(.prefer_teams // "always")",
     "CFG_MAX_TASKS=\(.max_tasks_per_plan // 5)",
@@ -169,6 +175,8 @@ fi
 echo "config_effort=$CFG_EFFORT"
 echo "config_autonomy=$CFG_AUTONOMY"
 echo "config_auto_commit=$CFG_AUTO_COMMIT"
+echo "config_planning_tracking=$CFG_PLANNING_TRACKING"
+echo "config_auto_push=$CFG_AUTO_PUSH"
 echo "config_verification_tier=$CFG_VERIFICATION_TIER"
 echo "config_prefer_teams=$CFG_PREFER_TEAMS"
 echo "config_max_tasks_per_plan=$CFG_MAX_TASKS"
