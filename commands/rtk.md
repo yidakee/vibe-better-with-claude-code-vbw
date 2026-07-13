@@ -3,7 +3,7 @@ name: vbw:rtk
 category: supporting
 disable-model-invocation: true
 description: Install, update, verify, and manage optional RTK tool-output compression.
-argument-hint: [status|install|init|verify|update|uninstall]
+argument-hint: "[status|install|init|verify|update|uninstall]"
 allowed-tools: Read, Bash, AskUserQuestion
 ---
 
