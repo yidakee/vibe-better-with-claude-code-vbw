@@ -3,7 +3,7 @@ name: vbw:help
 category: supporting
 disable-model-invocation: true
 description: Display all available VBW commands with descriptions and usage examples.
-argument-hint: [command-name]
+argument-hint: "[command-name]"
 allowed-tools: Read, Glob, Bash
 ---
 

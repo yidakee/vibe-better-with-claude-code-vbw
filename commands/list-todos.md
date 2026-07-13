@@ -3,7 +3,7 @@ name: vbw:list-todos
 category: supporting
 disable-model-invocation: true
 description: List pending todos from STATE.md with action hints.
-argument-hint: [priority filter]
+argument-hint: "[priority filter]"
 allowed-tools: Read, Edit, Bash
 ---
 
